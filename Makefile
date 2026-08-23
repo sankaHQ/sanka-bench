@@ -22,7 +22,7 @@ check: lint typecheck test
 
 # task-id:candidate-name pairs; baselines live at baselines/<task>/<candidate>/
 BASELINES_001 = noop compatibility-bridge native-reference sanka-native
-BASELINES_002 = noop compatibility-bridge native-reference
+BASELINES_002 = noop compatibility-bridge native-reference sanka-native
 
 baselines:
 	@for name in $(BASELINES_001); do \
