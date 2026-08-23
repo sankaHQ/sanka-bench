@@ -14,7 +14,7 @@ def test_all_versioned_schemas_are_valid() -> None:
 
 def test_checked_in_task_and_candidates_validate(repository_root: Path, task_dir: Path) -> None:
     assert load_and_validate(task_dir / "task.yaml", "task")["id"] == "drf-fastapi-001"
-    for path in sorted((repository_root / "baselines").glob("*/candidate.yaml")):
+    for path in sorted((repository_root / "baselines").glob("*/*/candidate.yaml")):
         load_and_validate(path, "candidate")
 
 

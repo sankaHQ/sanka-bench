@@ -205,7 +205,8 @@ def main() -> int:
     }
 
     client = TestClient(app, follow_redirects=False)
-    response = client.request(method, path, json=scenario.get("body"))
+    headers = {str(key): str(value) for key, value in dict(scenario.get("headers") or {}).items()}
+    response = client.request(method, path, json=scenario.get("body"), headers=headers)
 
     import os
 
@@ -218,8 +219,14 @@ def main() -> int:
             "settings_module": os.environ.get("DJANGO_SETTINGS_MODULE"),
         }
     )
+    served: dict[str, Any] = {"status": response.status_code, "body": _body(response)}
+    capture = scenario.get("capture_headers")
+    if capture:
+        served["headers"] = {
+            str(name).lower(): response.headers.get(str(name).lower(), "") for name in capture
+        }
     payload = {
-        "response": {"status": response.status_code, "body": _body(response)},
+        "response": served,
         "native": native,
     }
     print(json.dumps(payload, ensure_ascii=False, separators=(",", ":"), sort_keys=True))

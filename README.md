@@ -18,7 +18,15 @@ source-code similarity to one preferred implementation.
 Private implementation preview. This repository is not a published benchmark,
 leaderboard, package, or public claim.
 
-The first fixture proves three required controls:
+Two synthetic fixtures exist. `drf-fastapi-001` covers CRUD and validation;
+`drf-fastapi-002` adds database-backed `TokenAuthentication`, `IsAuthenticated`,
+and object-level permissions (author-or-read-only), with 401-variant,
+403, and `WWW-Authenticate`/`Allow` header scenarios. A native candidate for
+002 must reimplement token authentication without loading DRF — the token
+table stays, read through the retained Django ORM.
+
+Baselines live at `baselines/<task>/<candidate>/`. The first fixture proves
+the required controls:
 
 | Baseline | Expected result |
 | --- | --- |
@@ -26,6 +34,11 @@ The first fixture proves three required controls:
 | Sanka PR #13 compatibility bridge | Preserves behavior but fails the anti-proxy compliance gate |
 | Native human reference | Passes behavior, database, regression, and native FastAPI gates |
 | Sanka native converter (`sanka apply --bench-candidate`) | Passes every hard gate, including runtime native-target evidence |
+
+`drf-fastapi-002` carries noop, compatibility-bridge, and human
+native-reference baselines. The Sanka converter's native envelope does not
+cover authentication yet, so 002 has no passing converter baseline — the
+benchmark deliberately leads the converter here.
 
 The native-target gate is decided by recorded serving evidence, not source
 text. Every candidate scenario is served in a fresh guarded process that arms
@@ -46,7 +59,7 @@ uv run sanka-bench validate
 uv run sanka-bench evaluate \
   --runner local \
   --task tasks/drf-fastapi/drf-fastapi-001 \
-  --candidate baselines/native-reference
+  --candidate baselines/drf-fastapi-001/native-reference
 ```
 
 The default runner is Docker and disables network access while evaluating:
@@ -54,7 +67,7 @@ The default runner is Docker and disables network access while evaluating:
 ```bash
 uv run sanka-bench evaluate \
   --task tasks/drf-fastapi/drf-fastapi-001 \
-  --candidate baselines/native-reference
+  --candidate baselines/drf-fastapi-001/native-reference
 ```
 
 Evaluate every required baseline locally or in the isolated container:

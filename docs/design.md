@@ -1,3 +1,27 @@
+# Implemented slices
+
+## drf-fastapi-002: authentication and object permissions
+
+The second fixture (`drf-fastapi-002`) covers the auth surface:
+
+- database-backed `TokenAuthentication` (`rest_framework.authtoken`);
+- `IsAuthenticated` plus the canonical author-or-read-only object permission;
+- `perform_create` author injection;
+- 401 variants (missing, invalid, malformed credentials), 403 on
+  foreign-object writes, and `WWW-Authenticate`/`Allow` header parity via the
+  scenario-level `capture_headers` contract (drivers and the serving guard
+  capture a declared header subset into the compared response).
+
+A native candidate must reimplement token authentication without loading DRF:
+the token table stays, owned by the retained Django half, and the reference
+implementation reads it through an unmanaged model mirror. Baselines are
+noop, the Sanka compatibility bridge generated from merged Sanka main
+(behavior passes — auth included — native gate fails on evidence), and the
+human native reference. The Sanka converter's native envelope does not cover
+authentication yet, so 002 intentionally has no passing converter baseline.
+
+Baselines are laid out per task: `baselines/<task-id>/<candidate>/`.
+
 # Implemented v0.1 slice
 
 This slice establishes the evaluator boundary before a converter or hosted API
@@ -50,8 +74,9 @@ is allowed to claim a successful DRF-to-FastAPI migration.
 
 ## Next implementation gates
 
-1. Add authentication, object-permission, transaction rollback, and side-effect
-   fixtures.
+1. Add transaction-rollback, nested-write, and side-effect fixtures
+   (authentication and object permissions landed as `drf-fastapi-002`);
+   extend the Sanka converter's native envelope to pass 002.
 2. Replace public-only task execution with a private hidden-evaluator mount and
    signed result manifest.
 3. Integrate the shared result schema into `sanka verify` without letting Sanka

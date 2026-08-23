@@ -13,7 +13,7 @@ from sanka_bench.schema import load_and_validate
 @pytest.fixture(scope="module")
 def baseline_results(repository_root: Path, task_dir: Path) -> dict[str, dict[str, Any]]:
     return {
-        name: evaluate_local(task_dir, repository_root / "baselines" / name)
+        name: evaluate_local(task_dir, repository_root / "baselines" / "drf-fastapi-001" / name)
         for name in ("noop", "compatibility-bridge", "native-reference", "sanka-native")
     }
 
