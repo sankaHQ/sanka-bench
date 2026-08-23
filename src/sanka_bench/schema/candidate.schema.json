@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sanka.com/schemas/sanka-bench/candidate/v0.1.json",
+  "title": "Sanka Migration Bench candidate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "id", "kind", "provenance"],
+  "properties": {
+    "schema_version": { "const": "sanka-bench/candidate/v0.1" },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]+$" },
+    "kind": { "enum": ["noop", "overlay"] },
+    "overlay": { "type": "string", "minLength": 1 },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["producer", "revision", "command"],
+      "properties": {
+        "producer": { "type": "string", "minLength": 1 },
+        "revision": { "type": "string", "minLength": 1 },
+        "command": { "type": "string" }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "kind": { "const": "overlay" } } },
+      "then": { "required": ["overlay"] }
+    }
+  ]
+}
