@@ -6,6 +6,7 @@ settings and retained for the ORM only. Validation below is a native
 reimplementation of the serializer semantics captured at scan time, using the
 exact error strings the source application produced.
 """
+
 from __future__ import annotations
 
 import json

@@ -20,14 +20,22 @@ test:
 check: lint typecheck test
 	uv run sanka-bench validate
 
+# task-id:candidate-name pairs; baselines live at baselines/<task>/<candidate>/
+BASELINES_001 = noop compatibility-bridge native-reference sanka-native
+BASELINES_002 = noop compatibility-bridge native-reference
+
 baselines:
-	uv run sanka-bench evaluate --runner local --task tasks/drf-fastapi/drf-fastapi-001 --candidate baselines/noop --output reports/noop.json
-	uv run sanka-bench evaluate --runner local --task tasks/drf-fastapi/drf-fastapi-001 --candidate baselines/compatibility-bridge --output reports/compatibility-bridge.json
-	uv run sanka-bench evaluate --runner local --task tasks/drf-fastapi/drf-fastapi-001 --candidate baselines/native-reference --output reports/native-reference.json
-	uv run sanka-bench evaluate --runner local --task tasks/drf-fastapi/drf-fastapi-001 --candidate baselines/sanka-native --output reports/sanka-native.json
+	@for name in $(BASELINES_001); do \
+		uv run sanka-bench evaluate --runner local --task tasks/drf-fastapi/drf-fastapi-001 --candidate baselines/drf-fastapi-001/$$name --output reports/drf-fastapi-001-$$name.json || exit 1; \
+	done
+	@for name in $(BASELINES_002); do \
+		uv run sanka-bench evaluate --runner local --task tasks/drf-fastapi/drf-fastapi-002 --candidate baselines/drf-fastapi-002/$$name --output reports/drf-fastapi-002-$$name.json || exit 1; \
+	done
 
 docker-baselines:
-	uv run sanka-bench evaluate --runner docker --task tasks/drf-fastapi/drf-fastapi-001 --candidate baselines/noop --output reports/noop-docker.json
-	uv run sanka-bench evaluate --runner docker --task tasks/drf-fastapi/drf-fastapi-001 --candidate baselines/compatibility-bridge --output reports/compatibility-bridge-docker.json
-	uv run sanka-bench evaluate --runner docker --task tasks/drf-fastapi/drf-fastapi-001 --candidate baselines/native-reference --output reports/native-reference-docker.json
-	uv run sanka-bench evaluate --runner docker --task tasks/drf-fastapi/drf-fastapi-001 --candidate baselines/sanka-native --output reports/sanka-native-docker.json
+	@for name in $(BASELINES_001); do \
+		uv run sanka-bench evaluate --runner docker --task tasks/drf-fastapi/drf-fastapi-001 --candidate baselines/drf-fastapi-001/$$name --output reports/drf-fastapi-001-$$name-docker.json || exit 1; \
+	done
+	@for name in $(BASELINES_002); do \
+		uv run sanka-bench evaluate --runner docker --task tasks/drf-fastapi/drf-fastapi-002 --candidate baselines/drf-fastapi-002/$$name --output reports/drf-fastapi-002-$$name-docker.json || exit 1; \
+	done
