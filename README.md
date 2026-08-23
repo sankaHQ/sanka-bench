@@ -25,6 +25,7 @@ The first fixture proves three required controls:
 | No-op | Fails target boot and native-target compliance |
 | Sanka PR #13 compatibility bridge | Preserves behavior but fails the anti-proxy compliance gate |
 | Native human reference | Passes behavior, database, regression, and native FastAPI gates |
+| Sanka native converter (`sanka apply --bench-candidate`) | Passes every hard gate, including runtime native-target evidence |
 
 The native-target gate is decided by recorded serving evidence, not source
 text. Every candidate scenario is served in a fresh guarded process that arms

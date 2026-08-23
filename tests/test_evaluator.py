@@ -14,7 +14,7 @@ from sanka_bench.schema import load_and_validate
 def baseline_results(repository_root: Path, task_dir: Path) -> dict[str, dict[str, Any]]:
     return {
         name: evaluate_local(task_dir, repository_root / "baselines" / name)
-        for name in ("noop", "compatibility-bridge", "native-reference")
+        for name in ("noop", "compatibility-bridge", "native-reference", "sanka-native")
     }
 
 
@@ -75,6 +75,23 @@ def test_native_reference_passes_every_hard_gate(
         assert evidence["socket_events"] == []
         assert evidence["settings_module"] == "target_settings"
     assert result["diagnostics"]["static_patterns"]["required_missing"] == []
+
+
+def test_sanka_native_converter_passes_every_hard_gate(
+    baseline_results: dict[str, dict[str, Any]],
+) -> None:
+    """The product milestone: Sanka's own generated output, unedited."""
+    result = baseline_results["sanka-native"]
+    assert result["candidate_id"] == "sanka-native"
+    assert result["status"] == "passed"
+    assert result["fully_migrated"] is True
+    assert all(result["hard_gates"].values())
+    assert result["errors"] == []
+    for scenario in result["scenarios"]:
+        evidence = scenario["native"]
+        assert evidence["forbidden_imports"] == []
+        assert evidence["route_class"] == "fastapi.routing.APIRoute"
+        assert evidence["settings_module"] == "sanka_settings"
 
 
 def test_obfuscated_bridge_fails_on_runtime_evidence_despite_clean_entrypoint(
