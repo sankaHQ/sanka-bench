@@ -14,7 +14,7 @@ from sanka_bench.schema import load_and_validate
 def baseline_002_results(repository_root: Path, task_002_dir: Path) -> dict[str, dict[str, Any]]:
     return {
         name: evaluate_local(task_002_dir, repository_root / "baselines" / "drf-fastapi-002" / name)
-        for name in ("noop", "compatibility-bridge", "native-reference")
+        for name in ("noop", "compatibility-bridge", "native-reference", "sanka-native")
     }
 
 
@@ -64,6 +64,22 @@ def test_native_reference_passes_every_hard_gate(
         assert evidence["forbidden_imports"] == []
         assert evidence["settings_module"] == "target_settings"
         assert evidence["route_class"] == "fastapi.routing.APIRoute"
+
+
+def test_sanka_native_converter_passes_the_auth_fixture(
+    baseline_002_results: dict[str, dict[str, Any]],
+) -> None:
+    """The converter's untouched output serves token auth without DRF."""
+    result = baseline_002_results["sanka-native"]
+    assert result["candidate_id"] == "sanka-native"
+    assert result["status"] == "passed"
+    assert result["fully_migrated"] is True
+    assert all(result["hard_gates"].values())
+    assert result["errors"] == []
+    for scenario in result["scenarios"]:
+        evidence = scenario["native"]
+        assert evidence["forbidden_imports"] == []
+        assert evidence["settings_module"] == "sanka_settings"
 
 
 def test_auth_scenarios_are_present_and_distinct(task_002_dir: Path) -> None:

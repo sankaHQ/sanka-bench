@@ -35,10 +35,11 @@ the required controls:
 | Native human reference | Passes behavior, database, regression, and native FastAPI gates |
 | Sanka native converter (`sanka apply --bench-candidate`) | Passes every hard gate, including runtime native-target evidence |
 
-`drf-fastapi-002` carries noop, compatibility-bridge, and human
-native-reference baselines. The Sanka converter's native envelope does not
-cover authentication yet, so 002 has no passing converter baseline — the
-benchmark deliberately leads the converter here.
+`drf-fastapi-002` carries noop, compatibility-bridge, human
+native-reference, and Sanka native-converter baselines. The converter's
+envelope caught up with the fixture (sanka PR #17): its untouched
+`--bench-candidate` output passes every hard gate, serving token
+authentication natively without loading DRF.
 
 The native-target gate is decided by recorded serving evidence, not source
 text. Every candidate scenario is served in a fresh guarded process that arms
