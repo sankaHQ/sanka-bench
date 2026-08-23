@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import tempfile
 from pathlib import Path
 from typing import Any, cast
@@ -58,6 +59,8 @@ def evaluate_docker(
                 "ALL",
                 "--security-opt",
                 "no-new-privileges",
+                "--user",
+                f"{os.getuid()}:{os.getgid()}",
                 "--pids-limit",
                 "128",
                 "--memory",
