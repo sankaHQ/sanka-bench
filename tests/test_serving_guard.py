@@ -1,0 +1,154 @@
+from __future__ import annotations
+
+import json
+import subprocess
+import sys
+from pathlib import Path
+from typing import Any
+
+
+def _run_guard(
+    workspace: Path,
+    *,
+    entrypoint: str = "svc.py",
+    scenario: dict[str, Any] | None = None,
+    forbidden: list[str] | None = None,
+) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "sanka_bench.serving_guard",
+            "--workspace",
+            str(workspace),
+            "--entrypoint",
+            entrypoint,
+            "--scenario",
+            json.dumps(scenario or {"id": "ping", "method": "GET", "path": "/ping/"}),
+            "--forbidden-imports",
+            json.dumps(forbidden or ["rest_framework"]),
+        ],
+        cwd=workspace,
+        capture_output=True,
+        text=True,
+        timeout=60,
+        check=False,
+    )
+
+
+def _payload(outcome: subprocess.CompletedProcess[str]) -> dict[str, Any]:
+    assert outcome.returncode == 0, outcome.stderr
+    lines = [line for line in outcome.stdout.splitlines() if line.strip()]
+    return json.loads(lines[-1])
+
+
+def test_clean_fastapi_app_produces_compliant_evidence(tmp_path: Path) -> None:
+    (tmp_path / "svc.py").write_text(
+        "from fastapi import FastAPI\n"
+        "app = FastAPI()\n"
+        '@app.get("/ping/")\n'
+        "def ping():\n"
+        '    return {"ok": True}\n',
+        encoding="utf-8",
+    )
+    payload = _payload(_run_guard(tmp_path))
+    assert payload["response"] == {"status": 200, "body": {"ok": True}}
+    native = payload["native"]
+    assert native["app_is_fastapi"] is True
+    assert native["route_class"] == "fastapi.routing.APIRoute"
+    assert native["endpoint_in_workspace"] is True
+    assert native["forbidden_imports"] == []
+    assert native["process_events"] == []
+    assert native["socket_events"] == []
+
+
+def test_forbidden_import_is_recorded_even_when_indirect(tmp_path: Path) -> None:
+    (tmp_path / "helper.py").write_text(
+        'from importlib import import_module\nwave = import_module("wave")\n',
+        encoding="utf-8",
+    )
+    (tmp_path / "svc.py").write_text(
+        "import helper  # noqa: F401\n"
+        "from fastapi import FastAPI\n"
+        "app = FastAPI()\n"
+        '@app.get("/ping/")\n'
+        "def ping():\n"
+        '    return {"ok": True}\n',
+        encoding="utf-8",
+    )
+    payload = _payload(_run_guard(tmp_path, forbidden=["wave"]))
+    assert payload["native"]["forbidden_imports"] == ["wave"]
+
+
+def test_lazy_forbidden_import_inside_endpoint_is_recorded(tmp_path: Path) -> None:
+    (tmp_path / "svc.py").write_text(
+        "from fastapi import FastAPI\n"
+        "app = FastAPI()\n"
+        '@app.get("/ping/")\n'
+        "def ping():\n"
+        "    import wave  # noqa: F401\n"
+        '    return {"ok": True}\n',
+        encoding="utf-8",
+    )
+    payload = _payload(_run_guard(tmp_path, forbidden=["wave"]))
+    assert payload["native"]["forbidden_imports"] == ["wave"]
+
+
+def test_spawned_process_is_recorded(tmp_path: Path) -> None:
+    (tmp_path / "svc.py").write_text(
+        "import subprocess\n"
+        "import sys\n"
+        "from fastapi import FastAPI\n"
+        'subprocess.run([sys.executable, "-c", "pass"], check=True)\n'
+        "app = FastAPI()\n"
+        '@app.get("/ping/")\n'
+        "def ping():\n"
+        '    return {"ok": True}\n',
+        encoding="utf-8",
+    )
+    payload = _payload(_run_guard(tmp_path))
+    assert "subprocess.Popen" in payload["native"]["process_events"]
+
+
+def test_socket_connection_attempt_is_recorded(tmp_path: Path) -> None:
+    (tmp_path / "svc.py").write_text(
+        "import contextlib\n"
+        "import socket\n"
+        "from fastapi import FastAPI\n"
+        "sock = socket.socket()\n"
+        "sock.settimeout(0.05)\n"
+        "with contextlib.suppress(OSError):\n"
+        '    sock.connect(("127.0.0.1", 9))\n'
+        "sock.close()\n"
+        "app = FastAPI()\n"
+        '@app.get("/ping/")\n'
+        "def ping():\n"
+        '    return {"ok": True}\n',
+        encoding="utf-8",
+    )
+    payload = _payload(_run_guard(tmp_path))
+    assert payload["native"]["socket_events"] == ["socket.connect"]
+
+
+def test_non_fastapi_asgi_app_is_flagged(tmp_path: Path) -> None:
+    (tmp_path / "svc.py").write_text(
+        "async def app(scope, receive, send):\n"
+        "    assert scope['type'] == 'http'\n"
+        "    await receive()\n"
+        "    await send({'type': 'http.response.start', 'status': 200, 'headers': []})\n"
+        "    await send({'type': 'http.response.body', 'body': b'{\"ok\": true}'})\n",
+        encoding="utf-8",
+    )
+    payload = _payload(_run_guard(tmp_path))
+    native = payload["native"]
+    assert native["app_is_fastapi"] is False
+    assert native["route_class"] is None
+    assert native["endpoint_in_workspace"] is False
+    assert payload["response"]["status"] == 200
+
+
+def test_missing_app_attribute_fails(tmp_path: Path) -> None:
+    (tmp_path / "svc.py").write_text("value = 1\n", encoding="utf-8")
+    outcome = _run_guard(tmp_path)
+    assert outcome.returncode == 3
+    assert "does not expose `app`" in outcome.stderr
