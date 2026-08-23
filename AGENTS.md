@@ -20,7 +20,7 @@ This repository is the independent evaluator for repository-level migrations.
 uv sync --frozen --extra fixture --group dev
 make check
 make baselines
-make docker-baseline
+make docker-baselines
 ```
 
 All AI-authored changes use the workspace `sanka-pr-flow` and require exact-head

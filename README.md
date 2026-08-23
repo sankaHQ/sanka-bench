@@ -26,6 +26,17 @@ The first fixture proves three required controls:
 | Sanka PR #13 compatibility bridge | Preserves behavior but fails the anti-proxy compliance gate |
 | Native human reference | Passes behavior, database, regression, and native FastAPI gates |
 
+The native-target gate is decided by recorded serving evidence, not source
+text. Every candidate scenario is served in a fresh guarded process that arms
+an un-removable audit hook before any candidate code loads. The hook records
+imports of DRF and Django request-serving machinery, process creation, and
+socket connections; the guard also verifies the scenario was served by a
+FastAPI `APIRoute` whose endpoint code lives inside the candidate workspace.
+A facade that hides DRF dispatch behind an imported helper therefore fails
+even though its entrypoint text looks clean (see
+`tests/fixtures/obfuscated-bridge`). Textual pattern checks remain in results
+as diagnostics only.
+
 ## Run locally
 
 ```bash

@@ -15,6 +15,8 @@ from sanka_bench.hashing import digest_payload, digest_tree
 from sanka_bench.process import run_command
 from sanka_bench.schema import load_and_validate, validate_payload
 
+_NATIVE_ROUTE_CLASS = "fastapi.routing.APIRoute"
+
 
 class EvaluationError(RuntimeError):
     """Raised when an evaluator input is unsafe or structurally incomplete."""
@@ -32,6 +34,7 @@ def evaluate_local(task_dir: Path, candidate_dir: Path) -> dict[str, Any]:
     scenarios = _load_scenarios(scenarios_path)
     repeat = cast(int, task["evaluation"]["repeat"])
     timeout = cast(int, task["evaluation"]["timeout_seconds"])
+    serving_policy = _serving_policy(task)
 
     errors: list[str] = []
     actual_source_digest = digest_tree(source_dir)
@@ -50,8 +53,7 @@ def evaluate_local(task_dir: Path, candidate_dir: Path) -> dict[str, Any]:
     source_runs: list[list[dict[str, Any] | None]] = []
     candidate_runs: list[list[dict[str, Any] | None]] = []
     regression_runs: list[bool] = []
-    compliance_runs: list[bool] = []
-    compliance_details: list[str] = []
+    entrypoint_runs: list[bool] = []
 
     for run_index in range(repeat):
         with tempfile.TemporaryDirectory(prefix=f"sanka-bench-{run_index + 1}-") as temp:
@@ -71,9 +73,13 @@ def evaluate_local(task_dir: Path, candidate_dir: Path) -> dict[str, Any]:
                 for detail in regression_details
             )
 
-            compliance_passed, detail = _check_target_compliance(task, workspace)
-            compliance_runs.append(compliance_passed)
-            compliance_details.append(detail)
+            entrypoint = workspace / cast(str, task["target"]["entrypoint"])
+            entrypoint_runs.append(entrypoint.is_file())
+            if not entrypoint.is_file():
+                errors.append(
+                    f"native-target run {run_index + 1}: "
+                    f"missing target entrypoint {task['target']['entrypoint']}"
+                )
 
             oracle_results: list[dict[str, Any] | None] = []
             target_results: list[dict[str, Any] | None] = []
@@ -93,6 +99,7 @@ def evaluate_local(task_dir: Path, candidate_dir: Path) -> dict[str, Any]:
                     scenario=scenario,
                     database=temp_root / f"candidate-{scenario['id']}.sqlite3",
                     timeout=timeout,
+                    policy=serving_policy,
                 )
                 oracle_results.append(oracle)
                 target_results.append(target)
@@ -113,7 +120,9 @@ def evaluate_local(task_dir: Path, candidate_dir: Path) -> dict[str, Any]:
     )
     source_qualified = provenance_matches and source_regression[0] and source_scenarios_valid
     regression_tests = bool(regression_runs) and all(regression_runs)
-    native_target = bool(compliance_runs) and all(compliance_runs)
+    native_target = all(entrypoint_runs) and all(
+        report["native_compliant"] for report in scenario_reports
+    )
     target_boot = all(report["target_ran"] for report in scenario_reports)
     behavior_parity = all(report["behavior_match"] for report in scenario_reports)
     database_parity = all(report["database_match"] for report in scenario_reports)
@@ -131,15 +140,14 @@ def evaluate_local(task_dir: Path, candidate_dir: Path) -> dict[str, Any]:
         "deterministic": deterministic,
     }
     fully_migrated = all(hard_gates.values())
-    if not native_target:
-        errors.extend(
-            f"native-target compliance run {index + 1}: {detail}"
-            for index, detail in enumerate(compliance_details)
-            if detail != "ok"
-        )
+    errors.extend(
+        f"native-target scenario {report['id']}: {report['native_detail']}"
+        for report in scenario_reports
+        if not report["native_compliant"]
+    )
 
     result: dict[str, Any] = {
-        "schema_version": "sanka-bench/result/v0.1",
+        "schema_version": "sanka-bench/result/v0.2",
         "task_id": cast(str, task["id"]),
         "candidate_id": cast(str, candidate["id"]),
         "status": "invalid" if not source_qualified else ("passed" if fully_migrated else "failed"),
@@ -151,8 +159,15 @@ def evaluate_local(task_dir: Path, candidate_dir: Path) -> dict[str, Any]:
             "behavioral_parity": _fraction(scenario_reports, "behavior_match"),
             "database_parity": _fraction(scenario_reports, "database_match"),
             "side_effect_parity": _fraction(scenario_reports, "side_effect_match"),
+            "native_compliance": _fraction(scenario_reports, "native_compliant"),
         },
-        "scenarios": scenario_reports,
+        "scenarios": [
+            {key: value for key, value in report.items() if key != "native_detail"}
+            for report in scenario_reports
+        ],
+        "diagnostics": {
+            "static_patterns": _static_pattern_diagnostics(task, candidate, candidate_dir),
+        },
         "provenance": {
             "task_digest": digest_tree(task_dir),
             "source_digest": actual_source_digest,
@@ -185,6 +200,19 @@ def _load_scenarios(path: Path) -> list[dict[str, Any]]:
             raise EvaluationError(f"scenario {index} must contain a string id")
         scenarios.append(cast(dict[str, Any], item))
     return scenarios
+
+
+def _serving_policy(task: dict[str, Any]) -> str:
+    target = cast(dict[str, Any], task["target"])
+    return json.dumps(
+        {
+            "entrypoint": target["entrypoint"],
+            "forbidden_imports": target["serving"]["forbidden_imports"],
+        },
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    )
 
 
 def _apply_candidate(
@@ -221,28 +249,75 @@ def _run_regression(
     return passed, details
 
 
-def _check_target_compliance(
+def _static_pattern_diagnostics(
     task: dict[str, Any],
-    workspace: Path,
-) -> tuple[bool, str]:
+    candidate: dict[str, Any],
+    candidate_dir: Path,
+) -> dict[str, Any]:
+    """Textual findings over candidate-contributed files. Diagnostics only.
+
+    The native-target hard gate is decided by recorded serving evidence; these
+    string findings exist so reviewers can spot suspicious candidate text even
+    when it never executes.
+    """
     target = cast(dict[str, Any], task["target"])
-    entrypoint = workspace / cast(str, target["entrypoint"])
-    if not entrypoint.is_file():
-        return False, f"missing target entrypoint {target['entrypoint']}"
-    source = entrypoint.read_text(encoding="utf-8")
-    missing = [
-        pattern for pattern in cast(list[str], target["required_patterns"]) if pattern not in source
+    patterns = cast(dict[str, Any], target["static_patterns"])
+    required = cast(list[str], patterns["required"])
+    forbidden = cast(list[str], patterns["forbidden"])
+
+    contributed: list[tuple[str, str]] = []
+    if cast(str, candidate["kind"]) == "overlay":
+        overlay = _resolve_within(candidate_dir, cast(str, candidate["overlay"]))
+        for path in sorted(overlay.rglob("*")):
+            if not path.is_file():
+                continue
+            try:
+                text = path.read_text(encoding="utf-8")
+            except UnicodeDecodeError:
+                continue
+            contributed.append((path.relative_to(overlay).as_posix(), text))
+
+    entrypoint = cast(str, target["entrypoint"])
+    entrypoint_text = next((text for name, text in contributed if name == entrypoint), None)
+    required_missing = [
+        pattern for pattern in required if entrypoint_text is None or pattern not in entrypoint_text
     ]
-    forbidden = [
-        pattern for pattern in cast(list[str], target["forbidden_patterns"]) if pattern in source
+    forbidden_present = [
+        {"file": name, "pattern": pattern}
+        for name, text in contributed
+        for pattern in forbidden
+        if pattern in text
     ]
-    if missing or forbidden:
-        parts = []
-        if missing:
-            parts.append(f"missing required patterns: {', '.join(missing)}")
-        if forbidden:
-            parts.append(f"forbidden serving patterns: {', '.join(forbidden)}")
-        return False, "; ".join(parts)
+    return {"required_missing": required_missing, "forbidden_present": forbidden_present}
+
+
+def _native_verdict(payload: dict[str, Any] | None) -> tuple[bool, str]:
+    if payload is None:
+        return False, "candidate produced no serving evidence"
+    native = payload.get("native")
+    if not isinstance(native, dict):
+        return False, "candidate driver returned no native serving evidence"
+    problems: list[str] = []
+    if not native.get("app_is_fastapi"):
+        problems.append("entrypoint `app` is not a FastAPI application")
+    route_class = native.get("route_class")
+    if route_class != _NATIVE_ROUTE_CLASS:
+        problems.append(
+            f"scenario served by {route_class}" if route_class else "no FastAPI route matched"
+        )
+    if not native.get("endpoint_in_workspace"):
+        problems.append("endpoint code resolves outside the candidate workspace")
+    forbidden = native.get("forbidden_imports") or []
+    if forbidden:
+        problems.append("forbidden serving imports: " + ", ".join(sorted(forbidden)))
+    processes = native.get("process_events") or []
+    if processes:
+        problems.append("spawned processes while serving: " + ", ".join(sorted(processes)))
+    sockets = native.get("socket_events") or []
+    if sockets:
+        problems.append("opened network connections while serving: " + ", ".join(sorted(sockets)))
+    if problems:
+        return False, "; ".join(problems)
     return True, "ok"
 
 
@@ -254,23 +329,23 @@ def _run_driver(
     scenario: dict[str, Any],
     database: Path,
     timeout: int,
+    policy: str | None = None,
 ) -> tuple[dict[str, Any] | None, str | None]:
-    outcome = run_command(
-        [
-            sys.executable,
-            str(driver_path),
-            "--mode",
-            mode,
-            "--workspace",
-            str(workspace),
-            "--scenario",
-            json.dumps(scenario, ensure_ascii=False, separators=(",", ":")),
-            "--database",
-            str(database),
-        ],
-        cwd=driver_path.parent,
-        timeout=timeout,
-    )
+    argv = [
+        sys.executable,
+        str(driver_path),
+        "--mode",
+        mode,
+        "--workspace",
+        str(workspace),
+        "--scenario",
+        json.dumps(scenario, ensure_ascii=False, separators=(",", ":")),
+        "--database",
+        str(database),
+    ]
+    if policy is not None:
+        argv.extend(["--policy", policy])
+    outcome = run_command(argv, cwd=driver_path.parent, timeout=timeout)
     if not outcome.passed:
         detail = outcome.stderr.strip() or outcome.stdout.strip() or "no output"
         return None, f"driver exited {outcome.returncode}: {detail}"
@@ -308,6 +383,20 @@ def _scenario_reports(
             _view(source, "side_effects") == _view(candidate, "side_effects")
             for source, candidate in zip(sources, candidates, strict=True)
         )
+        verdicts = [_native_verdict(candidate) for candidate in candidates]
+        native_compliant = all(compliant for compliant, _ in verdicts)
+        native_detail = next(
+            (detail for compliant, detail in verdicts if not compliant),
+            "ok",
+        )
+        evidence = next(
+            (
+                cast(dict[str, Any], candidate["native"])
+                for candidate in candidates
+                if candidate is not None and isinstance(candidate.get("native"), dict)
+            ),
+            None,
+        )
         candidate_fingerprints = [
             digest_payload(candidate) for candidate in candidates if candidate is not None
         ]
@@ -321,6 +410,8 @@ def _scenario_reports(
             mismatches.append("database state differs")
         if not side_effects:
             mismatches.append("side effects differ")
+        if not native_compliant:
+            mismatches.append("native serving evidence non-compliant")
         if not stable:
             mismatches.append("candidate output varies between clean runs")
         reports.append(
@@ -330,8 +421,11 @@ def _scenario_reports(
                 "behavior_match": behavior,
                 "database_match": database,
                 "side_effect_match": side_effects,
+                "native_compliant": native_compliant,
                 "stable": stable,
                 "detail": "; ".join(mismatches) if mismatches else "ok",
+                "native": evidence,
+                "native_detail": native_detail,
             }
         )
     return reports

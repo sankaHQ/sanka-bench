@@ -3,7 +3,9 @@ from __future__ import annotations
 import os
 from typing import Annotated, Any
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "fixture_project.settings")
+# The serving process owns its configuration: point Django at the DRF-free
+# settings so only the ORM half of the source application is loaded.
+os.environ["DJANGO_SETTINGS_MODULE"] = "target_settings"
 
 import django
 from fastapi import Body, FastAPI
