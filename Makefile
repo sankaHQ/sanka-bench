@@ -24,8 +24,10 @@ baselines:
 	uv run sanka-bench evaluate --runner local --task tasks/drf-fastapi/drf-fastapi-001 --candidate baselines/noop --output reports/noop.json
 	uv run sanka-bench evaluate --runner local --task tasks/drf-fastapi/drf-fastapi-001 --candidate baselines/compatibility-bridge --output reports/compatibility-bridge.json
 	uv run sanka-bench evaluate --runner local --task tasks/drf-fastapi/drf-fastapi-001 --candidate baselines/native-reference --output reports/native-reference.json
+	uv run sanka-bench evaluate --runner local --task tasks/drf-fastapi/drf-fastapi-001 --candidate baselines/sanka-native --output reports/sanka-native.json
 
 docker-baselines:
 	uv run sanka-bench evaluate --runner docker --task tasks/drf-fastapi/drf-fastapi-001 --candidate baselines/noop --output reports/noop-docker.json
 	uv run sanka-bench evaluate --runner docker --task tasks/drf-fastapi/drf-fastapi-001 --candidate baselines/compatibility-bridge --output reports/compatibility-bridge-docker.json
 	uv run sanka-bench evaluate --runner docker --task tasks/drf-fastapi/drf-fastapi-001 --candidate baselines/native-reference --output reports/native-reference-docker.json
+	uv run sanka-bench evaluate --runner docker --task tasks/drf-fastapi/drf-fastapi-001 --candidate baselines/sanka-native --output reports/sanka-native-docker.json
