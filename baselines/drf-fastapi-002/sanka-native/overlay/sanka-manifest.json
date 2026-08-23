@@ -1,0 +1,281 @@
+{
+  "allow": {
+    "/api/": "GET, HEAD, OPTIONS",
+    "/api/posts/": "GET, POST, HEAD, OPTIONS",
+    "/api/posts/{pk}/": "GET, PUT, PATCH, DELETE, HEAD, OPTIONS"
+  },
+  "api_roots": [
+    {
+      "links": [
+        [
+          "posts",
+          "/api/posts/"
+        ]
+      ],
+      "path": "/api/"
+    }
+  ],
+  "dropped_routes": [
+    {
+      "method": "GET",
+      "path": "/api/<drf_format_suffix:format>",
+      "reason": "format-suffix alias"
+    },
+    {
+      "method": "GET",
+      "path": "/api/posts.{format}/",
+      "reason": "format-suffix alias"
+    },
+    {
+      "method": "POST",
+      "path": "/api/posts.{format}/",
+      "reason": "format-suffix alias"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/posts/{pk}.{format}/",
+      "reason": "format-suffix alias"
+    },
+    {
+      "method": "GET",
+      "path": "/api/posts/{pk}.{format}/",
+      "reason": "format-suffix alias"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/posts/{pk}.{format}/",
+      "reason": "format-suffix alias"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/posts/{pk}.{format}/",
+      "reason": "format-suffix alias"
+    }
+  ],
+  "entrypoint": "target_app.py",
+  "generated_files": [
+    "target_app.py",
+    "sanka_native.py",
+    "sanka_settings.py"
+  ],
+  "generator": "sanka",
+  "generic_messages": {
+    "not_found": "Not found."
+  },
+  "mode": "native",
+  "plan_hash": "sha256:0cb2ae5e26a1059630b7f37f4b82fafc480d6bf031715eac5c0f7f146c2e2d85",
+  "resources": [
+    {
+      "auth": {
+        "inject_owner_attname": "author_id",
+        "messages": {
+          "empty_header": "Invalid token header. No credentials provided.",
+          "forbidden": "You do not have permission to perform this action.",
+          "inactive_user": "User inactive or deleted.",
+          "invalid_token": "Invalid token.",
+          "no_credentials": "Authentication credentials were not provided.",
+          "spaced_header": "Invalid token header. Token string should not contain spaces.",
+          "www_authenticate": "Token"
+        },
+        "owner_attname": "author_id",
+        "token_db_table": "authtoken_token",
+        "token_key_column": "key",
+        "token_key_max_length": 40,
+        "token_keyword": "Token",
+        "token_user_column": "user_id"
+      },
+      "fields": [
+        {
+          "allow_blank": false,
+          "allow_null": false,
+          "attname": null,
+          "default": null,
+          "has_default": false,
+          "kind": "integer",
+          "max_length": null,
+          "max_value": null,
+          "messages": {
+            "invalid": "A valid integer is required.",
+            "max_string_length": "String value too large.",
+            "max_value": "Ensure this value is less than or equal to {max_value}.",
+            "min_value": "Ensure this value is greater than or equal to {min_value}.",
+            "null": "This field may not be null.",
+            "required": "This field is required."
+          },
+          "min_length": null,
+          "min_value": null,
+          "name": "id",
+          "read_only": true,
+          "required": false,
+          "trim_whitespace": true
+        },
+        {
+          "allow_blank": false,
+          "allow_null": false,
+          "attname": "author_id",
+          "default": null,
+          "has_default": false,
+          "kind": "related_pk",
+          "max_length": null,
+          "max_value": null,
+          "messages": {},
+          "min_length": null,
+          "min_value": null,
+          "name": "author",
+          "read_only": true,
+          "required": false,
+          "trim_whitespace": true
+        },
+        {
+          "allow_blank": false,
+          "allow_null": false,
+          "attname": null,
+          "default": null,
+          "has_default": false,
+          "kind": "char",
+          "max_length": 100,
+          "max_value": null,
+          "messages": {
+            "blank": "This field may not be blank.",
+            "invalid": "Not a valid string.",
+            "max_length": "Ensure this field has no more than 100 characters.",
+            "min_length": "Ensure this field has at least {min_length} characters.",
+            "null": "This field may not be null.",
+            "null_characters": "Null characters are not allowed.",
+            "required": "This field is required.",
+            "surrogate_characters": "Surrogate characters are not allowed: U+{code_point:X}."
+          },
+          "min_length": null,
+          "min_value": null,
+          "name": "title",
+          "read_only": false,
+          "required": true,
+          "trim_whitespace": true
+        },
+        {
+          "allow_blank": true,
+          "allow_null": false,
+          "attname": null,
+          "default": null,
+          "has_default": false,
+          "kind": "char",
+          "max_length": 400,
+          "max_value": null,
+          "messages": {
+            "blank": "This field may not be blank.",
+            "invalid": "Not a valid string.",
+            "max_length": "Ensure this field has no more than 400 characters.",
+            "min_length": "Ensure this field has at least {min_length} characters.",
+            "null": "This field may not be null.",
+            "null_characters": "Null characters are not allowed.",
+            "required": "This field is required.",
+            "surrogate_characters": "Surrogate characters are not allowed: U+{code_point:X}."
+          },
+          "min_length": null,
+          "min_value": null,
+          "name": "body",
+          "read_only": false,
+          "required": false,
+          "trim_whitespace": true
+        }
+      ],
+      "lookup": "pk",
+      "model_class": "Post",
+      "model_module": "posts.models",
+      "object_name": "Post",
+      "ordering": [
+        "id"
+      ],
+      "routes": [
+        {
+          "method": "GET",
+          "operation": "list",
+          "path": "/api/posts/"
+        },
+        {
+          "method": "POST",
+          "operation": "create",
+          "path": "/api/posts/"
+        },
+        {
+          "method": "DELETE",
+          "operation": "destroy",
+          "path": "/api/posts/{pk}/"
+        },
+        {
+          "method": "GET",
+          "operation": "retrieve",
+          "path": "/api/posts/{pk}/"
+        },
+        {
+          "method": "PATCH",
+          "operation": "partial_update",
+          "path": "/api/posts/{pk}/"
+        },
+        {
+          "method": "PUT",
+          "operation": "update",
+          "path": "/api/posts/{pk}/"
+        }
+      ],
+      "serializer": "posts.serializers.PostSerializer",
+      "view": "posts.views.PostViewSet"
+    }
+  ],
+  "routes": [
+    {
+      "method": "GET",
+      "operation": "get",
+      "path": "/api/",
+      "source_view": "rest_framework.routers.APIRootView",
+      "strategy": "native-fastapi-api-root"
+    },
+    {
+      "method": "GET",
+      "operation": "list",
+      "path": "/api/posts/",
+      "source_view": "posts.views.PostViewSet",
+      "strategy": "native-fastapi-crud"
+    },
+    {
+      "method": "POST",
+      "operation": "create",
+      "path": "/api/posts/",
+      "source_view": "posts.views.PostViewSet",
+      "strategy": "native-fastapi-crud"
+    },
+    {
+      "method": "DELETE",
+      "operation": "destroy",
+      "path": "/api/posts/{pk}/",
+      "source_view": "posts.views.PostViewSet",
+      "strategy": "native-fastapi-crud"
+    },
+    {
+      "method": "GET",
+      "operation": "retrieve",
+      "path": "/api/posts/{pk}/",
+      "source_view": "posts.views.PostViewSet",
+      "strategy": "native-fastapi-crud"
+    },
+    {
+      "method": "PATCH",
+      "operation": "partial_update",
+      "path": "/api/posts/{pk}/",
+      "source_view": "posts.views.PostViewSet",
+      "strategy": "native-fastapi-crud"
+    },
+    {
+      "method": "PUT",
+      "operation": "update",
+      "path": "/api/posts/{pk}/",
+      "source_view": "posts.views.PostViewSet",
+      "strategy": "native-fastapi-crud"
+    }
+  ],
+  "schema_version": 1,
+  "serving_settings": "sanka_settings",
+  "settings_module": "bulletin_project.settings",
+  "source_root": ".",
+  "source_scan_hash": "sha256:0c0276edb9effa8563965665f1351a6407fb35290965c17d23ec5f804be467be"
+}
