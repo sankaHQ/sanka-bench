@@ -174,6 +174,11 @@ def evaluate_local(task_dir: Path, candidate_dir: Path) -> dict[str, Any]:
             "candidate_digest": digest_tree(candidate_dir),
             "evaluator_version": __version__,
             "repeat": repeat,
+            **(
+                {"candidate_stats": candidate["stats"]}
+                if isinstance(candidate.get("stats"), dict)
+                else {}
+            ),
         },
         "errors": _deduplicate(errors),
     }
