@@ -21,9 +21,9 @@ check: lint typecheck test
 	uv run sanka-bench validate
 
 # task-id:candidate-name pairs; baselines live at baselines/<task>/<candidate>/
-BASELINES_001 = noop compatibility-bridge native-reference sanka-native
-BASELINES_002 = noop compatibility-bridge native-reference sanka-native
-BASELINES_003 = noop compatibility-bridge native-reference sanka-native
+BASELINES_001 = noop compatibility-bridge claude-code-alone claude-code-with-sanka native-reference sanka-native
+BASELINES_002 = noop compatibility-bridge claude-code-alone claude-code-with-sanka native-reference sanka-native
+BASELINES_003 = noop compatibility-bridge claude-code-alone claude-code-with-sanka native-reference sanka-native
 
 baselines:
 	@for name in $(BASELINES_001); do \

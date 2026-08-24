@@ -20,15 +20,25 @@ GATES_PASS = {
 }
 
 
-def _result(task: str, candidate: str, *, migrated: bool, native: bool = True) -> dict[str, Any]:
+def _result(
+    task: str,
+    candidate: str,
+    *,
+    migrated: bool,
+    native: bool = True,
+    stats: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     gates = dict(GATES_PASS)
     gates["native_target"] = native
+    provenance: dict[str, Any] = {"evaluator_version": "0.0.1"}
+    if stats is not None:
+        provenance["candidate_stats"] = stats
     return {
         "task_id": task,
         "candidate_id": candidate,
         "fully_migrated": migrated,
         "hard_gates": gates,
-        "provenance": {"evaluator_version": "0.0.1"},
+        "provenance": provenance,
     }
 
 
@@ -58,6 +68,26 @@ def reports_dir(tmp_path: Path) -> Path:
         _result("task-2", "sanka-compatibility-bridge", migrated=False, native=False),
     )
     _write(reports, "t2-ref.json", _result("task-2", "native-reference", migrated=True))
+    _write(
+        reports,
+        "t1-agent.json",
+        _result(
+            "task-1",
+            "claude-code-alone",
+            migrated=True,
+            stats={"turns": 36, "duration_seconds": 300.0, "cost_usd": 1.5},
+        ),
+    )
+    _write(
+        reports,
+        "t2-agent.json",
+        _result(
+            "task-2",
+            "claude-code-alone",
+            migrated=True,
+            stats={"turns": 40, "duration_seconds": 180.0, "cost_usd": 0.5},
+        ),
+    )
     return reports
 
 
@@ -72,13 +102,18 @@ def test_collect_groups_families_and_parity(reports_dir: Path) -> None:
     assert data["parity_checked"] == 1
     assert data["parity_matched"] == 1
     assert data["evaluator_versions"] == ["0.0.1"]
-    # story order: controls first, converter, then the human reference
+    # story order: controls, agents, converter, then the human reference
     assert [row["family"] for row in data["rows"]] == [
         "noop",
         "compatibility-bridge",
+        "claude-code-alone",
         "sanka-native",
         "native-reference",
     ]
+    agent = rows["claude-code-alone"]
+    assert agent["cost_usd"] == pytest.approx(2.0)
+    assert agent["duration_seconds"] == pytest.approx(480.0)
+    assert rows["sanka-native"]["cost_usd"] is None
 
 
 def test_html_and_svg_render_the_headline(reports_dir: Path) -> None:
@@ -89,6 +124,8 @@ def test_html_and_svg_render_the_headline(reports_dir: Path) -> None:
     assert "permanent negative control" in page
     assert 'class="gate-fail"' in page and 'class="gate-pass"' in page
     assert "1/1 local↔Docker runs agree" in page
+    assert "$2.00 · 8 min agent time" in page
+    assert "single unattended attempts" in page
     svg = render_svg(data)
     assert svg.startswith("<svg") and svg.endswith("</svg>")
     assert "tasks fully migrated" in svg
@@ -106,7 +143,7 @@ def test_write_report_outputs_files(reports_dir: Path, tmp_path: Path) -> None:
     svg_path = tmp_path / "out" / "summary.svg"
     data = write_report(reports_dir, html_path, svg_path)
     assert html_path.is_file() and svg_path.is_file()
-    assert len(data["rows"]) == 4
+    assert len(data["rows"]) == 5
 
 
 def test_empty_reports_dir_raises(tmp_path: Path) -> None:

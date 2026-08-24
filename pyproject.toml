@@ -50,7 +50,12 @@ testpaths = ["tests"]
 [tool.ruff]
 line-length = 100
 target-version = "py312"
-extend-exclude = ["baselines/*/compatibility-bridge/overlay", "baselines/*/sanka-native/overlay"]
+extend-exclude = [
+  "baselines/*/claude-code-alone/overlay",
+  "baselines/*/claude-code-with-sanka/overlay",
+  "baselines/*/compatibility-bridge/overlay",
+  "baselines/*/sanka-native/overlay",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "RUF"]
