@@ -20,7 +20,7 @@ def task_003_dir(repository_root: Path) -> Path:
 def baseline_003_results(repository_root: Path, task_003_dir: Path) -> dict[str, dict[str, Any]]:
     return {
         name: evaluate_local(task_003_dir, repository_root / "baselines" / "drf-fastapi-003" / name)
-        for name in ("noop", "compatibility-bridge", "native-reference")
+        for name in ("noop", "compatibility-bridge", "native-reference", "sanka-native")
     }
 
 
@@ -57,6 +57,23 @@ def test_native_reference_passes_every_hard_gate(
     assert all(result["hard_gates"].values())
     assert result["metrics"]["scenario_count"] == 16
     assert result["errors"] == []
+
+
+def test_sanka_native_converter_passes_the_nested_fixture(
+    baseline_003_results: dict[str, dict[str, Any]],
+) -> None:
+    """The converter's untouched output, with the author's create() carried
+    over verbatim — transaction boundary, business rule, rollback and all."""
+    result = baseline_003_results["sanka-native"]
+    assert result["candidate_id"] == "sanka-native"
+    assert result["status"] == "passed"
+    assert result["fully_migrated"] is True
+    assert all(result["hard_gates"].values())
+    assert result["errors"] == []
+    for scenario in result["scenarios"]:
+        evidence = scenario["native"]
+        assert evidence["forbidden_imports"] == []
+        assert evidence["settings_module"] == "sanka_settings"
 
 
 def test_rollback_scenario_compares_database_state(task_003_dir: Path) -> None:
