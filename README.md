@@ -99,6 +99,17 @@ make docker-baselines
 - The evaluator must be able to grade Sanka and non-Sanka candidates through the
   same candidate contract.
 
+Render the collected reports into a static page and summary SVG — the hero
+tally (tasks fully migrated per approach) and the per-task hard-gate matrix:
+
+```bash
+make baselines && make docker-baselines   # produce reports/*.json
+make report                               # -> reports/index.html + reports/summary.svg
+```
+
+The render is deterministic for a given set of reports; the headline stays the
+binary Fully Migrated count, never a blended score.
+
 See [docs/design.md](docs/design.md) for the implemented slice and next gates.
 
 ## License
