@@ -99,6 +99,24 @@ make docker-baselines
 - The evaluator must be able to grade Sanka and non-Sanka candidates through the
   same candidate contract.
 
+Produce a frozen coding-agent baseline for one task (unattended, one
+attempt, full disclosure of model, tool version, prompt, budget, turns,
+duration, and reported cost in the candidate's GENERATED.md):
+
+```bash
+uv run python scripts/run_agent_candidate.py \
+  --task tasks/drf-fastapi/drf-fastapi-001 \
+  --candidate-id claude-code-alone \
+  --out baselines/drf-fastapi-001/claude-code-alone \
+  --agent-bin ~/.claude/local/claude
+# claude-code-with-sanka additionally takes --sanka-bin <path to sanka>
+```
+
+The two configurations share the same model, budget, and contract; the
+with-Sanka prompt is strictly additive — it only tells the agent the Sanka
+CLI exists. The frozen overlay is graded by the same evaluator as every
+other candidate.
+
 Render the collected reports into a static page and summary SVG — the hero
 tally (tasks fully migrated per approach) and the per-task hard-gate matrix:
 
