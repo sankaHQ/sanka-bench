@@ -1,5 +1,25 @@
 # Implemented slices
 
+## drf-fastapi-003: nested writes, transactions, validation edges
+
+The third fixture covers the validation and transaction surface:
+
+- writable nested serializers with DRF's index-keyed nested error format
+  (`{"items": {"1": {"quantity": [...]}}}` — failing indices only), the
+  list-type error, and combined order-level plus item-level errors;
+- a transactional nested create: parent and children written inside
+  `transaction.atomic`, then a business rule raises — the observable
+  contract (400 plus an unchanged database) is enforced by the database
+  parity gate, so a candidate that half-writes fails;
+- `unique=True` model-message validation ("order with this reference already
+  exists."), decimal digit/precision errors and string representation,
+  choice-field errors, and cascade deletion.
+
+All response formats were captured empirically from the live source
+application before the native reference was written. Native plan readiness
+for the current Sanka converter is 57% (nested serializers are outside the
+envelope), so 003 ships without a converter baseline.
+
 ## drf-fastapi-002: authentication and object permissions
 
 The second fixture (`drf-fastapi-002`) covers the auth surface:
