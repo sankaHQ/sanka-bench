@@ -10,6 +10,7 @@ from typing import Any
 
 from sanka_bench.docker import DockerEvaluationError, evaluate_docker, repository_root
 from sanka_bench.evaluator import EvaluationError, evaluate_local
+from sanka_bench.report import ReportError, write_report
 from sanka_bench.schema import SchemaError, load_and_validate, load_schema
 
 
@@ -30,6 +31,13 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="exit non-zero when the candidate is valid but not fully migrated",
     )
+
+    report = commands.add_parser(
+        "report", help="render evaluation reports into a static HTML page and summary SVG"
+    )
+    report.add_argument("--reports", type=Path, default=Path("reports"))
+    report.add_argument("--html", type=Path, default=Path("reports/index.html"))
+    report.add_argument("--svg", type=Path, default=Path("reports/summary.svg"))
     return parser
 
 
@@ -38,8 +46,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         if args.command == "validate":
             return _validate(args.root)
+        if args.command == "report":
+            return _report(args)
         return _evaluate(args)
-    except (DockerEvaluationError, EvaluationError, SchemaError, OSError, ValueError) as exc:
+    except (
+        DockerEvaluationError,
+        EvaluationError,
+        ReportError,
+        SchemaError,
+        OSError,
+        ValueError,
+    ) as exc:
         print(f"sanka-bench: {exc}")
         return 2
 
@@ -60,6 +77,18 @@ def _validate(root: Path) -> int:
         load_and_validate(path, "candidate")
     print(
         f"validated {len(task_paths)} task(s), {len(candidate_paths)} candidate(s), and 3 schema(s)"
+    )
+    return 0
+
+
+def _report(args: argparse.Namespace) -> int:
+    data = write_report(args.reports.resolve(), args.html.resolve(), args.svg.resolve())
+    migrated = sum(
+        1 for row in data["rows"] if row["covered"] and len(row["migrated"]) == len(row["covered"])
+    )
+    print(
+        f"report: {len(data['tasks'])} task(s), {len(data['rows'])} approach(es), "
+        f"{migrated} approach(es) fully migrated everywhere -> {args.html}"
     )
     return 0
 
