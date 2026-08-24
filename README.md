@@ -45,11 +45,12 @@ envelope caught up with the fixture (sanka PR #17): its untouched
 `--bench-candidate` output passes every hard gate, serving token
 authentication natively without loading DRF.
 
-`drf-fastapi-003` carries noop, compatibility-bridge, and human
-native-reference baselines. Writable nested serializers are outside the
-converter's envelope today (native plan readiness: 57%, every viewset route
-needs manual adaptation), so 003 has no passing converter baseline — the
-benchmark leads the converter again.
+`drf-fastapi-003` carries noop, compatibility-bridge, human
+native-reference, and Sanka native-converter baselines. The converter's
+envelope caught up again (sanka PR #21): writable nested serializers are
+generated natively, and the author's transactional `create()` — business
+rule, rollback and all — is carried over verbatim with its DRF exception
+swapped for a native shim.
 
 The native-target gate is decided by recorded serving evidence, not source
 text. Every candidate scenario is served in a fresh guarded process that arms
