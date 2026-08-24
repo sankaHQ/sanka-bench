@@ -18,6 +18,21 @@ def test_checked_in_task_and_candidates_validate(repository_root: Path, task_dir
         load_and_validate(path, "candidate")
 
 
+def test_candidate_v02_accepts_and_validates_stats() -> None:
+    payload = {
+        "schema_version": "sanka-bench/candidate/v0.2",
+        "id": "agent-run",
+        "kind": "overlay",
+        "overlay": "overlay",
+        "provenance": {"producer": "claude-code", "revision": "model", "command": ""},
+        "stats": {"turns": 36, "duration_seconds": 411.5, "cost_usd": 1.23},
+    }
+    validate_payload(payload, "candidate", label="candidate")
+    payload["stats"] = {"turns": -1}
+    with pytest.raises(SchemaError):
+        validate_payload(payload, "candidate", label="candidate")
+
+
 def test_overlay_candidate_requires_overlay_path() -> None:
     payload = {
         "schema_version": "sanka-bench/candidate/v0.1",

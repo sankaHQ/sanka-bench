@@ -1,5 +1,16 @@
 # Implemented slices
 
+## Coding-agent baselines
+
+Frozen, fully disclosed agent candidates for every task: Claude Code run
+headlessly with a fixed migration contract and the public scenarios, one
+unattended attempt (infrastructure failures may be retried once, disclosed
+verbatim in the candidate's provenance), same model and budget across the
+alone/with-Sanka pair. Candidate schema v0.2 adds an optional ``stats`` block
+(turns, wall time, reported cost) that the evaluator copies into result
+provenance and the report renders beside the tally — the honest comparison
+axis once capable agents pass the synthetic fixtures outright.
+
 ## drf-fastapi-003: nested writes, transactions, validation edges
 
 The third fixture covers the validation and transaction surface:

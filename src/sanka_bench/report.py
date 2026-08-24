@@ -95,6 +95,9 @@ def collect(reports_dir: Path) -> dict[str, Any]:
     for family in families:
         migrated: list[str] = []
         covered: list[str] = []
+        cost_usd = 0.0
+        duration_seconds = 0.0
+        has_stats = False
         for task in tasks:
             entry = cells.get((task, family))
             result = entry and (entry["local"] or entry["docker"])
@@ -103,12 +106,19 @@ def collect(reports_dir: Path) -> dict[str, Any]:
             covered.append(task)
             if result.get("fully_migrated") is True:
                 migrated.append(task)
+            stats = result.get("provenance", {}).get("candidate_stats")
+            if isinstance(stats, dict):
+                has_stats = True
+                cost_usd += float(stats.get("cost_usd") or 0)
+                duration_seconds += float(stats.get("duration_seconds") or 0)
         rows.append(
             {
                 "family": family,
                 "label": family_label(family),
                 "migrated": migrated,
                 "covered": covered,
+                "cost_usd": cost_usd if has_stats else None,
+                "duration_seconds": duration_seconds if has_stats else None,
             }
         )
 
@@ -157,11 +167,19 @@ def _tally_row(row: dict[str, Any], tasks: list[str]) -> str:
                 f'<span class="cell cell-fail" title="{_esc(task)}: not fully migrated"></span>'
             )
     count = f"{len(row['migrated'])}/{len(row['covered'])}" if row["covered"] else "—"
+    stats_note = ""
+    if row.get("cost_usd") is not None:
+        minutes = (row.get("duration_seconds") or 0) / 60
+        stats_note = (
+            f'<span class="tally-stats">${row["cost_usd"]:.2f}'
+            f" · {minutes:.0f} min agent time</span>"
+        )
     return (
         '<div class="tally-row">'
         f'<span class="tally-label">{_esc(row["label"])}</span>'
         f'<span class="tally-cells">{"".join(cells)}</span>'
         f'<span class="tally-count">{_esc(count)}</span>'
+        f"{stats_note}"
         "</div>"
     )
 
@@ -214,6 +232,15 @@ def render_html(data: dict[str, Any]) -> str:
         else "single-runner results"
     )
     versions = ", ".join(data["evaluator_versions"]) or "unknown"
+    agent_note = ""
+    if any(row.get("cost_usd") is not None for row in data["rows"]):
+        agent_note = (
+            '<p class="note">Agent rows are single unattended attempts (pass@1) with the same '
+            "model, turn budget, and contract; the with-Sanka prompt only adds that the Sanka "
+            "CLI exists. Dollar and time figures are the agent's own reported totals across "
+            "the covered tasks. The Sanka native converter and the controls run in seconds at "
+            "no model cost.</p>"
+        )
     bridge_note = ""
     if any(row["family"] == "compatibility-bridge" for row in data["rows"]):
         bridge_note = (
@@ -278,6 +305,10 @@ h3 {{ font: 500 15px/1.4 "IBM Plex Mono", ui-monospace, monospace; margin: 24px 
   font: 500 14px/1 "IBM Plex Mono", ui-monospace, monospace;
   font-variant-numeric: tabular-nums; color: var(--ink-2);
 }}
+.tally-stats {{
+  font: 400 12px/1 "IBM Plex Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums; color: var(--ink-2); opacity: .85;
+}}
 .legend {{ color: var(--ink-2); font-size: 13px; margin-top: 10px; }}
 .legend .cell {{ display: inline-block; vertical-align: -3px; width: 16px; margin-right: 4px; }}
 .table-wrap {{ overflow-x: auto; }}
@@ -322,6 +353,7 @@ never averaged into a compensating score.</p>
 <p class="legend"><span class="cell cell-pass"></span> fully migrated
 &nbsp;&nbsp;<span class="cell cell-fail"></span> failed a hard gate
 &nbsp;&nbsp;one cell per task ({_esc(len(tasks))} task{"s" if len(tasks) != 1 else ""})</p>
+{agent_note}
 {bridge_note}
 <h2>Hard gates by task</h2>
 {tables}

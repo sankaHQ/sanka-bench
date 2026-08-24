@@ -93,6 +93,12 @@ def main() -> int:
     parser.add_argument("--model", default="claude-sonnet-5")
     parser.add_argument("--max-turns", type=int, default=60)
     parser.add_argument("--sanka-bin", type=Path, default=None)
+    parser.add_argument("--attempt", type=int, default=1)
+    parser.add_argument(
+        "--prior-failure",
+        default=None,
+        help="disclosed reason the previous attempt failed (infrastructure retries only)",
+    )
     args = parser.parse_args()
 
     task_dir = args.task.resolve()
@@ -195,7 +201,7 @@ def main() -> int:
                 file=sys.stderr,
             )
             return 1
-        _write_candidate(out_dir, args, agent_version)
+        _write_candidate(out_dir, args, agent_version, stats)
         _write_disclosure(
             out_dir,
             args,
@@ -242,19 +248,32 @@ def _agent_stats(stdout: str) -> dict[str, object]:
     return {}
 
 
-def _write_candidate(out_dir: Path, args: argparse.Namespace, agent_version: str) -> None:
+def _write_candidate(
+    out_dir: Path, args: argparse.Namespace, agent_version: str, stats: dict[str, object]
+) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
-    (out_dir / "candidate.yaml").write_text(
-        "schema_version: sanka-bench/candidate/v0.1\n"
-        f"id: {args.candidate_id}\n"
-        "kind: overlay\n"
-        "overlay: overlay\n"
-        "provenance:\n"
-        "  producer: claude-code\n"
-        f"  revision: {args.model} via {agent_version or 'claude cli'}\n"
-        "  command: scripts/run_agent_candidate.py (prompt and budget in GENERATED.md)\n",
-        encoding="utf-8",
-    )
+    lines = [
+        "schema_version: sanka-bench/candidate/v0.2",
+        f"id: {args.candidate_id}",
+        "kind: overlay",
+        "overlay: overlay",
+        "provenance:",
+        "  producer: claude-code",
+        f"  revision: {args.model} via {agent_version or 'claude cli'}",
+        "  command: scripts/run_agent_candidate.py (prompt and budget in GENERATED.md)",
+    ]
+    duration = stats.get("duration_ms")
+    cost = stats.get("total_cost_usd")
+    turns = stats.get("num_turns")
+    if any(isinstance(value, int | float) for value in (duration, cost, turns)):
+        lines.append("stats:")
+        if isinstance(turns, int | float):
+            lines.append(f"  turns: {int(turns)}")
+        if isinstance(duration, int | float):
+            lines.append(f"  duration_seconds: {round(duration / 1000, 1)}")
+        if isinstance(cost, int | float):
+            lines.append(f"  cost_usd: {round(float(cost), 4)}")
+    (out_dir / "candidate.yaml").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def _write_disclosure(
@@ -276,6 +295,13 @@ def _write_disclosure(
         if modified
         else "none — the add-only contract was respected"
     )
+    attempt_text = str(args.attempt)
+    if args.prior_failure:
+        attempt_text += (
+            f" (previous attempt failed on infrastructure, not agent quality: {args.prior_failure})"
+        )
+    elif args.attempt == 1:
+        attempt_text += " (pass@1; no retries)"
     (out_dir / "GENERATED.md").write_text(
         f"""# Coding-agent baseline provenance: {args.candidate_id}
 
@@ -290,7 +316,7 @@ intervention between prompt and frozen overlay.
 | Turns used | {stats.get("num_turns", "unknown")} |
 | Duration | {minutes} |
 | Reported cost | {cost_text} |
-| Attempts | 1 (pass@1; no retries) |
+| Attempt | {attempt_text} |
 
 Files added by the agent: {len(added)}. Contract-violating modifications to
 existing source files (dropped from the overlay, since candidates are

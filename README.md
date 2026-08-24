@@ -45,6 +45,15 @@ envelope caught up with the fixture (sanka PR #17): its untouched
 `--bench-candidate` output passes every hard gate, serving token
 authentication natively without loading DRF.
 
+Every fixture also carries two frozen coding-agent baselines —
+`claude-code-alone` and `claude-code-with-sanka` — produced unattended by
+`scripts/run_agent_candidate.py` with identical model, turn budget, and
+contract (the with-Sanka prompt only adds that the Sanka CLI exists). Each
+candidate's `GENERATED.md` discloses the prompt verbatim, turns, wall time,
+and reported cost; `make report` renders those figures beside the tally.
+Agent results are empirical, not pinned by tests — the report shows the
+current state.
+
 `drf-fastapi-003` carries noop, compatibility-bridge, human
 native-reference, and Sanka native-converter baselines. The converter's
 envelope caught up again (sanka PR #21): writable nested serializers are
