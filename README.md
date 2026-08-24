@@ -18,12 +18,16 @@ source-code similarity to one preferred implementation.
 Private implementation preview. This repository is not a published benchmark,
 leaderboard, package, or public claim.
 
-Two synthetic fixtures exist. `drf-fastapi-001` covers CRUD and validation;
+Three synthetic fixtures exist. `drf-fastapi-001` covers CRUD and validation;
 `drf-fastapi-002` adds database-backed `TokenAuthentication`, `IsAuthenticated`,
 and object-level permissions (author-or-read-only), with 401-variant,
-403, and `WWW-Authenticate`/`Allow` header scenarios. A native candidate for
-002 must reimplement token authentication without loading DRF — the token
-table stays, read through the retained Django ORM.
+403, and `WWW-Authenticate`/`Allow` header scenarios — a native candidate must
+reimplement token authentication without loading DRF. `drf-fastapi-003` adds
+writable nested serializers with DRF's index-keyed nested error format, a
+transactional create whose business-rule failure must leave the database
+unchanged (the rollback contract is proven by database parity), unique-field
+messages, decimal digit/precision errors with string representation, and
+choice-field errors.
 
 Baselines live at `baselines/<task>/<candidate>/`. The first fixture proves
 the required controls:
@@ -40,6 +44,12 @@ native-reference, and Sanka native-converter baselines. The converter's
 envelope caught up with the fixture (sanka PR #17): its untouched
 `--bench-candidate` output passes every hard gate, serving token
 authentication natively without loading DRF.
+
+`drf-fastapi-003` carries noop, compatibility-bridge, and human
+native-reference baselines. Writable nested serializers are outside the
+converter's envelope today (native plan readiness: 57%, every viewset route
+needs manual adaptation), so 003 has no passing converter baseline — the
+benchmark leads the converter again.
 
 The native-target gate is decided by recorded serving evidence, not source
 text. Every candidate scenario is served in a fresh guarded process that arms
