@@ -32,10 +32,19 @@ GATE_ORDER = (
     ("deterministic", "DET", "Deterministic across clean runs"),
 )
 
-_FAMILY_ORDER = ("noop", "compatibility-bridge", "sanka-native", "native-reference")
+_FAMILY_ORDER = (
+    "noop",
+    "compatibility-bridge",
+    "claude-code-alone",
+    "claude-code-with-sanka",
+    "sanka-native",
+    "native-reference",
+)
 _FAMILY_LABELS = {
     "noop": "No-op (unchanged source)",
     "compatibility-bridge": "Sanka compatibility bridge",
+    "claude-code-alone": "Claude Code, agent alone",
+    "claude-code-with-sanka": "Claude Code + Sanka",
     "sanka-native": "Sanka native converter",
     "native-reference": "Human native reference",
 }
