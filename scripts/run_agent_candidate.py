@@ -77,9 +77,12 @@ It can generate a native FastAPI candidate for you:
     {sanka} plan --to fastapi
     {sanka} apply --root . --bench-candidate ./bench-candidate
 
-The bench-candidate overlay contains target_app.py and its supporting files;
-copy them to the repository root as your deliverable, verify the scenarios,
-and adjust them if needed.
+The complete generated deliverable is the contents of bench-candidate/overlay/.
+Copy every file and directory from that overlay to the repository root, for
+example with `cp -R bench-candidate/overlay/. .`. This includes non-Python
+runtime files such as sanka-manifest.json and requirements.txt; do not copy
+only target_app.py or sanka_*.py. Then verify the scenarios and adjust the
+copied files if needed.
 """
 
 EXCLUDED_PARTS = {

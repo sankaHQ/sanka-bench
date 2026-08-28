@@ -61,6 +61,9 @@ def test_prompts_differ_only_by_the_sanka_paragraph(harness: object) -> None:
     assert "must not import" in core
     # the +Sanka variant is strictly additive: same contract, one extra tool
     assert "scan" in extra and "plan --to fastapi" in extra and "bench-candidate" in extra
+    assert "cp -R bench-candidate/overlay/. ." in extra
+    assert "sanka-manifest.json" in extra
+    assert "do not copy\nonly target_app.py" in extra
     assert "contract" not in extra.lower()
 
 
