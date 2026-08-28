@@ -46,12 +46,12 @@ Use it to run the original app and your app side by side (django test client
 vs fastapi TestClient) and verify every scenario before you finish. Do not
 consider the task done until every scenario matches exactly.
 
-The Sanka migration CLI is installed at: <workspace>/sanka/.venv/bin/sanka
+The Sanka migration CLI is installed at: <local-path>
 It can generate a native FastAPI candidate for you:
 
-    <workspace>/sanka/.venv/bin/sanka scan .
-    <workspace>/sanka/.venv/bin/sanka plan --to fastapi
-    <workspace>/sanka/.venv/bin/sanka apply --root . --bench-candidate ./bench-candidate
+    <local-path> scan .
+    <local-path> plan --to fastapi
+    <local-path> apply --root . --bench-candidate ./bench-candidate
 
 The bench-candidate overlay contains target_app.py and its supporting files;
 copy them to the repository root as your deliverable, verify the scenarios,
