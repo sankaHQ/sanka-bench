@@ -11,6 +11,45 @@ alone/with-Sanka pair. Candidate schema v0.2 adds an optional ``stats`` block
 provenance and the report renders beside the tally — the honest comparison
 axis once capable agents pass the synthetic fixtures outright.
 
+## drf-fastapi-004: signal-driven side effects, hidden scenario split
+
+The fourth fixture is the first hard-tier task: its observable behavior
+lives partly outside the views, in Django signals, and its graded scenario
+set is deliberately wider than the public one.
+
+- `post_save(LedgerEntry, created=True)` and `post_delete` receivers —
+  connected in `AppConfig.ready` — keep an API-read-only `Account.balance`
+  (via `F()` expressions) and an append-only `AuditLog` in step; the audit
+  table has no writing endpoint but a read-only list endpoint;
+- a custom `POST /accounts/{pk}/transfer/` action locks both accounts in pk
+  order inside `transaction.atomic`, validates amount and funds, and writes
+  two ledger entries plus one `transfer` audit row on success; insufficient
+  funds must leave all three tables untouched (proven by database parity);
+- deleting an account cascades its entries and fires the receivers per
+  cascaded row in Django's descending-pk deletion order — the surviving
+  audit rows pin that order;
+- the driver supports request chains (`setup` requests before the graded
+  request, each served in a fresh guarded process against the shared
+  scenario database), which also forces real persistence between serving
+  processes;
+- the split: `public-tests/scenarios.json` carries 5 scenarios, the graded
+  `evaluation/scenarios.json` a 17-scenario superset. The 12 hidden
+  scenarios cover balance read-only enforcement, multi-entry `F()`
+  composition, reverse postings on delete, rollback, transfer error shapes,
+  audit ordering, cascade audit, and Decimal string forms. A visible-only
+  probe passes all 5 public scenarios and fails 10 of the 12 hidden ones,
+  so saturating the public surface no longer saturates the task.
+
+All response formats were captured empirically from the live source
+application before the native reference was written. The reference serves
+through settings that install the ledger app via a plain `AppConfig`
+(source receivers never connected) and reapplies every side effect
+explicitly in the same transaction as its cause. The shipped converter
+(`sanka-cli` 0.1.8 / `sanka-migrate` 0.1.0a8) honestly reports 54% native
+readiness — mixin-composed viewsets and custom actions are outside the
+envelope — and its frozen output fails at 5/17 behavior parity, so 004
+ships without a passing converter baseline.
+
 ## drf-fastapi-003: nested writes, transactions, validation edges
 
 The third fixture covers the validation and transaction surface:

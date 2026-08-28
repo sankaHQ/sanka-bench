@@ -16,7 +16,7 @@ source-code similarity to one preferred implementation.
 ## Status
 
 Published benchmark, early and growing. The current suite is **v0: one lane
-(`drf-fastapi`), three tasks, 42 verifiable endpoints**. Recorded results —
+(`drf-fastapi`), four tasks, 68 verifiable endpoints**. Recorded results —
 six models, with and without the Sanka engine, pass@1 — live at
 [sanka.com/developer/bench](https://sanka.com/developer/bench). Numbers on
 that page come only from runs whose frozen candidates, evaluator reports, and
@@ -32,7 +32,7 @@ adding tasks. Lanes are scored separately — framework, data, and object
 lanes will never be blended into one number, because their route units are
 not commensurable. Score changes bump the score version (current: v0.2).
 
-Three synthetic fixtures exist. `drf-fastapi-001` covers CRUD and validation;
+Four synthetic fixtures exist. `drf-fastapi-001` covers CRUD and validation;
 `drf-fastapi-002` adds database-backed `TokenAuthentication`, `IsAuthenticated`,
 and object-level permissions (author-or-read-only), with 401-variant,
 403, and `WWW-Authenticate`/`Allow` header scenarios — a native candidate must
@@ -41,7 +41,18 @@ writable nested serializers with DRF's index-keyed nested error format, a
 transactional create whose business-rule failure must leave the database
 unchanged (the rollback contract is proven by database parity), unique-field
 messages, decimal digit/precision errors with string representation, and
-choice-field errors.
+choice-field errors. `drf-fastapi-004` is the first hard-tier fixture and the
+first with a visible/hidden scenario split: its ledger behavior lives partly
+in Django signals (`post_save`/`post_delete` keep an API-read-only
+`Account.balance` and an append-only audit trail in step, connected in
+`AppConfig.ready`), plus a custom transfer action that locks both accounts in
+pk order and rolls back on insufficient funds, and cascade deletes whose
+audit rows record Django's descending-pk `post_delete` order. Candidates see
+5 public scenarios; the evaluator grades a 17-scenario superset (12 hidden)
+covering balance read-only enforcement, `F()` composition, reverse postings,
+rollback-by-database-parity, audit ordering, and Decimal string forms — a
+probe candidate implementing only the visible surface passes all 5 public
+scenarios and fails 10 of the 12 hidden ones.
 
 Baselines live at `baselines/<task>/<candidate>/`. The first fixture proves
 the required controls:
@@ -74,6 +85,18 @@ envelope caught up again (sanka PR #21): writable nested serializers are
 generated natively, and the author's transactional `create()` — business
 rule, rollback and all — is carried over verbatim with its DRF exception
 swapped for a native shim.
+
+`drf-fastapi-004` carries noop, compatibility-bridge, human
+native-reference, and Sanka native-converter baselines, all produced with
+the shipped engine (`sanka-cli` 0.1.8 / `sanka-migrate` 0.1.0a8). The
+bridge proxies the signals along with everything else, so it passes
+behavior and database parity while failing the anti-proxy gate; the native
+reference reimplements every signal side effect explicitly in a serving
+process whose ledger app config never connects the source receivers. The
+converter's native plan honestly reports 54% readiness — mixin-composed
+viewsets and the `transfer` custom action are outside today's envelope —
+and its untouched output fails evaluation at 5/17 behavior parity: the
+benchmark leads the converter again.
 
 The native-target gate is decided by recorded serving evidence, not source
 text. Every candidate scenario is served in a fresh guarded process that arms
@@ -128,14 +151,15 @@ The suite is deliberately small and verification-heavy today; the plan is to
 grow it the same way it started — every task ships with its behavior oracle,
 public scenarios, and hard gates, never as a prompt list.
 
-1. **Hard tier (next ~5 tasks).** The current three tasks saturate at 100%
-   for strong models; these are designed to break that, each targeting a
+1. **Hard tier (~5 tasks).** The first three tasks saturate at 100% for
+   strong models; these are designed to break that, each targeting a
    failure mode already observed in recorded runs or real-app scans:
    auth-and-permission matrices (multiple authentication schemes, per-action
    and object-level permissions, 401/403 branch coverage); signal-driven
    side-effects and transaction boundaries (`post_save` chains, `F()`
-   updates, `select_for_update` — database-mutation parity does the work);
-   deep writable-nested graphs with DRF's index-keyed error shapes; exact
+   updates, `select_for_update` — database-mutation parity does the work;
+   landed as `drf-fastapi-004`, the first task with a hidden scenario
+   split); deep writable-nested graphs with DRF's index-keyed error shapes; exact
    response-shape parity (cursor pagination, ordering/search filters,
    Decimal string forms, timezone boundaries, conditional responses); and a
    legacy mixed-style app (function views + `APIView` + ViewSets, regex and
@@ -144,7 +168,7 @@ public scenarios, and hard gates, never as a prompt list.
    OSS Django apps (readthedocs and peering-manager are already pinned as
    corpus candidates in
    [sanka-examples](https://github.com/sankaHQ/sanka-examples)), lifting the
-   suite from 42 endpoints toward hundreds.
+   suite from 68 endpoints toward hundreds.
 3. **Scale.** On the order of fifty tasks across tiers, with the task list
    published the way mature benchmarks publish theirs.
 4. **New lanes.** Data-systems migrations (e.g. `markdown-sqlite`,
