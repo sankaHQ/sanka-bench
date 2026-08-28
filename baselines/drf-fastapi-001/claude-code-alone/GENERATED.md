@@ -41,7 +41,7 @@ Deliverable contract (an automated evaluator enforces all of it):
    the existing settings module; reuse that mechanism unchanged.
 
 A Python interpreter with django, djangorestframework, and fastapi installed
-is available at: /Users/haegwan/Sites/sanka-project/sanka-bench/.venv/bin/python3
+is available at: <repo>/.venv/bin/python3
 Use it to run the original app and your app side by side (django test client
 vs fastapi TestClient) and verify every scenario before you finish. Do not
 consider the task done until every scenario matches exactly.

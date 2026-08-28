@@ -41,17 +41,17 @@ Deliverable contract (an automated evaluator enforces all of it):
    the existing settings module; reuse that mechanism unchanged.
 
 A Python interpreter with django, djangorestframework, and fastapi installed
-is available at: /Users/haegwan/Sites/sanka-project/sanka-bench/.venv/bin/python3
+is available at: <repo>/.venv/bin/python3
 Use it to run the original app and your app side by side (django test client
 vs fastapi TestClient) and verify every scenario before you finish. Do not
 consider the task done until every scenario matches exactly.
 
-The Sanka migration CLI is installed at: /Users/haegwan/Sites/sanka-project/sanka/.venv/bin/sanka
+The Sanka migration CLI is installed at: <local-path>
 It can generate a native FastAPI candidate for you:
 
-    /Users/haegwan/Sites/sanka-project/sanka/.venv/bin/sanka scan .
-    /Users/haegwan/Sites/sanka-project/sanka/.venv/bin/sanka plan --to fastapi
-    /Users/haegwan/Sites/sanka-project/sanka/.venv/bin/sanka apply --root . --bench-candidate ./bench-candidate
+    <local-path> scan .
+    <local-path> plan --to fastapi
+    <local-path> apply --root . --bench-candidate ./bench-candidate
 
 The bench-candidate overlay contains target_app.py and its supporting files;
 copy them to the repository root as your deliverable, verify the scenarios,
