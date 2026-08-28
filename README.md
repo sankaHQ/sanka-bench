@@ -121,6 +121,23 @@ uv run python scripts/run_agent_candidate.py \
 # claude-code-with-sanka additionally takes --sanka-bin <path to sanka>
 ```
 
+The same harness can drive Codex against OpenAI or a supported
+OpenAI-compatible provider. Codex runs use an isolated `CODEX_HOME`, the
+Responses API, the provider's environment-variable API key, measured wall
+time, and token-based cost only when explicit per-million prices are supplied:
+
+```bash
+uv run python scripts/run_agent_candidate.py \
+  --agent codex \
+  --agent-bin codex \
+  --provider openai \
+  --model gpt-5.3-codex \
+  --task tasks/drf-fastapi/drf-fastapi-001 \
+  --candidate-id codex-gpt-5-3-codex-with-sanka \
+  --sanka-bin ../sanka/.venv/bin/sanka \
+  --out baselines/drf-fastapi-001/codex-gpt-5-3-codex-with-sanka
+```
+
 The two configurations share the same model, budget, and contract; the
 with-Sanka prompt is strictly additive — it only tells the agent the Sanka
 CLI exists. The frozen overlay is graded by the same evaluator as every

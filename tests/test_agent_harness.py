@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -60,4 +61,44 @@ def test_prompts_differ_only_by_the_sanka_paragraph(harness: object) -> None:
     assert "must not import" in core
     # the +Sanka variant is strictly additive: same contract, one extra tool
     assert "scan" in extra and "plan --to fastapi" in extra and "bench-candidate" in extra
+    assert "cp -R bench-candidate/overlay/. ." in extra
+    assert "sanka-manifest.json" in extra
+    assert "do not copy\nonly target_app.py" in extra
     assert "contract" not in extra.lower()
+
+
+def test_codex_command_uses_responses_and_custom_openai_provider(
+    harness: object, tmp_path: Path
+) -> None:
+    command = harness._codex_command(  # type: ignore[attr-defined]
+        SimpleNamespace(agent_bin="codex", model="gpt-test", provider="openai"),
+        "migrate it",
+        tmp_path,
+    )
+    config = (tmp_path / "config.toml").read_text(encoding="utf-8")
+    assert 'wire_api = "responses"' in config
+    assert "[model_providers.openai-custom]" in config
+    assert 'env_key = "OPENAI_API_KEY"' in config
+    assert "--json" in command
+    assert 'model_provider="openai-custom"' in command
+    assert command[-1] == "migrate it"
+
+
+def test_codex_stats_reads_usage_and_computes_disclosed_cost(harness: object) -> None:
+    event = json.dumps(
+        {
+            "type": "turn.completed",
+            "usage": {"input_tokens": 2_000_000, "output_tokens": 500_000},
+        }
+    )
+    stats = harness._codex_stats(  # type: ignore[attr-defined]
+        event,
+        SimpleNamespace(price_in=1.0, price_out=2.0),
+        12_345.0,
+    )
+    assert stats["num_turns"] == 1
+    assert stats["duration_ms"] == 12_345.0
+    assert stats["input_tokens"] == 2_000_000
+    assert stats["output_tokens"] == 500_000
+    assert stats["total_cost_usd"] == 3.0
+    assert stats["is_error"] is False
