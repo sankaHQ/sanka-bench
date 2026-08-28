@@ -14,6 +14,21 @@ Two configurations, identical except for one paragraph of the prompt:
 - ``--candidate-id claude-code-with-sanka`` (with ``--sanka-bin``) — the same
   agent, same budget, same contract, plus the Sanka CLI and three lines
   telling it that Sanka can generate the native candidate.
+
+Two agent families share the same contract, prompt, and freezing logic:
+
+- ``--agent claude-code`` (default) drives the Claude CLI headlessly and uses
+  its self-reported turns, duration, and cost;
+- ``--agent codex`` drives OpenAI's Codex CLI (``codex exec``) against the
+  OpenAI API or any OpenAI-compatible provider (``--provider deepinfra``,
+  ``fireworks``, ``together``). Codex does not self-report dollar cost, so the
+  run records measured wall-clock and token usage, and computes cost from the
+  per-model prices passed via ``--price-in``/``--price-out`` (USD per million
+  tokens) — the disclosure names that basis explicitly.
+
+Candidate ids stay free-form (``<agent>-<model-slug>-alone`` /
+``...-with-sanka``); the ``*-with-sanka`` suffix selects the extra prompt
+paragraph.
 """
 
 from __future__ import annotations
@@ -25,6 +40,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 PROMPT_CORE = """Migrate this Django REST Framework application to FastAPI, natively.
@@ -86,11 +102,30 @@ def main() -> int:
     parser.add_argument(
         "--candidate-id",
         required=True,
-        choices=("claude-code-alone", "claude-code-with-sanka"),
+        help="<agent>-<model-slug>-alone or ...-with-sanka",
     )
     parser.add_argument("--out", type=Path, required=True)
-    parser.add_argument("--agent-bin", default="claude")
+    parser.add_argument("--agent", default="claude-code", choices=("claude-code", "codex"))
+    parser.add_argument("--agent-bin", default=None)
     parser.add_argument("--model", default="claude-sonnet-5")
+    parser.add_argument(
+        "--provider",
+        default="openai",
+        choices=("openai", "deepinfra", "fireworks", "together"),
+        help="codex only: which OpenAI-compatible API serves the model",
+    )
+    parser.add_argument(
+        "--price-in",
+        type=float,
+        default=None,
+        help="codex only: USD per million input tokens, for computed cost",
+    )
+    parser.add_argument(
+        "--price-out",
+        type=float,
+        default=None,
+        help="codex only: USD per million output tokens, for computed cost",
+    )
     parser.add_argument("--max-turns", type=int, default=60)
     parser.add_argument("--sanka-bin", type=Path, default=None)
     parser.add_argument("--attempt", type=int, default=1)
@@ -107,9 +142,15 @@ def main() -> int:
     if not source.is_dir() or not scenarios.is_file():
         print(f"not a benchmark task: {task_dir}", file=sys.stderr)
         return 2
-    if args.candidate_id == "claude-code-with-sanka" and args.sanka_bin is None:
-        print("claude-code-with-sanka requires --sanka-bin", file=sys.stderr)
+    with_sanka = args.candidate_id.endswith("-with-sanka")
+    if not with_sanka and not args.candidate_id.endswith("-alone"):
+        print("candidate id must end in -alone or -with-sanka", file=sys.stderr)
         return 2
+    if with_sanka and args.sanka_bin is None:
+        print(f"{args.candidate_id} requires --sanka-bin", file=sys.stderr)
+        return 2
+    if args.agent_bin is None:
+        args.agent_bin = "claude" if args.agent == "claude-code" else "codex"
 
     agent_version = subprocess.run(
         [args.agent_bin, "--version"], capture_output=True, text=True, check=False
@@ -123,7 +164,7 @@ def main() -> int:
         shutil.copy2(scenarios, public_tests / "scenarios.json")
 
         prompt = PROMPT_CORE.format(python=sys.executable)
-        if args.candidate_id == "claude-code-with-sanka":
+        if with_sanka:
             prompt += PROMPT_SANKA.format(sanka=args.sanka_bin.resolve())
 
         env = dict(os.environ)
@@ -134,8 +175,12 @@ def main() -> int:
             "CLAUDE_CODE_ENTRYPOINT",
         ):
             env.pop(name, None)
-        outcome = subprocess.run(
-            [
+        if args.agent == "codex":
+            codex_home = Path(temp) / "codex-home"
+            command = _codex_command(args, prompt, codex_home)
+            env["CODEX_HOME"] = str(codex_home)
+        else:
+            command = [
                 args.agent_bin,
                 "-p",
                 prompt,
@@ -146,20 +191,32 @@ def main() -> int:
                 "--output-format",
                 "json",
                 "--dangerously-skip-permissions",
-            ],
+            ]
+        started = time.monotonic()
+        outcome = subprocess.run(
+            command,
             cwd=workspace,
             env=env,
+            stdin=subprocess.DEVNULL,
             capture_output=True,
             text=True,
             timeout=3600,
             check=False,
         )
-        stats = _agent_stats(outcome.stdout)
+        measured_ms = (time.monotonic() - started) * 1000
+        if args.agent == "codex":
+            stats = _codex_stats(outcome.stdout, args, measured_ms)
+        else:
+            stats = _agent_stats(outcome.stdout)
         out_dir = args.out.resolve()
         out_dir.mkdir(parents=True, exist_ok=True)
         raw = outcome.stdout.strip().splitlines()
         if raw:
             (out_dir / "agent-result.json").write_text(raw[-1] + "\n", encoding="utf-8")
+        if outcome.stdout:
+            (out_dir / "agent-log.jsonl").write_text(outcome.stdout, encoding="utf-8")
+        if outcome.stderr:
+            (out_dir / "agent-stderr.log").write_text(outcome.stderr, encoding="utf-8")
         if outcome.returncode != 0 and not stats:
             detail = outcome.stderr.strip()[:2000] or "no output"
             print(f"agent run failed: {detail}", file=sys.stderr)
@@ -219,6 +276,116 @@ def main() -> int:
     return 0
 
 
+PROVIDER_BASE_URLS = {
+    "openai": "https://api.openai.com/v1",
+    "deepinfra": "https://api.deepinfra.com/v1/openai",
+    "fireworks": "https://api.fireworks.ai/inference/v1",
+    "together": "https://api.together.xyz/v1",
+}
+PROVIDER_ENV_KEYS = {
+    "openai": "OPENAI_API_KEY",
+    "deepinfra": "DEEPINFRA_API_KEY",
+    "fireworks": "FIREWORKS_API_KEY",
+    "together": "TOGETHER_API_KEY",
+}
+
+
+def _codex_command(args: argparse.Namespace, prompt: str, codex_home: Path) -> list[str]:
+    codex_home.mkdir(parents=True, exist_ok=True)
+    # The isolated CODEX_HOME has no login session, so every provider —
+    # OpenAI included — authenticates through an env-var API key declared on
+    # a custom model_providers entry. Codex CLI >= 0.150 refuses
+    # `wire_api = "chat"` outright, so every provider speaks the responses
+    # wire API; it also reserves the built-in `openai` provider id (and the
+    # built-in provider sends no bearer from a loginless CODEX_HOME), so the
+    # OpenAI entry is registered as `openai-custom` against the same base URL.
+    provider_id = "openai-custom" if args.provider == "openai" else args.provider
+    config = (
+        f'preferred_auth_method = "apikey"\n'
+        f"[model_providers.{provider_id}]\n"
+        f'name = "{provider_id}"\n'
+        f'base_url = "{PROVIDER_BASE_URLS[args.provider]}"\n'
+        f'env_key = "{PROVIDER_ENV_KEYS[args.provider]}"\n'
+        f'wire_api = "responses"\n'
+    )
+    (codex_home / "config.toml").write_text(config, encoding="utf-8")
+    command = [
+        args.agent_bin,
+        "exec",
+        "--model",
+        args.model,
+        "--json",
+        "--skip-git-repo-check",
+        "--dangerously-bypass-approvals-and-sandbox",
+    ]
+    command += ["--config", f'model_provider="{provider_id}"']
+    command.append(prompt)
+    return command
+
+
+def _codex_stats(stdout: str, args: argparse.Namespace, measured_ms: float) -> dict[str, object]:
+    turns = 0
+    input_tokens = 0
+    output_tokens = 0
+    is_error = False
+    last_error: str | None = None
+    for line in stdout.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(event, dict):
+            continue
+        kind = str(event.get("type") or event.get("msg", {}).get("type") or "")
+        if "turn" in kind and kind.endswith("completed"):
+            turns += 1
+        if kind in {"error", "turn.failed"}:
+            is_error = True
+            last_error = json.dumps(event)[:500]
+        usage = _find_usage(event)
+        if usage:
+            input_tokens = max(input_tokens, int(usage.get("input_tokens") or 0)) or input_tokens
+            output_tokens = (
+                max(output_tokens, int(usage.get("output_tokens") or 0)) or output_tokens
+            )
+    cost: float | None = None
+    basis = "measured wall-clock; token usage unavailable"
+    if input_tokens or output_tokens:
+        basis = f"computed from token usage ({input_tokens} in / {output_tokens} out)"
+        if args.price_in is not None and args.price_out is not None:
+            cost = (input_tokens * args.price_in + output_tokens * args.price_out) / 1_000_000
+            basis += f" at ${args.price_in}/M in, ${args.price_out}/M out"
+    stats: dict[str, object] = {
+        "num_turns": turns or None,
+        "duration_ms": measured_ms,
+        "total_cost_usd": cost,
+        "is_error": is_error,
+        "subtype": "codex-exec",
+        "result": last_error,
+        "cost_basis": basis,
+        "input_tokens": input_tokens or None,
+        "output_tokens": output_tokens or None,
+    }
+    return stats
+
+
+def _find_usage(event: dict) -> dict | None:
+    for key in ("usage", "token_usage"):
+        value = event.get(key)
+        if isinstance(value, dict):
+            return value
+    info = event.get("info") or event.get("msg") or {}
+    if isinstance(info, dict):
+        for key in ("usage", "token_usage", "total_token_usage"):
+            value = info.get(key)
+            if isinstance(value, dict):
+                return value
+    return None
+
+
 def _excluded(relative: Path) -> bool:
     if any(part in EXCLUDED_PARTS for part in relative.parts):
         return True
@@ -258,7 +425,7 @@ def _write_candidate(
         "kind: overlay",
         "overlay: overlay",
         "provenance:",
-        "  producer: claude-code",
+        f"  producer: {args.agent}",
         f"  revision: {args.model} via {agent_version or 'claude cli'}",
         "  command: scripts/run_agent_candidate.py (prompt and budget in GENERATED.md)",
     ]
@@ -302,6 +469,9 @@ def _write_disclosure(
         )
     elif args.attempt == 1:
         attempt_text += " (pass@1; no retries)"
+    agent_label = "Claude Code" if args.agent == "claude-code" else "Codex CLI"
+    provider = "anthropic" if args.agent == "claude-code" else args.provider
+    version = agent_version or args.agent_bin
     (out_dir / "GENERATED.md").write_text(
         f"""# Coding-agent baseline provenance: {args.candidate_id}
 
@@ -310,7 +480,9 @@ intervention between prompt and frozen overlay.
 
 | Disclosure | Value |
 |---|---|
-| Agent | Claude Code (`{agent_version or "claude cli"}`) |
+| Agent | {agent_label} (`{version}`) |
+| Provider | {provider} |
+| Cost basis | {stats.get("cost_basis", "agent-reported")} |
 | Model | `{args.model}` |
 | Turn budget | {args.max_turns} |
 | Turns used | {stats.get("num_turns", "unknown")} |
