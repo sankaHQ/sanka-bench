@@ -16,7 +16,7 @@ source-code similarity to one preferred implementation.
 ## Status
 
 Published benchmark, early and growing. The current suite is **v0: one lane
-(`drf-fastapi`), seven tasks, 112 verifiable endpoints**. Recorded results —
+(`drf-fastapi`), eight tasks, 148 verifiable endpoints**. Recorded results —
 six models, with and without the Sanka engine, pass@1 — live at
 [sanka.com/developer/bench](https://sanka.com/developer/bench). Numbers on
 that page come only from runs whose frozen candidates, evaluator reports, and
@@ -32,7 +32,7 @@ adding tasks. Lanes are scored separately — framework, data, and object
 lanes will never be blended into one number, because their route units are
 not commensurable. Score changes bump the score version (current: v0.2).
 
-Seven synthetic fixtures exist. `drf-fastapi-001` covers CRUD and validation;
+Eight synthetic fixtures exist. `drf-fastapi-001` covers CRUD and validation;
 `drf-fastapi-002` adds database-backed `TokenAuthentication`, `IsAuthenticated`,
 and object-level permissions (author-or-read-only), with 401-variant,
 403, and `WWW-Authenticate`/`Allow` header scenarios — a native candidate must
@@ -84,6 +84,16 @@ three-page walks, query-preserving envelopes, malformed cursors, directional
 ties, empty searches, decimal/timezone normalization, wildcard/list ETags, and
 stale versus current validators after mutation. A visible-only probe passes all
 6 public scenarios and fails 19 of the 24 hidden scenarios.
+`drf-fastapi-008` migrates one `Entry` domain exposed simultaneously through
+function views, classic `APIView` classes with a hand-rolled dispatch lifecycle,
+and a router-backed `ModelViewSet`. Regex lookups accept dots, plus signs, and
+at-signs; a formatted route table appended after the main URL list triggers
+`SANKA_DRF_DYNAMIC_ROUTE`; and each view style has a distinct slash contract.
+Candidates see 8 canonical scenarios while the evaluator grades a 32-scenario
+superset (24 hidden) covering alternate slash redirects, a second non-slug code,
+cross-style create/update/delete visibility, validation failures, and rejected
+full-update rollback. A visible-only probe passes all 8 public scenarios and
+fails 20 of the 24 hidden scenarios.
 
 Baselines live at `baselines/<task>/<candidate>/`. The first fixture proves
 the required controls:
@@ -155,6 +165,15 @@ routes `SANKA_DRF_VIEWSET_OVERRIDES_UNSUPPORTED` because `retrieve()` and
 boots but matches 0/30 responses and 21/30 database states; cursor, filter,
 representation, and conditional-response behavior is not hand-repaired.
 
+`drf-fastapi-008` carries the same four controls. Its compatibility bridge
+matches all 32 HTTP and database outcomes but fails native serving evidence;
+the DRF-free reference passes every hard gate. The pinned engine reports 3%
+native readiness: it emits 1 of 29 non-alias routes, drops 7 format-suffix
+aliases, and marks the remaining 28 routes unsupported across legacy view kind,
+custom lookup-field, and dynamic-regex reasons. The untouched output boots but
+matches 0/32 responses and 19/32 database states; no generated route was
+hand-repaired.
+
 The native-target gate is decided by recorded serving evidence, not source
 text. Every candidate scenario is served in a fresh guarded process that arms
 an un-removable audit hook before any candidate code loads. The hook records
@@ -222,7 +241,7 @@ public scenarios, and hard gates, never as a prompt list.
    pagination, ordering/search filters, Decimal string forms, timezone
    boundaries, conditional responses; landed as `drf-fastapi-007`); and a
    legacy mixed-style app (function views + `APIView` + ViewSets, regex and
-   dynamic routes).
+   dynamic routes; landed as `drf-fastapi-008`).
 2. **Real-application tasks.** Oracle-ized slices of permissively licensed
    OSS Django apps (readthedocs and peering-manager are already pinned as
    corpus candidates in
