@@ -16,7 +16,7 @@ source-code similarity to one preferred implementation.
 ## Status
 
 Published benchmark, early and growing. The current suite is **v0: one lane
-(`drf-fastapi`), six tasks, 98 verifiable endpoints**. Recorded results —
+(`drf-fastapi`), seven tasks, 112 verifiable endpoints**. Recorded results —
 six models, with and without the Sanka engine, pass@1 — live at
 [sanka.com/developer/bench](https://sanka.com/developer/bench). Numbers on
 that page come only from runs whose frozen candidates, evaluator reports, and
@@ -32,7 +32,7 @@ adding tasks. Lanes are scored separately — framework, data, and object
 lanes will never be blended into one number, because their route units are
 not commensurable. Score changes bump the score version (current: v0.2).
 
-Six synthetic fixtures exist. `drf-fastapi-001` covers CRUD and validation;
+Seven synthetic fixtures exist. `drf-fastapi-001` covers CRUD and validation;
 `drf-fastapi-002` adds database-backed `TokenAuthentication`, `IsAuthenticated`,
 and object-level permissions (author-or-read-only), with 401-variant,
 403, and `WWW-Authenticate`/`Allow` header scenarios — a native candidate must
@@ -73,6 +73,17 @@ middle-level SKU and deepest-level adjustment uniqueness, failures after the
 Nth child has already been written, and rollback of parent changes plus deleted
 children. A visible-only probe passes all 7 public scenarios and fails 25 of
 the 25 hidden scenarios.
+`drf-fastapi-007` makes response representation itself part of the contract:
+encoded cursor pagination and page walking compose with search and ordering,
+ties use deterministic primary-key direction, Decimal fields remain fixed-scale
+strings, aware datetimes render in `Asia/Tokyo`, and detail responses carry
+content-derived ETags. Matching `If-None-Match` requests return an empty 304
+with exact cache headers. Candidates see 6 scenarios while the evaluator grades
+a 30-scenario superset (24 hidden) covering stable cursors after inserts,
+three-page walks, query-preserving envelopes, malformed cursors, directional
+ties, empty searches, decimal/timezone normalization, wildcard/list ETags, and
+stale versus current validators after mutation. A visible-only probe passes all
+6 public scenarios and fails 19 of the 24 hidden scenarios.
 
 Baselines live at `baselines/<task>/<candidate>/`. The first fixture proves
 the required controls:
@@ -134,6 +145,15 @@ all 6 order CRUD routes `SANKA_DRF_SERIALIZER_SEMANTICS_UNSUPPORTED`, and emits
 only the API root. Its untouched output boots but matches 0/32 responses and
 22/32 database states; the nested serializer and transactional replacement
 logic are not hand-repaired.
+
+`drf-fastapi-007` carries the same four controls. Its compatibility bridge
+matches all 30 HTTP and database outcomes but fails native serving evidence;
+the DRF-free reference passes every hard gate. The pinned engine reports 14%
+native readiness: it drops 7 format-suffix aliases, marks all 6 record CRUD
+routes `SANKA_DRF_VIEWSET_OVERRIDES_UNSUPPORTED` because `retrieve()` and
+`update()` are overridden, and emits only the API root. The untouched output
+boots but matches 0/30 responses and 21/30 database states; cursor, filter,
+representation, and conditional-response behavior is not hand-repaired.
 
 The native-target gate is decided by recorded serving evidence, not source
 text. Every candidate scenario is served in a fresh guarded process that arms
@@ -198,9 +218,9 @@ public scenarios, and hard gates, never as a prompt list.
    updates, `select_for_update` — database-mutation parity does the work;
    landed as `drf-fastapi-004`, the first task with a hidden scenario
    split); deep writable-nested graphs with DRF's index-keyed error shapes
-   (landed as `drf-fastapi-006`); exact
-   response-shape parity (cursor pagination, ordering/search filters,
-   Decimal string forms, timezone boundaries, conditional responses); and a
+   (landed as `drf-fastapi-006`); exact response-shape parity (cursor
+   pagination, ordering/search filters, Decimal string forms, timezone
+   boundaries, conditional responses; landed as `drf-fastapi-007`); and a
    legacy mixed-style app (function views + `APIView` + ViewSets, regex and
    dynamic routes).
 2. **Real-application tasks.** Oracle-ized slices of permissively licensed

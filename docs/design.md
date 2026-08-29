@@ -11,6 +11,40 @@ alone/with-Sanka pair. Candidate schema v0.2 adds an optional ``stats`` block
 provenance and the report renders beside the tally — the honest comparison
 axis once capable agents pass the synthetic fixtures outright.
 
+## drf-fastapi-007: response-shape precision and stable cursors
+
+The seventh fixture treats representation details as observable migration
+behavior rather than presentation polish.
+
+- a two-row `CursorPagination` envelope walks records by `-posted_at, -id`.
+  Search and ordering filters compose on the same collection, and a custom
+  ordering backend appends `id` in the requested direction so ties are stable;
+- request chains prove that an encoded cursor obtained before a newer or
+  middle-sorted insert still yields the same next logical page. Exact `next`
+  and `previous` URLs preserve filter query parameters, and malformed cursors
+  retain DRF's 404 body;
+- `DecimalField` values remain strings with two places, including `"0.00"`
+  and numeric input normalized to `"10.00"`. UTC and offset-aware inputs are
+  rendered in the fixture's non-UTC `Asia/Tokyo` zone;
+- detail and update responses use a SHA-256 validator over canonical serialized
+  content plus exact `ETag`, `Cache-Control`, and `Vary` headers. Matching,
+  wildcard, and comma-list `If-None-Match` branches return 304 with no body;
+  a stale validator after PATCH returns 200 and the changed representation;
+- candidates see 6 scenarios and the evaluator grades a 30-scenario strict
+  superset. A visible-only native scratch probe passes all 6 public scenarios
+  and fails 19 of the 24 hidden scenarios;
+- the DRF-free reference matches all 30 HTTP and database results. The
+  compatibility bridge also matches them but fails native serving evidence.
+  With `sanka-cli` 0.1.8 and `sanka-migrate` 0.1.0a8, the native plan reports
+  14% readiness: one API-root route emitted, seven aliases dropped, and all six
+  record routes marked `SANKA_DRF_VIEWSET_OVERRIDES_UNSUPPORTED`. Its untouched
+  output matches 0/30 responses and 21/30 database states.
+
+Query-bearing scenarios also pin a serving-guard correctness boundary: route
+evidence matches on the URL path while the full URL, including its query
+string, is still sent to the candidate. Otherwise a correctly served FastAPI
+route would be misclassified as unrouted solely because `?cursor` was present.
+
 ## drf-fastapi-006: deep writable graphs and atomic replacement
 
 The sixth fixture extends nested writes from one child level to a graph with
