@@ -11,6 +11,44 @@ alone/with-Sanka pair. Candidate schema v0.2 adds an optional ``stats`` block
 provenance and the report renders beside the tally — the honest comparison
 axis once capable agents pass the synthetic fixtures outright.
 
+## drf-fastapi-005: authentication and permission matrix
+
+The fifth fixture turns the single-scheme auth surface from 002 into a
+hard-tier ordering matrix with a visible/hidden split.
+
+- one `ModelViewSet` runs an expiring database-token authenticator before
+  `SessionAuthentication`; malformed, invalid, inactive, and expired token
+  branches are distinct, and a bad token must stop evaluation before an
+  otherwise valid session can authenticate;
+- session-backed unsafe writes retain CSRF enforcement. The oracle pins a
+  valid session+CSRF create and a missing-cookie 403 independently from token
+  401 responses;
+- `get_permissions()` selects `AllowAny` for list, `IsAuthenticated` for
+  create, `IsAdminUser` for destroy and the custom `review` action, and
+  `IsAuthenticated` plus an owner object permission for ordinary detail
+  routes. Staff may destroy or review somebody else's object; owners who are
+  not staff may not;
+- the 401/403/404 cases prove evaluation order: authentication still runs on
+  an `AllowAny` list; anonymous detail access fails before lookup; an
+  authenticated missing detail reaches 404; and object permission failures
+  happen only after a real detail object is loaded. Every case compares exact
+  response bodies plus declared `WWW-Authenticate` and `Allow` headers;
+- candidates see 7 scenarios while the graded evaluator runs a 31-scenario
+  strict superset. The 24 hidden cases carry the malformed/expired/inactive
+  variants, token-before-session traps, CSRF failure, missing-object ordering,
+  owner denial without mutation, and token/session staff-action branches. A
+  scratch candidate implementing only the seven public cases passes all seven
+  and fails 16 of the 24 hidden scenarios.
+
+All response formats were captured from the source application before the
+native reference was written. The DRF-free reference reads the retained token
+and session tables through Django's model layer, validates session hashes and
+CSRF tokens natively, and passes all 31 scenarios. The compatibility bridge
+also preserves all behavior but fails recorded serving evidence. The pinned
+converter reports 0% native readiness because both configured Django
+middleware classes are unsupported, emits no candidate, and is recorded as
+the honest empty/no-boot outcome rather than repaired.
+
 ## drf-fastapi-004: signal-driven side effects, hidden scenario split
 
 The fourth fixture is the first hard-tier task: its observable behavior

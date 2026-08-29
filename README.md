@@ -16,7 +16,7 @@ source-code similarity to one preferred implementation.
 ## Status
 
 Published benchmark, early and growing. The current suite is **v0: one lane
-(`drf-fastapi`), four tasks, 68 verifiable endpoints**. Recorded results —
+(`drf-fastapi`), five tasks, 84 verifiable endpoints**. Recorded results —
 six models, with and without the Sanka engine, pass@1 — live at
 [sanka.com/developer/bench](https://sanka.com/developer/bench). Numbers on
 that page come only from runs whose frozen candidates, evaluator reports, and
@@ -32,7 +32,7 @@ adding tasks. Lanes are scored separately — framework, data, and object
 lanes will never be blended into one number, because their route units are
 not commensurable. Score changes bump the score version (current: v0.2).
 
-Four synthetic fixtures exist. `drf-fastapi-001` covers CRUD and validation;
+Five synthetic fixtures exist. `drf-fastapi-001` covers CRUD and validation;
 `drf-fastapi-002` adds database-backed `TokenAuthentication`, `IsAuthenticated`,
 and object-level permissions (author-or-read-only), with 401-variant,
 403, and `WWW-Authenticate`/`Allow` header scenarios — a native candidate must
@@ -53,6 +53,16 @@ covering balance read-only enforcement, `F()` composition, reverse postings,
 rollback-by-database-parity, audit ordering, and Decimal string forms — a
 probe candidate implementing only the visible surface passes all 5 public
 scenarios and fails 10 of the 12 hidden ones.
+`drf-fastapi-005` expands authentication into a hard-tier permission matrix:
+expiring database tokens precede session authentication on one viewset,
+unsafe session writes enforce CSRF, `get_permissions()` makes list public,
+create authenticated, destroy staff-only, ordinary details owner-only, and a
+custom review action staff-only. Candidates see 7 scenarios; the evaluator
+grades a 31-scenario superset whose exact 401/403/404 bodies and
+`WWW-Authenticate`/`Allow` headers pin authentication-before-permission,
+no fallback from a bad token to a valid session, detail-only object checks,
+and staff action overrides. A visible-only probe passes all 7 public
+scenarios and fails 16 of the 24 hidden scenarios.
 
 Baselines live at `baselines/<task>/<candidate>/`. The first fixture proves
 the required controls:
@@ -97,6 +107,14 @@ converter's native plan honestly reports 54% readiness — mixin-composed
 viewsets and the `transfer` custom action are outside today's envelope —
 and its untouched output fails evaluation at 5/17 behavior parity: the
 benchmark leads the converter again.
+
+`drf-fastapi-005` carries the same four controls. The compatibility bridge
+passes all 31 behavior and database comparisons but fails native serving
+evidence; the native reference passes every hard gate. With the pinned
+`sanka-cli` 0.1.8 / `sanka-migrate` 0.1.0a8 engine, configured Django session
+and authentication middleware makes all 8 non-alias routes unsupported, so
+native readiness is honestly 0%. Apply emits no overlay, and the frozen empty
+outcome fails target boot rather than receiving a hand-written repair.
 
 The native-target gate is decided by recorded serving evidence, not source
 text. Every candidate scenario is served in a fresh guarded process that arms
@@ -155,7 +173,8 @@ public scenarios, and hard gates, never as a prompt list.
    strong models; these are designed to break that, each targeting a
    failure mode already observed in recorded runs or real-app scans:
    auth-and-permission matrices (multiple authentication schemes, per-action
-   and object-level permissions, 401/403 branch coverage); signal-driven
+   and object-level permissions, 401/403 branch coverage; landed as
+   `drf-fastapi-005`); signal-driven
    side-effects and transaction boundaries (`post_save` chains, `F()`
    updates, `select_for_update` — database-mutation parity does the work;
    landed as `drf-fastapi-004`, the first task with a hidden scenario
