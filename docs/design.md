@@ -11,6 +11,38 @@ alone/with-Sanka pair. Candidate schema v0.2 adds an optional ``stats`` block
 provenance and the report renders beside the tally — the honest comparison
 axis once capable agents pass the synthetic fixtures outright.
 
+## drf-fastapi-006: deep writable graphs and atomic replacement
+
+The sixth fixture extends nested writes from one child level to a graph with
+two independently constrained lists: `Order -> OrderItem -> Adjustment`.
+
+- `POST`, `PUT`, and `PATCH` all accept the three-level graph. A supplied
+  `items` list is a complete replacement, including on PATCH; a PATCH that
+  omits `items` updates only root fields and preserves the existing nested
+  graph, including every primary key;
+- item SKUs are unique per order and adjustment codes are unique per item.
+  These constraints are exercised during persistence rather than reduced to
+  preflight-only validation, so a duplicate at the second item or second
+  adjustment proves the surrounding `transaction.atomic()` rolls back the
+  changed parent, deleted old graph, and already-created siblings;
+- DRF 3.18's sparse string-index format is part of the HTTP contract. A bad
+  second adjustment under the second item is returned as
+  `{"items":{"1":{"adjustments":{"1":{...}}}}}`, with no placeholder
+  entries for valid siblings;
+- candidates see 7 scenarios and the evaluator grades a 32-scenario strict
+  superset. The 25 hidden scenarios cover empty/default branches, errors at
+  both list depths, mid-graph uniqueness, Nth-child rollback, PUT replacement,
+  PATCH preservation, PATCH replacement, and rejected partial graphs. A
+  visible-only scratch probe passes all 7 public scenarios and fails 25 of the
+  25 hidden scenarios;
+- the DRF-free reference reproduces all 32 response and database results. The
+  compatibility bridge does the same through Django and therefore fails the
+  native serving-evidence gate. With `sanka-cli` 0.1.8 and `sanka-migrate`
+  0.1.0a8, the native plan reports 14% readiness: one API-root route emitted,
+  seven format-suffix aliases dropped, and all six order routes marked
+  `SANKA_DRF_SERIALIZER_SEMANTICS_UNSUPPORTED`. The untouched candidate boots
+  but matches 0/32 responses and 22/32 database states.
+
 ## drf-fastapi-005: authentication and permission matrix
 
 The fifth fixture turns the single-scheme auth surface from 002 into a
