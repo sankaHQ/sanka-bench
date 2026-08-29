@@ -26,6 +26,7 @@ on the recorded evidence.
 from __future__ import annotations
 
 import argparse
+import base64
 import importlib
 import inspect
 import json
@@ -164,14 +165,58 @@ def _class_name(value: Any) -> str | None:
     return f"{cls.__module__}.{cls.__qualname__}"
 
 
-def _body(response: Any) -> Any:
+def _body(response: Any, scenario: dict[str, Any]) -> Any:
     content = bytes(response.content)
     if not content:
         return None
+    if scenario.get("response_body") == "base64":
+        return {"base64": base64.b64encode(content).decode("ascii")}
     try:
         return response.json()
     except (ValueError, json.JSONDecodeError):
-        return content.decode("utf-8")
+        try:
+            return content.decode("utf-8")
+        except UnicodeDecodeError:
+            return {"base64": base64.b64encode(content).decode("ascii")}
+
+
+def _multipart_body(spec: dict[str, Any]) -> tuple[bytes, str]:
+    boundary = str(spec.get("boundary") or "SankaBenchBoundary")
+    boundary_bytes = boundary.encode("ascii")
+    chunks: list[bytes] = []
+    fields = spec.get("fields") or {}
+    if not isinstance(fields, dict):
+        raise ValueError("multipart fields must be an object")
+    for name, value in fields.items():
+        chunks.extend(
+            [
+                b"--" + boundary_bytes,
+                f'Content-Disposition: form-data; name="{name}"'.encode(),
+                b"",
+                str(value).encode("utf-8"),
+            ]
+        )
+    files = spec.get("files") or []
+    if not isinstance(files, list):
+        raise ValueError("multipart files must be an array")
+    for item in files:
+        if not isinstance(item, dict):
+            raise ValueError("multipart file entries must be objects")
+        name = str(item["field"])
+        filename = str(item["filename"])
+        content_type = str(item.get("content_type") or "application/octet-stream")
+        content = base64.b64decode(str(item["content_b64"]), validate=True)
+        chunks.extend(
+            [
+                b"--" + boundary_bytes,
+                (f'Content-Disposition: form-data; name="{name}"; filename="{filename}"').encode(),
+                f"Content-Type: {content_type}".encode("ascii"),
+                b"",
+                content,
+            ]
+        )
+    chunks.extend([b"--" + boundary_bytes + b"--", b""])
+    return b"\r\n".join(chunks), boundary
 
 
 def main() -> int:
@@ -208,7 +253,13 @@ def main() -> int:
 
     client = TestClient(app, follow_redirects=False)
     headers = {str(key): str(value) for key, value in dict(scenario.get("headers") or {}).items()}
-    response = client.request(method, path, json=scenario.get("body"), headers=headers)
+    multipart = scenario.get("multipart")
+    if isinstance(multipart, dict):
+        content, boundary = _multipart_body(multipart)
+        headers.setdefault("content-type", f"multipart/form-data; boundary={boundary}")
+        response = client.request(method, path, content=content, headers=headers)
+    else:
+        response = client.request(method, path, json=scenario.get("body"), headers=headers)
 
     import os
 
@@ -221,7 +272,10 @@ def main() -> int:
             "settings_module": os.environ.get("DJANGO_SETTINGS_MODULE"),
         }
     )
-    served: dict[str, Any] = {"status": response.status_code, "body": _body(response)}
+    served: dict[str, Any] = {
+        "status": response.status_code,
+        "body": _body(response, scenario),
+    }
     capture = scenario.get("capture_headers")
     if capture:
         served["headers"] = {

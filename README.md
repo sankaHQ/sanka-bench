@@ -16,7 +16,7 @@ source-code similarity to one preferred implementation.
 ## Status
 
 Published benchmark, early and growing. The current suite is **v0: one lane
-(`drf-fastapi`), eight tasks, 148 verifiable endpoints**. Recorded results —
+(`drf-fastapi`), nine tasks, 160 verifiable endpoints**. Recorded results —
 six models, with and without the Sanka engine, pass@1 — live at
 [sanka.com/developer/bench](https://sanka.com/developer/bench). Numbers on
 that page come only from runs whose frozen candidates, evaluator reports, and
@@ -32,7 +32,7 @@ adding tasks. Lanes are scored separately — framework, data, and object
 lanes will never be blended into one number, because their route units are
 not commensurable. Score changes bump the score version (current: v0.2).
 
-Eight synthetic fixtures exist. `drf-fastapi-001` covers CRUD and validation;
+Nine synthetic fixtures exist. `drf-fastapi-001` covers CRUD and validation;
 `drf-fastapi-002` adds database-backed `TokenAuthentication`, `IsAuthenticated`,
 and object-level permissions (author-or-read-only), with 401-variant,
 403, and `WWW-Authenticate`/`Allow` header scenarios — a native candidate must
@@ -94,6 +94,16 @@ superset (24 hidden) covering alternate slash redirects, a second non-slug code,
 cross-style create/update/delete visibility, validation failures, and rejected
 full-update rollback. A visible-only probe passes all 8 public scenarios and
 fails 20 of the 24 hidden scenarios.
+`drf-fastapi-009` makes file transport observable: a multipart collection
+stores validated `FileField` bytes and deterministic metadata, binary download
+routes preserve attachment disposition and byte parity, and explicit `.json`
+and `.api` routes negotiate JSON versus a vendor media type. Candidates see 8
+scenarios while the evaluator grades a 32-scenario superset (24 hidden)
+covering unusual multipart boundaries, suffix-specific uploads and downloads,
+case-insensitive extensions, the 32-byte boundary, exact validation errors,
+missing objects, mutation chains, rejected-write database parity, and a
+filesystem ledger of every stored byte. A visible-only probe passes all 8
+public scenarios and fails 13 of the 24 hidden scenarios.
 
 Baselines live at `baselines/<task>/<candidate>/`. The first fixture proves
 the required controls:
@@ -174,6 +184,15 @@ custom lookup-field, and dynamic-regex reasons. The untouched output boots but
 matches 0/32 responses and 19/32 database states; no generated route was
 hand-repaired.
 
+`drf-fastapi-009` carries all four controls. The compatibility bridge preserves
+all 32 HTTP, database, and stored-file outcomes but fails native serving
+evidence; the DRF-free reference passes every hard gate. The pinned engine
+reports 0% native readiness: nine serializer routes require
+`SANKA_DRF_SERIALIZER_SEMANTICS_UNSUPPORTED`, three download routes require
+`SANKA_DRF_CUSTOM_ACTION_UNSUPPORTED`, and apply emits no candidate. The honest
+frozen outcome therefore fails target boot instead of receiving a hand-written
+multipart or binary-response repair.
+
 The native-target gate is decided by recorded serving evidence, not source
 text. Every candidate scenario is served in a fresh guarded process that arms
 an un-removable audit hook before any candidate code loads. The hook records
@@ -241,7 +260,9 @@ public scenarios, and hard gates, never as a prompt list.
    pagination, ordering/search filters, Decimal string forms, timezone
    boundaries, conditional responses; landed as `drf-fastapi-007`); and a
    legacy mixed-style app (function views + `APIView` + ViewSets, regex and
-   dynamic routes; landed as `drf-fastapi-008`).
+   dynamic routes; landed as `drf-fastapi-008`). File transport and format
+   negotiation landed as `drf-fastapi-009`, including multipart boundaries,
+   exact stored/downloaded bytes, and explicit `.json`/`.api` routes.
 2. **Real-application tasks.** Oracle-ized slices of permissively licensed
    OSS Django apps (readthedocs and peering-manager are already pinned as
    corpus candidates in

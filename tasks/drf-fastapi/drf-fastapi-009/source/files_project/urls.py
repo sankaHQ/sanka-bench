@@ -1,38 +1,48 @@
-from typing import ClassVar
-
 from artifacts.views import ArtifactViewSet
-from rest_framework.routers import DynamicRoute, Route, SimpleRouter
-from rest_framework.urlpatterns import format_suffix_patterns
+from django.urls import path
 
+collection = ArtifactViewSet.as_view({"get": "list", "post": "create"})
+detail = ArtifactViewSet.as_view({"get": "retrieve"})
+download = ArtifactViewSet.as_view({"get": "download"})
 
-class FileRouter(SimpleRouter):
-    routes: ClassVar[list[Route | DynamicRoute]] = [
-        Route(
-            url=r"^{prefix}{trailing_slash}$",
-            mapping={"get": "list", "post": "create"},
-            name="{basename}-list",
-            detail=False,
-            initkwargs={"suffix": "List"},
-        ),
-        Route(
-            url=r"^{prefix}/{lookup}{trailing_slash}$",
-            mapping={"get": "retrieve"},
-            name="{basename}-detail",
-            detail=True,
-            initkwargs={"suffix": "Instance"},
-        ),
-        DynamicRoute(
-            url=r"^{prefix}/{lookup}/{url_path}{trailing_slash}$",
-            name="{basename}-{url_name}",
-            detail=True,
-            initkwargs={},
-        ),
-    ]
-
-    def get_urls(self):  # type: ignore[no-untyped-def]
-        return format_suffix_patterns(super().get_urls(), allowed=["json", "api"])
-
-
-router = FileRouter()
-router.register("api/files", ArtifactViewSet, basename="artifact")
-urlpatterns = router.urls
+urlpatterns = [
+    path("api/files/", collection, name="artifact-list"),
+    path(
+        "api/files.json",
+        collection,
+        {"format": "json"},
+        name="artifact-list-json",
+    ),
+    path(
+        "api/files.api",
+        collection,
+        {"format": "api"},
+        name="artifact-list-api",
+    ),
+    path("api/files/<int:pk>/", detail, name="artifact-detail"),
+    path(
+        "api/files/<int:pk>.json",
+        detail,
+        {"format": "json"},
+        name="artifact-detail-json",
+    ),
+    path(
+        "api/files/<int:pk>.api",
+        detail,
+        {"format": "api"},
+        name="artifact-detail-api",
+    ),
+    path("api/files/<int:pk>/download/", download, name="artifact-download"),
+    path(
+        "api/files/<int:pk>/download.json",
+        download,
+        {"format": "json"},
+        name="artifact-download-json",
+    ),
+    path(
+        "api/files/<int:pk>/download.api",
+        download,
+        {"format": "api"},
+        name="artifact-download-api",
+    ),
+]

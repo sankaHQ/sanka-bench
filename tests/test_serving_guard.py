@@ -82,6 +82,70 @@ def test_query_string_is_excluded_from_route_matching(tmp_path: Path) -> None:
     assert payload["native"]["endpoint_in_workspace"] is True
 
 
+def test_multipart_body_is_sent_with_requested_boundary(tmp_path: Path) -> None:
+    (tmp_path / "svc.py").write_text(
+        "from base64 import b64encode\n"
+        "from fastapi import FastAPI, Request\n"
+        "app = FastAPI()\n"
+        '@app.post("/upload/")\n'
+        "async def upload(request: Request):\n"
+        "    body = await request.body()\n"
+        "    return {\n"
+        "        'content_type': request.headers['content-type'],\n"
+        "        'body_b64': b64encode(body).decode('ascii'),\n"
+        "    }\n",
+        encoding="utf-8",
+    )
+    scenario = {
+        "id": "multipart",
+        "method": "POST",
+        "path": "/upload/",
+        "multipart": {
+            "boundary": "Boundary-Test-42",
+            "fields": {"label": "Example"},
+            "files": [
+                {
+                    "field": "file",
+                    "filename": "sample.txt",
+                    "content_type": "text/plain",
+                    "content_b64": "YWxwaGENCmJldGEK",
+                }
+            ],
+        },
+    }
+    payload = _payload(_run_guard(tmp_path, scenario=scenario))
+    response = payload["response"]
+    assert response["status"] == 200
+    assert response["body"]["content_type"] == ("multipart/form-data; boundary=Boundary-Test-42")
+    assert response["body"]["body_b64"].startswith("LS1Cb3VuZGFyeS1UZXN0LTQy")
+
+
+def test_binary_response_is_normalized_as_base64(tmp_path: Path) -> None:
+    (tmp_path / "svc.py").write_text(
+        "from fastapi import FastAPI, Response\n"
+        "app = FastAPI()\n"
+        '@app.get("/binary/")\n'
+        "def binary():\n"
+        "    return Response(bytes([0, 255, 10]), media_type='application/octet-stream')\n",
+        encoding="utf-8",
+    )
+    payload = _payload(
+        _run_guard(
+            tmp_path,
+            scenario={
+                "id": "binary",
+                "method": "GET",
+                "path": "/binary/",
+                "response_body": "base64",
+            },
+        )
+    )
+    assert payload["response"] == {
+        "status": 200,
+        "body": {"base64": "AP8K"},
+    }
+
+
 def test_forbidden_import_is_recorded_even_when_indirect(tmp_path: Path) -> None:
     (tmp_path / "helper.py").write_text(
         'from importlib import import_module\nwave = import_module("wave")\n',

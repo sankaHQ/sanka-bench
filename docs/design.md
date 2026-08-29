@@ -11,6 +11,37 @@ alone/with-Sanka pair. Candidate schema v0.2 adds an optional ``stats`` block
 provenance and the report renders beside the tally — the honest comparison
 axis once capable agents pass the synthetic fixtures outright.
 
+## drf-fastapi-009: multipart files and explicit format negotiation
+
+The ninth fixture makes request transport, stored bytes, and binary response
+semantics part of the migration contract.
+
+- a `ModelViewSet` collection accepts raw multipart requests and writes a
+  Django `FileField`. The serializer allows `.csv`, `.json`, and `.txt`
+  extensions case-insensitively, enforces a 32-byte ceiling, and records the
+  original filename, media type, byte count, and SHA-256 digest;
+- canonical, `.json`, and `.api` collection/detail/download routes are explicit
+  URL patterns, so all 12 method-routes are counted by scan and served. The
+  `.api` representation uses `application/vnd.sanka.file+json`; downloads stay
+  binary and retain their stored media type plus exact `Content-Disposition`;
+- the evaluation driver builds deterministic multipart bodies rather than
+  relying on a client library, and normalizes declared binary responses as
+  base64. Its side-effect ledger records path, size, digest, and bytes for every
+  media file, making a database-only imitation insufficient;
+- candidates see 8 scenarios and the evaluator grades a 32-scenario strict
+  superset. The 24 hidden cases cover unusual and in-payload boundary tokens,
+  suffix-specific uploads/downloads, both seeded files, case-insensitive
+  extensions, 32-versus-33-byte limits, exact missing/blank/duplicate errors,
+  missing objects, and mutation chains whose rejected writes must leave both
+  tables and media files unchanged. A visible-only scratch probe passes all 8
+  public scenarios and fails 13 of the 24 hidden scenarios;
+- the native reference passes all HTTP, database, file-side-effect, rerun, and
+  serving checks. The compatibility bridge preserves those behavioral outputs
+  while its imported Django/DRF serving stack fails native evidence. With
+  `sanka-cli` 0.1.8 and `sanka-migrate` 0.1.0a8, native readiness is 0%: nine
+  serializer routes and three custom download routes require adaptation, so
+  apply emits no candidate and the frozen sanka-native outcome fails boot.
+
 ## drf-fastapi-008: one domain across three legacy view styles
 
 The eighth fixture makes mixed DRF routing styles and their URL semantics part
