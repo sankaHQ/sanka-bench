@@ -16,7 +16,7 @@ source-code similarity to one preferred implementation.
 ## Status
 
 Published benchmark, early and growing. The current suite is **v0: one lane
-(`drf-fastapi`), ten tasks, 165 verifiable endpoints**. Recorded results —
+(`drf-fastapi`), eleven tasks, 170 verifiable endpoints**. Recorded results —
 six models, with and without the Sanka engine, pass@1 — live at
 [sanka.com/developer/bench](https://sanka.com/developer/bench). Numbers on
 that page come only from runs whose frozen candidates, evaluator reports, and
@@ -32,7 +32,7 @@ adding tasks. Lanes are scored separately — framework, data, and object
 lanes will never be blended into one number, because their route units are
 not commensurable. Score changes bump the score version (current: v0.2).
 
-Ten synthetic fixtures exist. `drf-fastapi-001` covers CRUD and validation;
+Eleven synthetic fixtures exist. `drf-fastapi-001` covers CRUD and validation;
 `drf-fastapi-002` adds database-backed `TokenAuthentication`, `IsAuthenticated`,
 and object-level permissions (author-or-read-only), with 401-variant,
 403, and `WWW-Authenticate`/`Allow` header scenarios — a native candidate must
@@ -113,6 +113,15 @@ superset (25 hidden) that exhausts all 25 current-status/target-status pairs,
 pins exact 400/409 bodies, and proves stale PATCH and transition requests leave
 both orders and events unchanged. A visible-only probe passes all 7 public
 scenarios and fails all 25 hidden scenarios.
+`drf-fastapi-011` makes related-row aggregates and computed fields observable.
+Its paginated account list combines filtered `Count`/`Sum` annotations,
+deterministic computed ordering, fixed-scale Decimal strings, and method fields
+derived from the latest prefetched transaction; transaction writes must
+recompute both list and grouped-summary results. Candidates see 7 scenarios
+while the evaluator grades a 32-scenario superset (25 hidden) covering both
+pages, ordering ties, mutation chains, negative/zero/large totals, related-row
+moves, empty accounts, empty groups, and a fully empty dataset. A visible-only
+probe passes all 7 public scenarios and fails 17 of the 25 hidden scenarios.
 
 Baselines live at `baselines/<task>/<candidate>/`. The first fixture proves
 the required controls:
@@ -223,6 +232,15 @@ partial-update overrides, while the transition route requires
 frozen native outcome fails target boot instead of receiving a hand-written
 state-machine or optimistic-locking repair.
 
+`drf-fastapi-011` carries all four controls. The compatibility bridge preserves
+all 32 HTTP and database outcomes but fails native serving evidence; the
+DRF-free reference passes every hard gate. The pinned engine reports 0% native
+readiness: the annotated list and grouped summary are unsupported non-viewset
+view kinds, while all three transaction routes require
+`SANKA_DRF_SERIALIZER_SEMANTICS_UNSUPPORTED` for their slug-related account
+field. Apply emits no candidate, so the honest frozen native outcome fails
+target boot rather than receiving hand-written aggregate logic.
+
 The native-target gate is decided by recorded serving evidence, not source
 text. Every candidate scenario is served in a fresh guarded process that arms
 an un-removable audit hook before any candidate code loads. The hook records
@@ -295,7 +313,9 @@ public scenarios, and hard gates, never as a prompt list.
    exact stored/downloaded bytes, and explicit `.json`/`.api` routes. State
    transitions and optimistic concurrency landed as `drf-fastapi-010`, with an
    exhaustive legal/illegal matrix, exact version increments, audit events,
-   and rejected-write rollback.
+   and rejected-write rollback. Aggregate and computed-field behavior landed as
+   `drf-fastapi-011`, including filtered counts/sums, computed ordering,
+   pagination consistency, mutation recomputation, and empty-group semantics.
 2. **Real-application tasks.** Oracle-ized slices of permissively licensed
    OSS Django apps (readthedocs and peering-manager are already pinned as
    corpus candidates in

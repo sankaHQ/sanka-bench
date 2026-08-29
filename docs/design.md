@@ -1,5 +1,32 @@
 # Implemented slices
 
+## drf-fastapi-011: aggregates and related-row computed fields
+
+The eleventh fixture makes query-derived response values observable across
+pagination and mutations instead of treating them as serializer decoration.
+
+- the two-row account list annotates total and pending transaction counts plus
+  a filtered posted `Sum`, orders by those computed values with deterministic
+  ties, and renders every Decimal at two places;
+- `SerializerMethodField` values distinguish empty, pending, and settled
+  accounts and expose the latest related reference. The evaluator checks both
+  pages before and after creates, patches, deletes, and cross-account moves;
+- the summary endpoint groups by region, includes account and transaction
+  counts, preserves zero and negative totals, and returns an empty group list
+  plus `"0.00"` when the fixture has no accounts;
+- candidates see 7 scenarios and the evaluator grades a 32-scenario strict
+  superset. Hidden cases cover computed ordering in both directions, page URL
+  and tie stability, zero/negative/large totals, latest-row changes, rejected
+  duplicate writes, mutation chains, empty accounts, and fully empty state. A
+  visible-only scratch probe passes 7/7 public scenarios and fails 17/25 hidden
+  scenarios;
+- the native reference passes all 32 HTTP, database, side-effect, rerun, and
+  serving checks. The compatibility bridge preserves the full contract but
+  fails native evidence. With `sanka-cli` 0.1.8 and `sanka-migrate` 0.1.0a8,
+  native readiness is 0%: two non-viewset aggregate routes and three
+  slug-related serializer routes require adaptation, so apply emits no
+  candidate and the frozen sanka-native outcome fails boot.
+
 ## drf-fastapi-010: state transitions and optimistic concurrency
 
 The tenth fixture makes business-state legality, exact version progression,
