@@ -24,6 +24,7 @@ check: lint typecheck test
 BASELINES_001 = noop compatibility-bridge claude-code-alone claude-code-with-sanka native-reference sanka-native
 BASELINES_002 = noop compatibility-bridge claude-code-alone claude-code-with-sanka native-reference sanka-native
 BASELINES_003 = noop compatibility-bridge claude-code-alone claude-code-with-sanka native-reference sanka-native
+BASELINES_004 = noop compatibility-bridge native-reference sanka-native
 
 baselines:
 	@for name in $(BASELINES_001); do \
@@ -35,6 +36,9 @@ baselines:
 	@for name in $(BASELINES_003); do \
 		uv run sanka-bench evaluate --runner local --task tasks/drf-fastapi/drf-fastapi-003 --candidate baselines/drf-fastapi-003/$$name --output reports/drf-fastapi-003-$$name.json || exit 1; \
 	done
+	@for name in $(BASELINES_004); do \
+		uv run sanka-bench evaluate --runner local --task tasks/drf-fastapi/drf-fastapi-004 --candidate baselines/drf-fastapi-004/$$name --output reports/drf-fastapi-004-$$name.json || exit 1; \
+	done
 
 docker-baselines:
 	@for name in $(BASELINES_001); do \
@@ -45,6 +49,9 @@ docker-baselines:
 	done
 	@for name in $(BASELINES_003); do \
 		uv run sanka-bench evaluate --runner docker --task tasks/drf-fastapi/drf-fastapi-003 --candidate baselines/drf-fastapi-003/$$name --output reports/drf-fastapi-003-$$name-docker.json || exit 1; \
+	done
+	@for name in $(BASELINES_004); do \
+		uv run sanka-bench evaluate --runner docker --task tasks/drf-fastapi/drf-fastapi-004 --candidate baselines/drf-fastapi-004/$$name --output reports/drf-fastapi-004-$$name-docker.json || exit 1; \
 	done
 
 report:

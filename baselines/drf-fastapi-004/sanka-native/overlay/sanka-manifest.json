@@ -1,0 +1,313 @@
+{
+  "allow": {
+    "/api/": "GET, HEAD, OPTIONS",
+    "/api/accounts/": "GET, POST, HEAD, OPTIONS",
+    "/api/accounts/{pk}/": "GET, PUT, PATCH, DELETE, HEAD, OPTIONS"
+  },
+  "api_roots": [
+    {
+      "links": [
+        [
+          "accounts",
+          "/api/accounts/"
+        ],
+        [
+          "audit",
+          "/api/audit/"
+        ],
+        [
+          "entries",
+          "/api/entries/"
+        ]
+      ],
+      "path": "/api/"
+    }
+  ],
+  "database": {
+    "host": "",
+    "name": "db.sqlite3",
+    "port": "",
+    "user": "",
+    "vendor": "sqlite"
+  },
+  "dropped_routes": [
+    {
+      "method": "GET",
+      "path": "/api/<drf_format_suffix:format>",
+      "reason": "format-suffix alias"
+    },
+    {
+      "method": "GET",
+      "path": "/api/accounts.{format}/",
+      "reason": "format-suffix alias"
+    },
+    {
+      "method": "POST",
+      "path": "/api/accounts.{format}/",
+      "reason": "format-suffix alias"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/accounts/{pk}.{format}/",
+      "reason": "format-suffix alias"
+    },
+    {
+      "method": "GET",
+      "path": "/api/accounts/{pk}.{format}/",
+      "reason": "format-suffix alias"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/accounts/{pk}.{format}/",
+      "reason": "format-suffix alias"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/accounts/{pk}.{format}/",
+      "reason": "format-suffix alias"
+    },
+    {
+      "method": "POST",
+      "path": "/api/accounts/{pk}/transfer.{format}/",
+      "reason": "format-suffix alias"
+    },
+    {
+      "method": "GET",
+      "path": "/api/audit.{format}/",
+      "reason": "format-suffix alias"
+    },
+    {
+      "method": "GET",
+      "path": "/api/entries.{format}/",
+      "reason": "format-suffix alias"
+    },
+    {
+      "method": "POST",
+      "path": "/api/entries.{format}/",
+      "reason": "format-suffix alias"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/entries/{pk}.{format}/",
+      "reason": "format-suffix alias"
+    },
+    {
+      "method": "GET",
+      "path": "/api/entries/{pk}.{format}/",
+      "reason": "format-suffix alias"
+    }
+  ],
+  "entrypoint": "target_app.py",
+  "generated_files": [
+    "target_app.py",
+    "sanka_native.py",
+    "sanka_store.py",
+    "sanka_settings.py"
+  ],
+  "generator": "sanka",
+  "generic_messages": {
+    "not_found": "Not found."
+  },
+  "mode": "native",
+  "plan_hash": "sha256:68162c9f7e9bf13aea681080dd22d69c526fac7a179b395a35bca7b6b2d32e91",
+  "resources": [
+    {
+      "auth": null,
+      "create": {
+        "style": "default"
+      },
+      "db_table": "ledger_account",
+      "fields": [
+        {
+          "allow_blank": false,
+          "allow_null": false,
+          "attname": null,
+          "choices": [],
+          "decimal_places": null,
+          "default": null,
+          "has_default": false,
+          "kind": "integer",
+          "max_digits": null,
+          "max_length": null,
+          "max_value": null,
+          "messages": {
+            "invalid": "A valid integer is required.",
+            "max_string_length": "String value too large.",
+            "max_value": "Ensure this value is less than or equal to {max_value}.",
+            "min_value": "Ensure this value is greater than or equal to {min_value}.",
+            "null": "This field may not be null.",
+            "required": "This field is required."
+          },
+          "min_length": null,
+          "min_value": null,
+          "name": "id",
+          "read_only": true,
+          "required": false,
+          "trim_whitespace": true,
+          "unique": false,
+          "unique_message": null
+        },
+        {
+          "allow_blank": false,
+          "allow_null": false,
+          "attname": null,
+          "choices": [],
+          "decimal_places": null,
+          "default": null,
+          "has_default": false,
+          "kind": "char",
+          "max_digits": null,
+          "max_length": 60,
+          "max_value": null,
+          "messages": {
+            "blank": "This field may not be blank.",
+            "invalid": "Not a valid string.",
+            "max_length": "Ensure this field has no more than 60 characters.",
+            "min_length": "Ensure this field has at least {min_length} characters.",
+            "null": "This field may not be null.",
+            "null_characters": "Null characters are not allowed.",
+            "required": "This field is required.",
+            "surrogate_characters": "Surrogate characters are not allowed: U+{code_point:X}."
+          },
+          "min_length": null,
+          "min_value": null,
+          "name": "name",
+          "read_only": false,
+          "required": true,
+          "trim_whitespace": true,
+          "unique": true,
+          "unique_message": "account with this name already exists."
+        },
+        {
+          "allow_blank": false,
+          "allow_null": false,
+          "attname": null,
+          "choices": [],
+          "decimal_places": 2,
+          "default": 0,
+          "has_default": true,
+          "kind": "decimal",
+          "max_digits": 12,
+          "max_length": null,
+          "max_value": null,
+          "messages": {
+            "invalid": "A valid number is required.",
+            "max_decimal_places": "Ensure that there are no more than 2 decimal places.",
+            "max_digits": "Ensure that there are no more than 12 digits in total.",
+            "max_string_length": "String value too large.",
+            "max_whole_digits": "Ensure that there are no more than 10 digits before the decimal point.",
+            "null": "This field may not be null.",
+            "required": "This field is required."
+          },
+          "min_length": null,
+          "min_value": null,
+          "name": "balance",
+          "read_only": true,
+          "required": false,
+          "trim_whitespace": true,
+          "unique": false,
+          "unique_message": null
+        }
+      ],
+      "lookup": "pk",
+      "model_class": "Account",
+      "model_module": "ledger.models",
+      "object_name": "Account",
+      "ordering": [
+        "id"
+      ],
+      "pk_attname": "id",
+      "routes": [
+        {
+          "method": "GET",
+          "operation": "list",
+          "path": "/api/accounts/"
+        },
+        {
+          "method": "POST",
+          "operation": "create",
+          "path": "/api/accounts/"
+        },
+        {
+          "method": "DELETE",
+          "operation": "destroy",
+          "path": "/api/accounts/{pk}/"
+        },
+        {
+          "method": "GET",
+          "operation": "retrieve",
+          "path": "/api/accounts/{pk}/"
+        },
+        {
+          "method": "PATCH",
+          "operation": "partial_update",
+          "path": "/api/accounts/{pk}/"
+        },
+        {
+          "method": "PUT",
+          "operation": "update",
+          "path": "/api/accounts/{pk}/"
+        }
+      ],
+      "serializer": "ledger.serializers.AccountSerializer",
+      "update_drops": null,
+      "view": "ledger.views.AccountViewSet"
+    }
+  ],
+  "routes": [
+    {
+      "method": "GET",
+      "operation": "get",
+      "path": "/api/",
+      "source_view": "rest_framework.routers.APIRootView",
+      "strategy": "native-fastapi-api-root"
+    },
+    {
+      "method": "GET",
+      "operation": "list",
+      "path": "/api/accounts/",
+      "source_view": "ledger.views.AccountViewSet",
+      "strategy": "native-fastapi-crud"
+    },
+    {
+      "method": "POST",
+      "operation": "create",
+      "path": "/api/accounts/",
+      "source_view": "ledger.views.AccountViewSet",
+      "strategy": "native-fastapi-crud"
+    },
+    {
+      "method": "DELETE",
+      "operation": "destroy",
+      "path": "/api/accounts/{pk}/",
+      "source_view": "ledger.views.AccountViewSet",
+      "strategy": "native-fastapi-crud"
+    },
+    {
+      "method": "GET",
+      "operation": "retrieve",
+      "path": "/api/accounts/{pk}/",
+      "source_view": "ledger.views.AccountViewSet",
+      "strategy": "native-fastapi-crud"
+    },
+    {
+      "method": "PATCH",
+      "operation": "partial_update",
+      "path": "/api/accounts/{pk}/",
+      "source_view": "ledger.views.AccountViewSet",
+      "strategy": "native-fastapi-crud"
+    },
+    {
+      "method": "PUT",
+      "operation": "update",
+      "path": "/api/accounts/{pk}/",
+      "source_view": "ledger.views.AccountViewSet",
+      "strategy": "native-fastapi-crud"
+    }
+  ],
+  "schema_version": 1,
+  "settings_module": "ledger_project.settings",
+  "source_root": ".",
+  "source_scan_hash": "sha256:aeab60aef901aad0e486c8bdb244a68e26808a79b14fba2da4db7f65db047c1e",
+  "sql_engine": "django"
+}
