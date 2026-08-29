@@ -16,7 +16,7 @@ source-code similarity to one preferred implementation.
 ## Status
 
 Published benchmark, early and growing. The current suite is **v0: one lane
-(`drf-fastapi`), five tasks, 84 verifiable endpoints**. Recorded results —
+(`drf-fastapi`), six tasks, 98 verifiable endpoints**. Recorded results —
 six models, with and without the Sanka engine, pass@1 — live at
 [sanka.com/developer/bench](https://sanka.com/developer/bench). Numbers on
 that page come only from runs whose frozen candidates, evaluator reports, and
@@ -32,7 +32,7 @@ adding tasks. Lanes are scored separately — framework, data, and object
 lanes will never be blended into one number, because their route units are
 not commensurable. Score changes bump the score version (current: v0.2).
 
-Five synthetic fixtures exist. `drf-fastapi-001` covers CRUD and validation;
+Six synthetic fixtures exist. `drf-fastapi-001` covers CRUD and validation;
 `drf-fastapi-002` adds database-backed `TokenAuthentication`, `IsAuthenticated`,
 and object-level permissions (author-or-read-only), with 401-variant,
 403, and `WWW-Authenticate`/`Allow` header scenarios — a native candidate must
@@ -63,6 +63,16 @@ grades a 31-scenario superset whose exact 401/403/404 bodies and
 no fallback from a bad token to a valid session, detail-only object checks,
 and staff action overrides. A visible-only probe passes all 7 public
 scenarios and fails 16 of the 24 hidden scenarios.
+`drf-fastapi-006` deepens nested writes to three levels
+(`Order -> OrderItem -> Adjustment`). Supplying `items` during PUT or PATCH
+atomically replaces the entire child graph; omitting it during PATCH preserves
+every existing child and adjustment byte-for-byte. Candidates see 7 scenarios
+while the evaluator grades a 32-scenario superset (25 hidden) covering
+string-indexed errors at both list depths, defaults and empty lists,
+middle-level SKU and deepest-level adjustment uniqueness, failures after the
+Nth child has already been written, and rollback of parent changes plus deleted
+children. A visible-only probe passes all 7 public scenarios and fails 25 of
+the 25 hidden scenarios.
 
 Baselines live at `baselines/<task>/<candidate>/`. The first fixture proves
 the required controls:
@@ -115,6 +125,15 @@ evidence; the native reference passes every hard gate. With the pinned
 and authentication middleware makes all 8 non-alias routes unsupported, so
 native readiness is honestly 0%. Apply emits no overlay, and the frozen empty
 outcome fails target boot rather than receiving a hand-written repair.
+
+`drf-fastapi-006` also carries all four controls. The compatibility bridge
+passes all 32 behavior and database comparisons but fails native serving
+evidence, while the DRF-free reference passes every hard gate. The pinned
+engine reports 14% native readiness: it drops 7 format-suffix aliases, marks
+all 6 order CRUD routes `SANKA_DRF_SERIALIZER_SEMANTICS_UNSUPPORTED`, and emits
+only the API root. Its untouched output boots but matches 0/32 responses and
+22/32 database states; the nested serializer and transactional replacement
+logic are not hand-repaired.
 
 The native-target gate is decided by recorded serving evidence, not source
 text. Every candidate scenario is served in a fresh guarded process that arms
@@ -178,7 +197,8 @@ public scenarios, and hard gates, never as a prompt list.
    side-effects and transaction boundaries (`post_save` chains, `F()`
    updates, `select_for_update` — database-mutation parity does the work;
    landed as `drf-fastapi-004`, the first task with a hidden scenario
-   split); deep writable-nested graphs with DRF's index-keyed error shapes; exact
+   split); deep writable-nested graphs with DRF's index-keyed error shapes
+   (landed as `drf-fastapi-006`); exact
    response-shape parity (cursor pagination, ordering/search filters,
    Decimal string forms, timezone boundaries, conditional responses); and a
    legacy mixed-style app (function views + `APIView` + ViewSets, regex and
