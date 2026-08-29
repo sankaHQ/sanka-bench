@@ -16,7 +16,7 @@ source-code similarity to one preferred implementation.
 ## Status
 
 Published benchmark, early and growing. The current suite is **v0: one lane
-(`drf-fastapi`), nine tasks, 160 verifiable endpoints**. Recorded results —
+(`drf-fastapi`), ten tasks, 165 verifiable endpoints**. Recorded results —
 six models, with and without the Sanka engine, pass@1 — live at
 [sanka.com/developer/bench](https://sanka.com/developer/bench). Numbers on
 that page come only from runs whose frozen candidates, evaluator reports, and
@@ -32,7 +32,7 @@ adding tasks. Lanes are scored separately — framework, data, and object
 lanes will never be blended into one number, because their route units are
 not commensurable. Score changes bump the score version (current: v0.2).
 
-Nine synthetic fixtures exist. `drf-fastapi-001` covers CRUD and validation;
+Ten synthetic fixtures exist. `drf-fastapi-001` covers CRUD and validation;
 `drf-fastapi-002` adds database-backed `TokenAuthentication`, `IsAuthenticated`,
 and object-level permissions (author-or-read-only), with 401-variant,
 403, and `WWW-Authenticate`/`Allow` header scenarios — a native candidate must
@@ -104,6 +104,15 @@ case-insensitive extensions, the 32-byte boundary, exact validation errors,
 missing objects, mutation chains, rejected-write database parity, and a
 filesystem ledger of every stored byte. A visible-only probe passes all 8
 public scenarios and fails 13 of the 24 hidden scenarios.
+`drf-fastapi-010` makes a versioned order state machine observable. Draft,
+submitted, approved, shipped, and cancelled orders follow an explicit legal
+transition graph; PATCH and transition requests use optimistic locking; every
+successful write increments the version exactly once and appends one audit
+event. Candidates see 7 scenarios while the evaluator grades a 32-scenario
+superset (25 hidden) that exhausts all 25 current-status/target-status pairs,
+pins exact 400/409 bodies, and proves stale PATCH and transition requests leave
+both orders and events unchanged. A visible-only probe passes all 7 public
+scenarios and fails all 25 hidden scenarios.
 
 Baselines live at `baselines/<task>/<candidate>/`. The first fixture proves
 the required controls:
@@ -193,6 +202,16 @@ reports 0% native readiness: nine serializer routes require
 frozen outcome therefore fails target boot instead of receiving a hand-written
 multipart or binary-response repair.
 
+`drf-fastapi-010` carries all four controls. The compatibility bridge preserves
+all 32 HTTP and two-table database outcomes but fails native serving evidence;
+the DRF-free reference passes every hard gate. The pinned engine reports 0%
+native readiness: four routes require
+`SANKA_DRF_VIEWSET_OVERRIDES_UNSUPPORTED` for the transactional create and
+partial-update overrides, while the transition route requires
+`SANKA_DRF_CUSTOM_ACTION_UNSUPPORTED`. Apply emits no candidate, so the honest
+frozen native outcome fails target boot instead of receiving a hand-written
+state-machine or optimistic-locking repair.
+
 The native-target gate is decided by recorded serving evidence, not source
 text. Every candidate scenario is served in a fresh guarded process that arms
 an un-removable audit hook before any candidate code loads. The hook records
@@ -262,7 +281,10 @@ public scenarios, and hard gates, never as a prompt list.
    legacy mixed-style app (function views + `APIView` + ViewSets, regex and
    dynamic routes; landed as `drf-fastapi-008`). File transport and format
    negotiation landed as `drf-fastapi-009`, including multipart boundaries,
-   exact stored/downloaded bytes, and explicit `.json`/`.api` routes.
+   exact stored/downloaded bytes, and explicit `.json`/`.api` routes. State
+   transitions and optimistic concurrency landed as `drf-fastapi-010`, with an
+   exhaustive legal/illegal matrix, exact version increments, audit events,
+   and rejected-write rollback.
 2. **Real-application tasks.** Oracle-ized slices of permissively licensed
    OSS Django apps (readthedocs and peering-manager are already pinned as
    corpus candidates in

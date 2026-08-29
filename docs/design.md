@@ -1,5 +1,33 @@
 # Implemented slices
 
+## drf-fastapi-010: state transitions and optimistic concurrency
+
+The tenth fixture makes business-state legality, exact version progression,
+and rejected-write atomicity part of the migration contract.
+
+- `Order.status` follows one explicit graph: draft can submit or cancel,
+  submitted can approve or cancel, approved can ship, and shipped/cancelled are
+  terminal. The response includes the current state's ordered legal targets;
+- PATCH and the custom `transition` action require a version. A successful
+  write increments it exactly once and appends exactly one `OrderEvent`; a
+  stale version returns 409 with expected/provided versions and changes neither
+  table;
+- the graded transition matrix covers every one of the 25 combinations of
+  five source states and five target states. Legal moves return the updated
+  representation; illegal moves return an exact 409 body with the ordered
+  allowed list, while an unknown target remains a serializer-level 400;
+- candidates see 7 scenarios and the evaluator grades a 32-scenario strict
+  superset. The 25 hidden cases contain the remaining 23 matrix cells plus
+  unknown-target validation and stale-transition rollback. A native scratch
+  probe implementing only the visible branches passes 7/7 public scenarios and
+  fails 25/25 hidden scenarios;
+- the native reference passes all 32 HTTP, database, side-effect, rerun, and
+  serving checks. The compatibility bridge preserves behavior and both tables
+  but fails native evidence. With `sanka-cli` 0.1.8 and `sanka-migrate`
+  0.1.0a8, native readiness is 0%: four viewset-override routes and the custom
+  transition action require adaptation, so apply emits no candidate and the
+  frozen sanka-native outcome fails boot.
+
 ## Coding-agent baselines
 
 Frozen, fully disclosed agent candidates for every task: Claude Code run
