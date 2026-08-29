@@ -11,6 +11,40 @@ alone/with-Sanka pair. Candidate schema v0.2 adds an optional ``stats`` block
 provenance and the report renders beside the tally — the honest comparison
 axis once capable agents pass the synthetic fixtures outright.
 
+## drf-fastapi-008: one domain across three legacy view styles
+
+The eighth fixture makes mixed DRF routing styles and their URL semantics part
+of one migration contract.
+
+- the same `Entry` table and `ModelSerializer` are served through two
+  `@api_view` functions, classic collection/detail `APIView` classes whose base
+  explicitly performs DRF's dispatch lifecycle, and a router-backed
+  `ModelViewSet`;
+- function routes accept both slash forms, class routes canonically omit the
+  slash, and viewset routes require it. Alternate class/viewset forms return
+  exact 307 redirects in opposite directions, including their absolute
+  `Location` values;
+- regex detail captures accept `guide.v2+draft` and `release@2026.08`, proving
+  the migration cannot silently substitute a slug converter. A formatted
+  nested-regex route table is appended after the primary URL list in the style
+  of large legacy Django applications; the source regression suite serves it,
+  while scan reports `SANKA_DRF_DYNAMIC_ROUTE` for its four methods;
+- request chains write through one style and read through another. Cross-style
+  create, PATCH, PUT, and DELETE cases prove that all surfaces share one state
+  model, while exact validation errors and database parity prove rejected
+  writes do not persist;
+- candidates see 8 canonical scenarios and the evaluator grades a 32-scenario
+  strict superset. A scratch implementation of only the public surface passes
+  all 8 visible cases and fails 20 of the 24 hidden cases;
+- the native reference passes all 32 HTTP, database, side-effect, and serving
+  checks. The compatibility bridge also preserves all HTTP/database outcomes
+  but fails native evidence. With `sanka-cli` 0.1.8 and `sanka-migrate`
+  0.1.0a8, the native plan reports 3% readiness: 1 of 29 non-alias routes is
+  emitted, 7 aliases are dropped, and 28 routes require manual adaptation for
+  legacy view kinds, the custom lookup field, or the dynamic regex. Its frozen
+  pass@1 output boots and records 0/32 behavior, 19/32 database, and 0/32 native
+  matches.
+
 ## drf-fastapi-007: response-shape precision and stable cursors
 
 The seventh fixture treats representation details as observable migration

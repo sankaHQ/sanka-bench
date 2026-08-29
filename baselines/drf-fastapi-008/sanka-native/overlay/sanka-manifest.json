@@ -1,0 +1,88 @@
+{
+  "allow": {
+    "/api/viewset/": "GET, HEAD, OPTIONS"
+  },
+  "api_roots": [
+    {
+      "links": [
+        [
+          "entries",
+          "/api/viewset/entries/"
+        ]
+      ],
+      "path": "/api/viewset/"
+    }
+  ],
+  "database": {
+    "host": "",
+    "name": "db.sqlite3",
+    "port": "",
+    "user": "",
+    "vendor": "sqlite"
+  },
+  "dropped_routes": [
+    {
+      "method": "GET",
+      "path": "/api/viewset/<drf_format_suffix:format>",
+      "reason": "format-suffix alias"
+    },
+    {
+      "method": "GET",
+      "path": "/api/viewset/entries.{format}/",
+      "reason": "format-suffix alias"
+    },
+    {
+      "method": "POST",
+      "path": "/api/viewset/entries.{format}/",
+      "reason": "format-suffix alias"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/viewset/entries/{code}.{format}/",
+      "reason": "format-suffix alias"
+    },
+    {
+      "method": "GET",
+      "path": "/api/viewset/entries/{code}.{format}/",
+      "reason": "format-suffix alias"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/viewset/entries/{code}.{format}/",
+      "reason": "format-suffix alias"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/viewset/entries/{code}.{format}/",
+      "reason": "format-suffix alias"
+    }
+  ],
+  "entrypoint": "target_app.py",
+  "generated_files": [
+    "target_app.py",
+    "sanka_native.py",
+    "sanka_store.py",
+    "sanka_settings.py"
+  ],
+  "generator": "sanka",
+  "generic_messages": {
+    "not_found": "Not found."
+  },
+  "mode": "native",
+  "plan_hash": "sha256:828cb33d720a97dfec9e1125f49094b9dca00dfa540e5b138413b1441d315aa7",
+  "resources": [],
+  "routes": [
+    {
+      "method": "GET",
+      "operation": "get",
+      "path": "/api/viewset/",
+      "source_view": "rest_framework.routers.APIRootView",
+      "strategy": "native-fastapi-api-root"
+    }
+  ],
+  "schema_version": 1,
+  "settings_module": "legacy_project.settings",
+  "source_root": ".",
+  "source_scan_hash": "sha256:69a673430c0d2cfb8f0e40337fb53dc5b1909dce08cff6d82177f84db6aba7d9",
+  "sql_engine": "django"
+}
