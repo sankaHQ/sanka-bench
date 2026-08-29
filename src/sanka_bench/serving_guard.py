@@ -32,6 +32,7 @@ import json
 import sys
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -117,13 +118,14 @@ def _matched_route(app: Any, method: str, path: str) -> Any:
     routes = getattr(app, "routes", None)
     if not isinstance(routes, list):
         return None
+    parsed = urlsplit(path)
     scope = {
         "type": "http",
         "method": method,
-        "path": path,
+        "path": parsed.path,
         "root_path": "",
         "headers": [],
-        "query_string": b"",
+        "query_string": parsed.query.encode("ascii"),
     }
     from starlette.routing import Match
 

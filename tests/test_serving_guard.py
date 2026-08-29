@@ -62,6 +62,26 @@ def test_clean_fastapi_app_produces_compliant_evidence(tmp_path: Path) -> None:
     assert native["socket_events"] == []
 
 
+def test_query_string_is_excluded_from_route_matching(tmp_path: Path) -> None:
+    (tmp_path / "svc.py").write_text(
+        "from fastapi import FastAPI, Request\n"
+        "app = FastAPI()\n"
+        '@app.get("/ping/")\n'
+        "def ping(request: Request):\n"
+        '    return {"search": request.query_params.get("search")}\n',
+        encoding="utf-8",
+    )
+    payload = _payload(
+        _run_guard(
+            tmp_path,
+            scenario={"id": "query", "method": "GET", "path": "/ping/?search=alpha"},
+        )
+    )
+    assert payload["response"] == {"status": 200, "body": {"search": "alpha"}}
+    assert payload["native"]["route_class"] == "fastapi.routing.APIRoute"
+    assert payload["native"]["endpoint_in_workspace"] is True
+
+
 def test_forbidden_import_is_recorded_even_when_indirect(tmp_path: Path) -> None:
     (tmp_path / "helper.py").write_text(
         'from importlib import import_module\nwave = import_module("wave")\n',
