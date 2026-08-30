@@ -8,6 +8,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from sanka_bench.workspace_effects import workspace_changes, workspace_snapshot
+
 GUARD_TIMEOUT_SECONDS = 90
 
 
@@ -24,6 +26,7 @@ def _parser() -> argparse.ArgumentParser:
 def main() -> int:
     args = _parser().parse_args()
     workspace = args.workspace.resolve()
+    effects_before = workspace_snapshot(workspace)
     sys.path.insert(0, str(workspace))
     os.environ["DJANGO_SETTINGS_MODULE"] = "legacy_project.settings"
     os.environ["BENCH_DB_PATH"] = str(args.database.resolve())
@@ -48,7 +51,7 @@ def main() -> int:
 
     payload = dict(served)
     payload["database"] = _database_state()
-    payload["side_effects"] = []
+    payload["side_effects"] = workspace_changes(effects_before, workspace_snapshot(workspace))
     print(json.dumps(payload, ensure_ascii=False, separators=(",", ":"), sort_keys=True))
     return 0
 
