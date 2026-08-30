@@ -46,8 +46,8 @@ at the default 50% threshold it supplies only the unsupported and unscanned
 route checklist instead of a low-readiness scaffold. The evaluator remains
 tool-neutral and unchanged.
 
-Result reports aggregate the already-recorded per-scenario HTTP, database,
-side-effect, and native-serving counters. They are explicitly diagnostic: the
+Result reports aggregate the already-recorded per-scenario HTTP, database, and
+native-serving counters. They are explicitly diagnostic: the
 v0.2 verdict is still task-level all-or-nothing, with no partial-credit or
 compensating-score path.
 

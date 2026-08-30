@@ -348,8 +348,8 @@ uv run python scripts/run_agent_candidate.py \
 ```
 
 The two official configurations share the same model, budget, and contract;
-the ordinary with-Sanka prompt is strictly additive — it only tells the agent
-the Sanka CLI exists. A third, diagnostic candidate id ending in
+the ordinary with-Sanka prompt is strictly additive — it offers the Sanka CLI
+with readiness-aware usage guidance. A third, diagnostic candidate id ending in
 `-with-sanka-readiness-aware` adds a preflight threshold decision and frozen
 gap checklist. The frozen overlay is graded by the same evaluator as every
 other candidate.
@@ -364,7 +364,7 @@ make report                               # -> reports/index.html + reports/summ
 
 The render is deterministic for a given set of reports; the headline stays the
 binary Fully Migrated count, never a blended score. Scenario-level HTTP,
-database, side-effect, and native-serving percentages appear underneath as
+database, and native-serving percentages appear underneath as
 non-scoring diagnostics only; they cannot compensate for a failed hard gate.
 
 See [docs/design.md](docs/design.md) for the implemented slice and next gates.

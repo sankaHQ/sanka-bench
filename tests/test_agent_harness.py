@@ -139,7 +139,8 @@ def test_readiness_context_abstains_and_renders_route_checklist(harness: object)
     assert "SANKA_DRF_ROUTE_PATTERN_UNSUPPORTED" in prompt
     assert "api/class/entries/ -> legacy_project.urls.permanent_style_redirect" in prompt
     assert "Allow, Location, and WWW-Authenticate" in prompt
-    assert "not a framework\n  redirect" in prompt
+    assert "FastAPI `APIRoute`" in prompt
+    assert "raw Starlette\n  `Route`" in prompt
 
 
 def test_readiness_context_emits_scaffold_at_threshold(harness: object) -> None:

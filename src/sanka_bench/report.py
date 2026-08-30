@@ -61,6 +61,7 @@ _FAMILY_LABELS = {
     "native-reference": "Human native reference",
 }
 
+
 class ReportError(RuntimeError):
     """Raised when the reports directory holds nothing renderable."""
 
@@ -306,8 +307,9 @@ def render_html(data: dict[str, Any]) -> str:
     if any(row.get("cost_usd") is not None for row in data["rows"]):
         agent_note = (
             '<p class="note">Official agent rows are single unattended attempts (pass@1) with '
-            "the same model, turn budget, and contract; the ordinary with-Sanka prompt only "
-            "adds that the Sanka CLI exists. Readiness-aware rows are a separately labelled "
+            "the same model, turn budget, and contract; the ordinary with-Sanka prompt offers "
+            "the Sanka CLI with readiness-aware usage guidance. Readiness-aware rows are a "
+            "separately labelled "
             "diagnostic arm. Dollar and time figures are the agent's own reported totals "
             "across the covered tasks. The Sanka native converter and the controls run in "
             "seconds at no model cost.</p>"

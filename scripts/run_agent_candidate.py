@@ -13,8 +13,8 @@ separate diagnostic arm:
 
 - ``--candidate-id claude-code-alone`` — the agent and the task, nothing else;
 - ``--candidate-id claude-code-with-sanka`` (with ``--sanka-bin``) — the same
-  agent, same budget, same contract, plus the Sanka CLI and three lines
-  telling it that Sanka can generate the native candidate.
+  agent, same budget, same contract, plus the Sanka CLI and readiness-aware
+  guidance for adopting or declining its generated candidate.
 - ``--candidate-id claude-code-with-sanka-readiness-aware`` — the harness runs
   scan/plan first, generates a scaffold only at or above the configured native
   readiness threshold, and otherwise gives the agent a structured unsupported-
