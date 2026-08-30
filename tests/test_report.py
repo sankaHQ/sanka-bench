@@ -27,19 +27,23 @@ def _result(
     migrated: bool,
     native: bool = True,
     stats: dict[str, Any] | None = None,
+    metrics: dict[str, dict[str, int]] | None = None,
 ) -> dict[str, Any]:
     gates = dict(GATES_PASS)
     gates["native_target"] = native
     provenance: dict[str, Any] = {"evaluator_version": "0.0.1"}
     if stats is not None:
         provenance["candidate_stats"] = stats
-    return {
+    result: dict[str, Any] = {
         "task_id": task,
         "candidate_id": candidate,
         "fully_migrated": migrated,
         "hard_gates": gates,
         "provenance": provenance,
     }
+    if metrics is not None:
+        result["metrics"] = metrics
+    return result
 
 
 def _write(reports: Path, name: str, payload: dict[str, Any]) -> None:
@@ -76,6 +80,12 @@ def reports_dir(tmp_path: Path) -> Path:
             "claude-code-alone",
             migrated=True,
             stats={"turns": 36, "duration_seconds": 300.0, "cost_usd": 1.5},
+            metrics={
+                "behavioral_parity": {"passed": 9, "total": 10},
+                "database_parity": {"passed": 10, "total": 10},
+                "side_effect_parity": {"passed": 10, "total": 10},
+                "native_compliance": {"passed": 8, "total": 10},
+            },
         ),
     )
     _write(
@@ -86,6 +96,12 @@ def reports_dir(tmp_path: Path) -> Path:
             "claude-code-alone",
             migrated=True,
             stats={"turns": 40, "duration_seconds": 180.0, "cost_usd": 0.5},
+            metrics={
+                "behavioral_parity": {"passed": 8, "total": 10},
+                "database_parity": {"passed": 9, "total": 10},
+                "side_effect_parity": {"passed": 10, "total": 10},
+                "native_compliance": {"passed": 10, "total": 10},
+            },
         ),
     )
     return reports
@@ -113,6 +129,12 @@ def test_collect_groups_families_and_parity(reports_dir: Path) -> None:
     agent = rows["claude-code-alone"]
     assert agent["cost_usd"] == pytest.approx(2.0)
     assert agent["duration_seconds"] == pytest.approx(480.0)
+    assert agent["scenario_metrics"] == {
+        "behavioral_parity": {"passed": 17, "total": 20, "rate": 0.85},
+        "database_parity": {"passed": 19, "total": 20, "rate": 0.95},
+        "side_effect_parity": {"passed": 20, "total": 20, "rate": 1.0},
+        "native_compliance": {"passed": 18, "total": 20, "rate": 0.9},
+    }
     assert rows["sanka-native"]["cost_usd"] is None
 
 
@@ -126,6 +148,9 @@ def test_html_and_svg_render_the_headline(reports_dir: Path) -> None:
     assert "1/1 local↔Docker runs agree" in page
     assert "$2.00 · 8 min agent time" in page
     assert "single unattended attempts" in page
+    assert "non-scoring: HTTP 85.0% (17/20)" in page
+    assert "Scenario percentages are diagnostic only" in page
+    assert "never compensate for a failed hard gate" in page
     svg = render_svg(data)
     assert svg.startswith("<svg") and svg.endswith("</svg>")
     assert "tasks fully migrated" in svg

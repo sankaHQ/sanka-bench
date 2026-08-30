@@ -7,6 +7,8 @@ candidate, and renders:
 - a hero tally — tasks fully migrated per approach — the headline visual;
 - a per-task hard-gate matrix, where a compatibility facade shows green
   behavior next to a red native-evidence gate;
+- non-scoring scenario diagnostics for behavior, database, side effects, and
+  native serving evidence, kept visibly separate from the v0.2 verdict;
 - a provenance footer (evaluator versions, repeat counts, runner parity).
 
 The output is deterministic for a given set of reports: no timestamps, sorted
@@ -37,6 +39,7 @@ _FAMILY_ORDER = (
     "compatibility-bridge",
     "claude-code-alone",
     "claude-code-with-sanka",
+    "claude-code-with-sanka-readiness-aware",
     "sanka-native",
     "native-reference",
 )
@@ -45,9 +48,17 @@ _FAMILY_LABELS = {
     "compatibility-bridge": "Sanka compatibility bridge",
     "claude-code-alone": "Claude Code, agent alone",
     "claude-code-with-sanka": "Claude Code + Sanka",
+    "claude-code-with-sanka-readiness-aware": "Claude Code + readiness-aware Sanka",
     "sanka-native": "Sanka native converter",
     "native-reference": "Human native reference",
 }
+
+_DIAGNOSTIC_METRICS = (
+    ("behavioral_parity", "HTTP"),
+    ("database_parity", "DB"),
+    ("side_effect_parity", "FX"),
+    ("native_compliance", "NATIVE"),
+)
 
 
 class ReportError(RuntimeError):
@@ -98,6 +109,10 @@ def collect(reports_dir: Path) -> dict[str, Any]:
         cost_usd = 0.0
         duration_seconds = 0.0
         has_stats = False
+        scenario_metrics = {
+            key: {"passed": 0, "total": 0, "rate": 0.0} for key, _ in _DIAGNOSTIC_METRICS
+        }
+        has_scenario_metrics = False
         for task in tasks:
             entry = cells.get((task, family))
             result = entry and (entry["local"] or entry["docker"])
@@ -106,11 +121,25 @@ def collect(reports_dir: Path) -> dict[str, Any]:
             covered.append(task)
             if result.get("fully_migrated") is True:
                 migrated.append(task)
+            metrics = result.get("metrics")
+            if isinstance(metrics, dict):
+                for key, _ in _DIAGNOSTIC_METRICS:
+                    item = metrics.get(key)
+                    if not isinstance(item, dict):
+                        continue
+                    passed = int(item.get("passed") or 0)
+                    total = int(item.get("total") or 0)
+                    scenario_metrics[key]["passed"] += passed
+                    scenario_metrics[key]["total"] += total
+                    has_scenario_metrics = has_scenario_metrics or total > 0
             stats = result.get("provenance", {}).get("candidate_stats")
             if isinstance(stats, dict):
                 has_stats = True
                 cost_usd += float(stats.get("cost_usd") or 0)
                 duration_seconds += float(stats.get("duration_seconds") or 0)
+        if has_scenario_metrics:
+            for item in scenario_metrics.values():
+                item["rate"] = item["passed"] / item["total"] if item["total"] else 0.0
         rows.append(
             {
                 "family": family,
@@ -119,6 +148,7 @@ def collect(reports_dir: Path) -> dict[str, Any]:
                 "covered": covered,
                 "cost_usd": cost_usd if has_stats else None,
                 "duration_seconds": duration_seconds if has_stats else None,
+                "scenario_metrics": scenario_metrics if has_scenario_metrics else None,
             }
         )
 
@@ -174,12 +204,28 @@ def _tally_row(row: dict[str, Any], tasks: list[str]) -> str:
             f'<span class="tally-stats">${row["cost_usd"]:.2f}'
             f" · {minutes:.0f} min agent time</span>"
         )
+    diagnostics_note = ""
+    diagnostics = row.get("scenario_metrics")
+    if isinstance(diagnostics, dict):
+        values = []
+        for key, label in _DIAGNOSTIC_METRICS:
+            metric = diagnostics.get(key)
+            if not isinstance(metric, dict) or not metric.get("total"):
+                continue
+            values.append(
+                f"{label} {float(metric.get('rate') or 0) * 100:.1f}% "
+                f"({int(metric.get('passed') or 0)}/{int(metric['total'])})"
+            )
+        if values:
+            diagnostics_note = (
+                f'<span class="tally-diagnostics">non-scoring: {_esc(" · ".join(values))}</span>'
+            )
     return (
         '<div class="tally-row">'
         f'<span class="tally-label">{_esc(row["label"])}</span>'
         f'<span class="tally-cells">{"".join(cells)}</span>'
         f'<span class="tally-count">{_esc(count)}</span>'
-        f"{stats_note}"
+        f"{stats_note}{diagnostics_note}"
         "</div>"
     )
 
@@ -235,11 +281,19 @@ def render_html(data: dict[str, Any]) -> str:
     agent_note = ""
     if any(row.get("cost_usd") is not None for row in data["rows"]):
         agent_note = (
-            '<p class="note">Agent rows are single unattended attempts (pass@1) with the same '
-            "model, turn budget, and contract; the with-Sanka prompt only adds that the Sanka "
-            "CLI exists. Dollar and time figures are the agent's own reported totals across "
-            "the covered tasks. The Sanka native converter and the controls run in seconds at "
-            "no model cost.</p>"
+            '<p class="note">Official agent rows are single unattended attempts (pass@1) with '
+            "the same model, turn budget, and contract; the ordinary with-Sanka prompt only "
+            "adds that the Sanka CLI exists. Readiness-aware rows are a separately labelled "
+            "diagnostic arm. Dollar and time figures are the agent's own reported totals "
+            "across the covered tasks. The Sanka native converter and the controls run in "
+            "seconds at no model cost.</p>"
+        )
+    diagnostics_note = ""
+    if any(row.get("scenario_metrics") is not None for row in data["rows"]):
+        diagnostics_note = (
+            '<p class="note">Scenario percentages are diagnostic only. They explain where a '
+            "candidate failed but never compensate for a failed hard gate or change the v0.2 "
+            "all-or-nothing task score.</p>"
         )
     bridge_note = ""
     if any(row["family"] == "compatibility-bridge" for row in data["rows"]):
@@ -292,7 +346,7 @@ h2 {{
 }}
 h3 {{ font: 500 15px/1.4 "IBM Plex Mono", ui-monospace, monospace; margin: 24px 0 8px; }}
 .tally {{ display: flex; flex-direction: column; gap: 10px; }}
-.tally-row {{ display: flex; align-items: center; gap: 14px; }}
+.tally-row {{ display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; }}
 .tally-label {{ flex: 0 0 240px; font-size: 14px; }}
 .tally-cells {{ display: flex; gap: 2px; }}
 .cell {{ width: 34px; height: 16px; border-radius: 4px; }}
@@ -308,6 +362,11 @@ h3 {{ font: 500 15px/1.4 "IBM Plex Mono", ui-monospace, monospace; margin: 24px 
 .tally-stats {{
   font: 400 12px/1 "IBM Plex Mono", ui-monospace, monospace;
   font-variant-numeric: tabular-nums; color: var(--ink-2); opacity: .85;
+}}
+.tally-diagnostics {{
+  flex-basis: 100%; margin-left: 254px;
+  font: 400 11.5px/1.4 "IBM Plex Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums; color: var(--ink-2); opacity: .8;
 }}
 .legend {{ color: var(--ink-2); font-size: 13px; margin-top: 10px; }}
 .legend .cell {{ display: inline-block; vertical-align: -3px; width: 16px; margin-right: 4px; }}
@@ -354,6 +413,7 @@ never averaged into a compensating score.</p>
 &nbsp;&nbsp;<span class="cell cell-fail"></span> failed a hard gate
 &nbsp;&nbsp;one cell per task ({_esc(len(tasks))} task{"s" if len(tasks) != 1 else ""})</p>
 {agent_note}
+{diagnostics_note}
 {bridge_note}
 <h2>Hard gates by task</h2>
 {tables}
