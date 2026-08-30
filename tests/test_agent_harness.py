@@ -64,6 +64,11 @@ def test_prompts_differ_only_by_the_sanka_paragraph(harness: object) -> None:
     # the grading basis is disclosed: a hidden superset extends the public sample
     assert "hidden superset" in core
     assert "representative sample" in core
+    # the native-serving requirement is disclosed: APIRoute registration, with
+    # the specific mechanisms that fail the gate named (this exact omission
+    # zeroed four behaviorally-correct candidates across three runs)
+    assert "fastapi.routing.APIRoute" in core
+    assert "raw Starlette" in core
     # the +Sanka variant is strictly additive: same contract, one extra tool
     assert "scan" in extra and "plan --to fastapi" in extra and "bench-candidate" in extra
     # readiness-aware availability, not a copy mandate: the agent is told to read
@@ -81,6 +86,168 @@ def test_as_text_normalizes_timeout_output(harness: object) -> None:
     assert as_text(None) == ""
     assert as_text(b"partial \xff output") == "partial � output"
     assert as_text("already text") == "already text"
+
+
+def test_candidate_modes_preserve_official_arms_and_add_diagnostic_arm(
+    harness: object,
+) -> None:
+    mode = harness._candidate_mode  # type: ignore[attr-defined]
+    assert mode("opus-alone") == "alone"
+    assert mode("opus-with-sanka") == "with-sanka"
+    assert mode("opus-with-sanka-readiness-aware") == "readiness-aware"
+    assert mode("opus-experimental") is None
+
+
+def test_readiness_context_abstains_and_renders_route_checklist(harness: object) -> None:
+    context = harness._readiness_context(  # type: ignore[attr-defined]
+        {
+            "readiness": 0.034,
+            "native_routes": 1,
+            "native_eligible_routes": 29,
+            "needs_adaptation_routes": 1,
+            "plan_hash": "sha256:task008",
+            "routes": [
+                {
+                    "automatic": False,
+                    "method": "GET",
+                    "path": "/api/dynamic/entries/{code}/",
+                    "operation": "get",
+                    "strategy": "needs-manual-adaptation",
+                    "adaptation_reasons": [
+                        {
+                            "code": "SANKA_DRF_ROUTE_PATTERN_UNSUPPORTED",
+                            "feature": "route-pattern",
+                            "message": "Regex route requires manual adaptation.",
+                        }
+                    ],
+                },
+                {
+                    "automatic": True,
+                    "method": "GET",
+                    "path": "/api/",
+                    "operation": "get",
+                    "strategy": "native-fastapi-api-root",
+                    "adaptation_reasons": [],
+                },
+            ],
+        },
+        0.5,
+        {
+            "skipped_routes": [
+                {
+                    "pattern": "api/class/entries/",
+                    "view": "legacy_project.urls.permanent_style_redirect",
+                    "reason": "non-drf-view",
+                }
+            ]
+        },
+    )
+    assert context["decision"] == "gap-report-only"
+    assert len(context["unsupported_routes"]) == 1
+    prompt = harness._readiness_prompt(context)  # type: ignore[attr-defined]
+    assert "3.4% (1/29" in prompt
+    assert "did not generate a scaffold" in prompt
+    assert "Do not run `sanka apply`" in prompt
+    assert "SANKA_DRF_ROUTE_PATTERN_UNSUPPORTED" in prompt
+    assert "api/class/entries/ -> legacy_project.urls.permanent_style_redirect" in prompt
+    assert "Allow, Location, and WWW-Authenticate" in prompt
+    assert "fastapi.routing.APIRoute" in prompt
+    assert "not a raw" in prompt and "Starlette route" in prompt
+
+
+def test_readiness_context_emits_scaffold_at_threshold(harness: object) -> None:
+    context = harness._readiness_context(  # type: ignore[attr-defined]
+        {
+            "readiness": 0.75,
+            "native_routes": 3,
+            "native_eligible_routes": 4,
+            "needs_adaptation_routes": 1,
+            "plan_hash": "sha256:ready",
+            "routes": [],
+        },
+        0.5,
+    )
+    assert context["decision"] == "emit-scaffold"
+    prompt = harness._readiness_prompt(context)  # type: ignore[attr-defined]
+    assert "generated `bench-candidate/overlay/`" in prompt
+
+
+@pytest.mark.parametrize(
+    ("readiness", "expected_decision", "expects_apply"),
+    [(0.034, "gap-report-only", False), (0.75, "emit-scaffold", True)],
+)
+def test_readiness_preflight_mechanically_gates_scaffold(
+    harness: object,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    readiness: float,
+    expected_decision: str,
+    expects_apply: bool,
+) -> None:
+    plan_dir = tmp_path / ".sanka"
+    plan_dir.mkdir()
+    (plan_dir / "plan-fastapi.json").write_text(
+        json.dumps(
+            {
+                "readiness": readiness,
+                "native_routes": 3 if readiness >= 0.5 else 1,
+                "native_eligible_routes": 4 if readiness >= 0.5 else 29,
+                "needs_adaptation_routes": 1,
+                "plan_hash": "sha256:preflight",
+                "routes": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (plan_dir / "scan.json").write_text(
+        json.dumps(
+            {
+                "skipped_routes": [
+                    {
+                        "pattern": "legacy/redirect/",
+                        "view": "config.urls.legacy_redirect",
+                        "reason": "non-drf-view",
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    commands: list[list[str]] = []
+
+    def fake_run(command: list[str], *, workspace: Path, env: dict[str, str]) -> SimpleNamespace:
+        assert workspace == tmp_path
+        assert env == {"BENCH": "1"}
+        commands.append(command)
+        return SimpleNamespace(returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr(harness, "_run_sanka_command", fake_run)
+    context = harness._prepare_readiness_context(  # type: ignore[attr-defined]
+        tmp_path,
+        Path("/tools/sanka"),
+        {"BENCH": "1"},
+        0.5,
+    )
+    assert context["decision"] == expected_decision
+    assert context["skipped_routes"] == [
+        {
+            "pattern": "legacy/redirect/",
+            "view": "config.urls.legacy_redirect",
+            "reason": "non-drf-view",
+        }
+    ]
+    assert [command[1] for command in commands] == [
+        "scan",
+        "plan",
+        *(("apply",) if expects_apply else ()),
+    ]
+    if expects_apply:
+        assert "--plan-hash" in commands[-1]
+        assert "sha256:preflight" in commands[-1]
+        # the harness already made the threshold decision; the engine's own
+        # default --min-readiness gate must not double-veto it
+        assert "--min-readiness" in commands[-1]
+        assert commands[-1][commands[-1].index("--min-readiness") + 1] == "0"
 
 
 def test_codex_command_uses_responses_and_custom_openai_provider(

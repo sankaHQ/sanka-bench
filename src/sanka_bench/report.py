@@ -6,9 +6,9 @@ candidate, and renders:
 
 - a hero tally — tasks fully migrated per approach — the headline visual;
 - a diagnostic scenario-parity table (Migration Quality Score v0.3 preview):
-  per-scenario behavior/database/native rates published beside the binary
-  verdict, so a 31/32 near-miss is visible next to the cliff it fell off —
-  never blended into the headline;
+  per-scenario behavior, database, side-effect, and native-serving rates
+  published beside the binary verdict, so a 31/32 near-miss is visible next
+  to the cliff it fell off — never blended into the headline;
 - a per-task hard-gate matrix, where a compatibility facade shows green
   behavior next to a red native-evidence gate;
 - a provenance footer (evaluator versions, repeat counts, runner parity).
@@ -39,6 +39,7 @@ GATE_ORDER = (
 _DIAGNOSTIC_FIELDS = {
     "behavior": "behavioral_parity",
     "database": "database_parity",
+    "side_effects": "side_effect_parity",
     "native": "native_compliance",
 }
 
@@ -47,6 +48,7 @@ _FAMILY_ORDER = (
     "compatibility-bridge",
     "claude-code-alone",
     "claude-code-with-sanka",
+    "claude-code-with-sanka-readiness-aware",
     "sanka-native",
     "native-reference",
 )
@@ -55,6 +57,7 @@ _FAMILY_LABELS = {
     "compatibility-bridge": "Sanka compatibility bridge",
     "claude-code-alone": "Claude Code, agent alone",
     "claude-code-with-sanka": "Claude Code + Sanka",
+    "claude-code-with-sanka-readiness-aware": "Claude Code + readiness-aware Sanka",
     "sanka-native": "Sanka native converter",
     "native-reference": "Human native reference",
 }
@@ -285,7 +288,7 @@ def _diagnostic_table(data: dict[str, Any]) -> str:
         '<div class="table-wrap"><table>'
         '<thead><tr><th scope="col">Candidate</th>'
         '<th scope="col">HTTP behavior</th><th scope="col">Database</th>'
-        '<th scope="col">Native serving</th></tr></thead>'
+        '<th scope="col">Side effects</th><th scope="col">Native serving</th></tr></thead>'
         f"<tbody>{''.join(body_rows)}</tbody></table></div>"
     )
 
@@ -304,11 +307,12 @@ def render_html(data: dict[str, Any]) -> str:
     agent_note = ""
     if any(row.get("cost_usd") is not None for row in data["rows"]):
         agent_note = (
-            '<p class="note">Agent rows are single unattended attempts (pass@1) with the same '
-            "model, turn budget, and contract; the with-Sanka prompt only adds that the Sanka "
-            "CLI exists. Dollar and time figures are the agent's own reported totals across "
-            "the covered tasks. The Sanka native converter and the controls run in seconds at "
-            "no model cost.</p>"
+            '<p class="note">Official agent rows are single unattended attempts (pass@1) with '
+            "the same model, turn budget, and contract; the ordinary with-Sanka prompt only "
+            "adds that the Sanka CLI exists. Readiness-aware rows are a separately labelled "
+            "diagnostic arm. Dollar and time figures are the agent's own reported totals "
+            "across the covered tasks. The Sanka native converter and the controls run in "
+            "seconds at no model cost.</p>"
         )
     bridge_note = ""
     if any(row["family"] == "compatibility-bridge" for row in data["rows"]):
@@ -361,7 +365,7 @@ h2 {{
 }}
 h3 {{ font: 500 15px/1.4 "IBM Plex Mono", ui-monospace, monospace; margin: 24px 0 8px; }}
 .tally {{ display: flex; flex-direction: column; gap: 10px; }}
-.tally-row {{ display: flex; align-items: center; gap: 14px; }}
+.tally-row {{ display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; }}
 .tally-label {{ flex: 0 0 240px; font-size: 14px; }}
 .tally-cells {{ display: flex; gap: 2px; }}
 .cell {{ width: 34px; height: 16px; border-radius: 4px; }}

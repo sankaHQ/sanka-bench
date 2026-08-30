@@ -47,13 +47,19 @@ def _result(
 
 
 def _metrics(
-    behavior: tuple[int, int], database: tuple[int, int], native: tuple[int, int]
+    behavior: tuple[int, int],
+    database: tuple[int, int],
+    native: tuple[int, int],
+    side_effects: tuple[int, int] | None = None,
 ) -> dict[str, Any]:
-    return {
+    payload = {
         "behavioral_parity": {"passed": behavior[0], "total": behavior[1]},
         "database_parity": {"passed": database[0], "total": database[1]},
         "native_compliance": {"passed": native[0], "total": native[1]},
     }
+    if side_effects is not None:
+        payload["side_effect_parity"] = {"passed": side_effects[0], "total": side_effects[1]}
+    return payload
 
 
 def _write(reports: Path, name: str, payload: dict[str, Any]) -> None:
@@ -90,6 +96,9 @@ def reports_dir(tmp_path: Path) -> Path:
             "claude-code-alone",
             migrated=True,
             stats={"turns": 36, "duration_seconds": 300.0, "cost_usd": 1.5},
+            metrics=_metrics(
+                behavior=(9, 10), database=(10, 10), native=(8, 10), side_effects=(10, 10)
+            ),
         ),
     )
     _write(
@@ -128,6 +137,12 @@ def test_collect_groups_families_and_parity(reports_dir: Path) -> None:
     agent = rows["claude-code-alone"]
     assert agent["cost_usd"] == pytest.approx(2.0)
     assert agent["duration_seconds"] == pytest.approx(480.0)
+    assert agent["diagnostic"] == {
+        "behavior": [40, 42],
+        "database": [42, 42],
+        "side_effects": [10, 10],
+        "native": [37, 42],
+    }
     assert rows["sanka-native"]["cost_usd"] is None
 
 
@@ -141,6 +156,7 @@ def test_html_and_svg_render_the_headline(reports_dir: Path) -> None:
     assert "1/1 local↔Docker runs agree" in page
     assert "$2.00 · 8 min agent time" in page
     assert "single unattended attempts" in page
+    assert "never compensate for a failed hard gate" in page
     svg = render_svg(data)
     assert svg.startswith("<svg") and svg.endswith("</svg>")
     assert "tasks fully migrated" in svg
@@ -151,9 +167,10 @@ def test_diagnostic_parity_is_published_beside_the_binary_verdict(reports_dir: P
     rows = {row["family"]: row for row in data["rows"]}
     # only results carrying metrics contribute; families without metrics stay diagnostic-free
     assert rows["claude-code-alone"]["diagnostic"] == {
-        "behavior": [31, 32],
-        "database": [32, 32],
-        "native": [29, 32],
+        "behavior": [40, 42],
+        "database": [42, 42],
+        "side_effects": [10, 10],
+        "native": [37, 42],
     }
     assert rows["sanka-native"]["diagnostic"] is None
     page = render_html(data)
