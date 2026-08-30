@@ -27,14 +27,14 @@ def _result(
     migrated: bool,
     native: bool = True,
     stats: dict[str, Any] | None = None,
-    metrics: dict[str, dict[str, int]] | None = None,
+    metrics: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     gates = dict(GATES_PASS)
     gates["native_target"] = native
     provenance: dict[str, Any] = {"evaluator_version": "0.0.1"}
     if stats is not None:
         provenance["candidate_stats"] = stats
-    result: dict[str, Any] = {
+    payload = {
         "task_id": task,
         "candidate_id": candidate,
         "fully_migrated": migrated,
@@ -42,8 +42,18 @@ def _result(
         "provenance": provenance,
     }
     if metrics is not None:
-        result["metrics"] = metrics
-    return result
+        payload["metrics"] = metrics
+    return payload
+
+
+def _metrics(
+    behavior: tuple[int, int], database: tuple[int, int], native: tuple[int, int]
+) -> dict[str, Any]:
+    return {
+        "behavioral_parity": {"passed": behavior[0], "total": behavior[1]},
+        "database_parity": {"passed": database[0], "total": database[1]},
+        "native_compliance": {"passed": native[0], "total": native[1]},
+    }
 
 
 def _write(reports: Path, name: str, payload: dict[str, Any]) -> None:
@@ -80,12 +90,6 @@ def reports_dir(tmp_path: Path) -> Path:
             "claude-code-alone",
             migrated=True,
             stats={"turns": 36, "duration_seconds": 300.0, "cost_usd": 1.5},
-            metrics={
-                "behavioral_parity": {"passed": 9, "total": 10},
-                "database_parity": {"passed": 10, "total": 10},
-                "side_effect_parity": {"passed": 10, "total": 10},
-                "native_compliance": {"passed": 8, "total": 10},
-            },
         ),
     )
     _write(
@@ -96,12 +100,7 @@ def reports_dir(tmp_path: Path) -> Path:
             "claude-code-alone",
             migrated=True,
             stats={"turns": 40, "duration_seconds": 180.0, "cost_usd": 0.5},
-            metrics={
-                "behavioral_parity": {"passed": 8, "total": 10},
-                "database_parity": {"passed": 9, "total": 10},
-                "side_effect_parity": {"passed": 10, "total": 10},
-                "native_compliance": {"passed": 10, "total": 10},
-            },
+            metrics=_metrics(behavior=(31, 32), database=(32, 32), native=(29, 32)),
         ),
     )
     return reports
@@ -129,12 +128,6 @@ def test_collect_groups_families_and_parity(reports_dir: Path) -> None:
     agent = rows["claude-code-alone"]
     assert agent["cost_usd"] == pytest.approx(2.0)
     assert agent["duration_seconds"] == pytest.approx(480.0)
-    assert agent["scenario_metrics"] == {
-        "behavioral_parity": {"passed": 17, "total": 20, "rate": 0.85},
-        "database_parity": {"passed": 19, "total": 20, "rate": 0.95},
-        "side_effect_parity": {"passed": 20, "total": 20, "rate": 1.0},
-        "native_compliance": {"passed": 18, "total": 20, "rate": 0.9},
-    }
     assert rows["sanka-native"]["cost_usd"] is None
 
 
@@ -148,12 +141,28 @@ def test_html_and_svg_render_the_headline(reports_dir: Path) -> None:
     assert "1/1 local↔Docker runs agree" in page
     assert "$2.00 · 8 min agent time" in page
     assert "single unattended attempts" in page
-    assert "non-scoring: HTTP 85.0% (17/20)" in page
-    assert "Scenario percentages are diagnostic only" in page
-    assert "never compensate for a failed hard gate" in page
     svg = render_svg(data)
     assert svg.startswith("<svg") and svg.endswith("</svg>")
     assert "tasks fully migrated" in svg
+
+
+def test_diagnostic_parity_is_published_beside_the_binary_verdict(reports_dir: Path) -> None:
+    data = collect(reports_dir)
+    rows = {row["family"]: row for row in data["rows"]}
+    # only results carrying metrics contribute; families without metrics stay diagnostic-free
+    assert rows["claude-code-alone"]["diagnostic"] == {
+        "behavior": [31, 32],
+        "database": [32, 32],
+        "native": [29, 32],
+    }
+    assert rows["sanka-native"]["diagnostic"] is None
+    page = render_html(data)
+    assert "Diagnostic scenario parity" in page
+    assert "score v0.3 preview" in page
+    assert "31/32" in page
+    # the diagnostic never replaces the headline: binary language stays present
+    assert "fully migrated" in page
+    assert "never compensate for a failed" in page
 
 
 def test_render_is_deterministic(reports_dir: Path) -> None:

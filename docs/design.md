@@ -362,3 +362,64 @@ is allowed to claim a successful DRF-to-FastAPI migration.
    select or bypass evaluator assertions.
 4. Design the separately reviewed `/v2/migrate/code-projects` and
    `/v2/migrate/code-migrations` API resources.
+
+## Measurement fixes from the v3 model-matrix forensics (2026-08-31)
+
+The 10-task model matrix (2026-08-30) surfaced measurement hazards that
+distorted the alone/with-Sanka comparison. Each fix below changes how cells are
+measured, so results produced before and after are not silently comparable —
+the agent-harness prompt and the driver evidence are part of the recorded
+provenance (GENERATED.md carries the prompt verbatim; task digests cover the
+drivers).
+
+**Side-effect parity is now measured, never declared.** Every scenario driver
+snapshots its served workspace before the scenario and reports the files the
+application created, modified, or deleted (`sanka_bench.workspace_effects`),
+for the oracle and the candidate symmetrically. Previously nine of ten drivers
+hardcoded `side_effects = []`, which made the gate an assertion-free tautology;
+a candidate that quietly wrote files into its workspace could not fail it.
+Media-serving tasks keep their richer media-state evidence and add the
+workspace probe on top. Only change kinds enter the evidence, so files whose
+contents legitimately vary between clean runs still fingerprint identically
+for the determinism gate.
+
+**Budget exhaustion is graded; infrastructure death is classified.** The agent
+harness previously discarded any run whose agent reported an error — including
+`error_max_turns` — so a turn-capped workspace that might have passed scored
+zero without ever being evaluated, and a silent provider failure that produced
+no files was indistinguishable from an agent refusal. Now: turn-budget and
+wall-clock exhaustion freeze the workspace as-is with the terminal reason
+disclosed in GENERATED.md (exit 0, evaluated like any candidate); other agent
+errors remain unfrozen failures (exit 1); an empty workspace exits 3 with the
+recorded turn count so the run driver can classify silent provider failures
+into the infrastructure ledger instead of the quality columns. The Codex CLI
+exposes no turn bound, so codex cells are bounded only by the wall-clock
+timeout — GENERATED.md now states which limit actually applied instead of
+implying a turn cap that never reached the agent.
+
+**The grading basis is disclosed to the agent.** The prompt now states that
+`public-tests/scenarios.json` is a representative sample and that the evaluator
+replays a hidden superset with additional edge cases and captured response
+headers. The hidden scenarios themselves stay hidden; what changed is that an
+agent can no longer satisfy the letter of the prompt ("verify every scenario")
+while remaining blind to the dimension it is graded on.
+
+**The with-Sanka condition offers the tool; it no longer mandates a workflow.**
+The old paragraph instructed agents to copy the complete generated overlay to
+the repository root and adjust it — including on tasks where the engine's own
+plan reported 0–14% native readiness and emitted almost nothing. Forensics
+across three models showed the mandate displaced source reconnaissance and
+licensed early confidence without contributing code. The new paragraph tells
+the agent to read the plan's readiness report, adopt generated files where
+readiness is high, treat low-readiness output as reference material, and in
+all cases derive exact semantics from the source application, which remains
+the specification. The condition still differs from `alone` by exactly one
+additive paragraph.
+
+**Near-misses are visible beside the cliff.** `sanka-bench report` now renders
+a diagnostic scenario-parity table (Migration Quality Score v0.3 preview):
+per-scenario behavior/database/native pass rates summed across covered tasks,
+plus per-task scenario counts in the gate matrix. The headline stays binary
+per task — a 36-route task is still all-or-nothing — but a candidate at 31/32
+scenarios is now distinguishable from an empty one without reweighting or
+blending anything into the verdict.

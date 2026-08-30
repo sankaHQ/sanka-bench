@@ -11,6 +11,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from sanka_bench.workspace_effects import workspace_changes, workspace_snapshot
+
 GUARD_TIMEOUT_SECONDS = 90
 
 
@@ -27,6 +29,7 @@ def _parser() -> argparse.ArgumentParser:
 def main() -> int:
     args = _parser().parse_args()
     workspace = args.workspace.resolve()
+    effects_before = workspace_snapshot(workspace)
     database = args.database.resolve()
     media_root = database.with_name(f"{database.stem}-media")
     if media_root.exists():
@@ -58,7 +61,9 @@ def main() -> int:
 
     payload = dict(served)
     payload["database"] = _database_state()
-    payload["side_effects"] = _media_state(media_root)
+    payload["side_effects"] = _media_state(media_root) + workspace_changes(
+        effects_before, workspace_snapshot(workspace)
+    )
     print(json.dumps(payload, ensure_ascii=False, separators=(",", ":"), sort_keys=True))
     return 0
 

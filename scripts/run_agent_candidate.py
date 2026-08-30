@@ -35,6 +35,28 @@ Two agent families share the same contract, prompt, and freezing logic:
 Candidate ids stay free-form (``<agent>-<model-slug>-alone`` /
 ``...-with-sanka`` / ``...-with-sanka-readiness-aware``); the suffix selects
 the run configuration.
+
+Budget enforcement differs by agent and is disclosed, never papered over:
+``--max-turns`` reaches the Claude CLI, while Codex CLI 0.150 exposes no turn
+bound, so codex cells are bounded only by the 3600-second wall-clock timeout —
+GENERATED.md states which limit actually applied.
+
+Exit codes tell the run driver what happened, so exhaustion is still
+evaluated while infrastructure failures stay out of the quality columns:
+
+- ``0`` — a candidate was frozen. That includes runs that exhausted the turn
+  budget or the wall-clock timeout with work in the workspace: the workspace
+  is frozen as-is and the terminal reason is disclosed in GENERATED.md, so the
+  evaluator grades what the agent actually produced instead of scoring an
+  unevaluated zero.
+- ``1`` — the agent reported an error (other than budget exhaustion) or the
+  run produced no parseable result; nothing is frozen. Classify before any
+  authorized rerun.
+- ``2`` — usage error (bad arguments / not a benchmark task).
+- ``3`` — the agent finished without adding a single file; nothing is frozen.
+  An empty workspace together with no error event and no recorded turns is the
+  signature of a silent provider failure — record it in the infrastructure
+  ledger instead of charging it as a quality result.
 """
 
 from __future__ import annotations
@@ -64,7 +86,12 @@ Deliverable contract (an automated evaluator enforces all of it):
    `public-tests/scenarios.json`: status codes, JSON bodies including exact
    error strings, and the resulting database rows. The evaluator seeds the
    database itself, replays each scenario against both applications from
-   identical snapshots, repeats runs, and rejects nondeterminism.
+   identical snapshots, repeats runs, and rejects nondeterminism. The public
+   scenarios are a representative sample, not the grading set: the evaluator
+   replays a hidden superset that adds edge cases and captures declared
+   response headers (redirects included), so match the source application's
+   exact semantics — headers, error wording, edge-case validation — rather
+   than tuning for the public list alone.
 5. The database path comes from the BENCH_DB_PATH environment variable through
    the existing settings module; reuse that mechanism unchanged.
 
@@ -77,18 +104,23 @@ consider the task done until every scenario matches exactly.
 
 PROMPT_SANKA = """
 The Sanka migration CLI is installed at: {sanka}
-It can generate a native FastAPI candidate for you:
+It can scan the source, report how much of it it can migrate natively, and
+generate FastAPI code for the routes it supports:
 
     {sanka} scan .
     {sanka} plan --to fastapi
     {sanka} apply --root . --bench-candidate ./bench-candidate
 
-The complete generated deliverable is the contents of bench-candidate/overlay/.
-Copy every file and directory from that overlay to the repository root, for
-example with `cp -R bench-candidate/overlay/. .`. This includes non-Python
-runtime files such as sanka-manifest.json and requirements.txt; do not copy
-only target_app.py or sanka_*.py. Then verify the scenarios and adjust the
-copied files if needed.
+Read the plan's readiness report before adopting anything: it states, per
+route, whether native generation is supported and why not when it is not
+(`plan --to fastapi --json` prints the full detail). At high readiness the
+generated overlay under bench-candidate/overlay/ is a strong starting point —
+copy the generated files and continue from them. At low readiness apply may
+refuse outright or emit only a few routes; treat whatever it produces as
+reference material, not as the thing to submit. Either way the original
+application remains the specification: derive every route's exact semantics
+from the source and verify by differential testing against it, never against
+the generated code.
 """
 
 PROMPT_SANKA_READINESS = """
@@ -108,8 +140,9 @@ URL patterns the Sanka scan saw but did not classify as DRF routes:
 Post-generation critic checklist (the evaluator checks these independently):
 - Every source route is covered, including explicit slash/no-slash variants.
 - Status, JSON/body bytes, Allow, Location, and WWW-Authenticate match exactly.
-- Each request is served by a workspace FastAPI endpoint, not a framework
-  redirect, mount, compatibility bridge, or source-framework dispatcher.
+- Each request is served by a workspace FastAPI `APIRoute`, not a raw Starlette
+  `Route`, framework redirect, mount, compatibility bridge, or source-framework
+  dispatcher.
 - Successful and rejected mutations leave every database table in the same
   state as the source application.
 
@@ -420,17 +453,34 @@ def main() -> int:
                 "json",
                 "--dangerously-skip-permissions",
             ]
+        terminal_reason: str | None = None
+        timed_out = False
         started = time.monotonic()
-        outcome = subprocess.run(
-            command,
-            cwd=workspace,
-            env=env,
-            stdin=subprocess.DEVNULL,
-            capture_output=True,
-            text=True,
-            timeout=3600,
-            check=False,
-        )
+        try:
+            outcome = subprocess.run(
+                command,
+                cwd=workspace,
+                env=env,
+                stdin=subprocess.DEVNULL,
+                capture_output=True,
+                text=True,
+                timeout=3600,
+                check=False,
+            )
+        except subprocess.TimeoutExpired as exc:
+            # The transcript so far is evidence, not garbage: keep it, and
+            # freeze whatever the agent managed to produce before the kill.
+            timed_out = True
+            outcome = subprocess.CompletedProcess(
+                exc.cmd,
+                returncode=124,
+                stdout=_as_text(exc.stdout),
+                stderr=_as_text(exc.stderr),
+            )
+            terminal_reason = (
+                "wall-clock timeout (3600s) exhausted; the agent process was "
+                "killed and the workspace was frozen as-is"
+            )
         measured_ms = (time.monotonic() - started) * 1000
         if args.agent == "codex":
             stats = _codex_stats(outcome.stdout, args, measured_ms)
@@ -450,13 +500,21 @@ def main() -> int:
                 json.dumps(readiness_context, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
                 encoding="utf-8",
             )
-        if outcome.returncode != 0 and not stats:
+        if not timed_out and outcome.returncode != 0 and not stats:
             detail = outcome.stderr.strip()[:2000] or "no output"
             print(f"agent run failed: {detail}", file=sys.stderr)
             return 1
         if stats.get("is_error"):
-            print(f"agent reported an error: {stats.get('result') or stats}", file=sys.stderr)
-            return 1
+            if str(stats.get("subtype") or "") == "error_max_turns":
+                # Budget exhaustion is a pass@1 quality outcome, not an
+                # infrastructure failure: freeze and let the evaluator grade
+                # whatever the agent produced within its budget.
+                terminal_reason = (
+                    f"turn budget ({args.max_turns}) exhausted; the workspace was frozen as-is"
+                )
+            else:
+                print(f"agent reported an error: {stats.get('result') or stats}", file=sys.stderr)
+                return 1
 
         pristine = {
             path.relative_to(source).as_posix(): path.read_bytes()
@@ -486,11 +544,17 @@ def main() -> int:
             shutil.copy2(workspace / key, destination)
 
         if not added:
+            turns = stats.get("num_turns")
             print(
-                "agent produced no new files; refusing to freeze an empty candidate",
+                "agent produced no new files; refusing to freeze an empty candidate "
+                f"(terminal: {terminal_reason or 'completed'}; "
+                f"turns: {turns if turns is not None else 'none recorded'}). "
+                "No error event plus no recorded activity is the signature of a "
+                "silent provider failure - classify it in the infrastructure "
+                "ledger instead of charging it as an agent-quality result.",
                 file=sys.stderr,
             )
-            return 1
+            return 3
         _write_candidate(out_dir, args, agent_version, stats)
         _write_disclosure(
             out_dir,
@@ -501,11 +565,13 @@ def main() -> int:
             added=added,
             modified=modified,
             readiness_context=readiness_context,
+            terminal_reason=terminal_reason,
         )
     print(
         f"{args.candidate_id}: {len(added)} file(s) in overlay"
         + (f", {len(modified)} contract-violating modification(s) DROPPED" if modified else "")
         + (f", {stats.get('num_turns', '?')} turns" if stats else "")
+        + (f" [{terminal_reason}]" if terminal_reason else "")
     )
     return 0
 
@@ -628,6 +694,15 @@ def _excluded(relative: Path) -> bool:
     return relative.name in EXCLUDED_NAMES
 
 
+def _as_text(value: object) -> str:
+    """TimeoutExpired carries bytes on POSIX even in text mode; normalize."""
+    if value is None:
+        return ""
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="replace")
+    return str(value)
+
+
 def _agent_stats(stdout: str) -> dict[str, object]:
     for line in reversed([line for line in stdout.splitlines() if line.strip()]):
         try:
@@ -687,11 +762,19 @@ def _write_disclosure(
     added: list[str],
     modified: list[str],
     readiness_context: dict[str, object] | None,
+    terminal_reason: str | None = None,
 ) -> None:
     duration = stats.get("duration_ms")
     minutes = f"{int(duration) / 60000:.1f} min" if isinstance(duration, int | float) else "unknown"
     cost = stats.get("total_cost_usd")
     cost_text = f"${float(cost):.2f}" if isinstance(cost, int | float) else "unknown"
+    if args.agent == "claude-code":
+        budget_text = str(args.max_turns)
+    else:
+        budget_text = (
+            f"{args.max_turns} requested - not enforced by Codex CLI; "
+            "the 3600s wall-clock timeout is the binding limit"
+        )
     modified_text = (
         "\n".join(f"- `{name}`" for name in modified)
         if modified
@@ -731,10 +814,11 @@ intervention between prompt and frozen overlay.
 | Provider | {provider} |
 | Cost basis | {stats.get("cost_basis", "agent-reported")} |
 | Model | `{args.model}` |
-| Turn budget | {args.max_turns} |
+| Turn budget | {budget_text} |
 | Turns used | {stats.get("num_turns", "unknown")} |
 | Duration | {minutes} |
 | Reported cost | {cost_text} |
+| Terminal | {terminal_reason or "completed within budget"} |
 | Attempt | {attempt_text} |
 | Sanka readiness preflight | {readiness_value} |
 

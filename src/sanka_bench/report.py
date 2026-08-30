@@ -5,10 +5,12 @@ Reads every ``*.json`` result in a reports directory (as produced by
 candidate, and renders:
 
 - a hero tally — tasks fully migrated per approach — the headline visual;
+- a diagnostic scenario-parity table (Migration Quality Score v0.3 preview):
+  per-scenario behavior/database/native rates published beside the binary
+  verdict, so a 31/32 near-miss is visible next to the cliff it fell off —
+  never blended into the headline;
 - a per-task hard-gate matrix, where a compatibility facade shows green
   behavior next to a red native-evidence gate;
-- non-scoring scenario diagnostics for behavior, database, side effects, and
-  native serving evidence, kept visibly separate from the v0.2 verdict;
 - a provenance footer (evaluator versions, repeat counts, runner parity).
 
 The output is deterministic for a given set of reports: no timestamps, sorted
@@ -34,6 +36,12 @@ GATE_ORDER = (
     ("deterministic", "DET", "Deterministic across clean runs"),
 )
 
+_DIAGNOSTIC_FIELDS = {
+    "behavior": "behavioral_parity",
+    "database": "database_parity",
+    "native": "native_compliance",
+}
+
 _FAMILY_ORDER = (
     "noop",
     "compatibility-bridge",
@@ -52,14 +60,6 @@ _FAMILY_LABELS = {
     "sanka-native": "Sanka native converter",
     "native-reference": "Human native reference",
 }
-
-_DIAGNOSTIC_METRICS = (
-    ("behavioral_parity", "HTTP"),
-    ("database_parity", "DB"),
-    ("side_effect_parity", "FX"),
-    ("native_compliance", "NATIVE"),
-)
-
 
 class ReportError(RuntimeError):
     """Raised when the reports directory holds nothing renderable."""
@@ -109,10 +109,8 @@ def collect(reports_dir: Path) -> dict[str, Any]:
         cost_usd = 0.0
         duration_seconds = 0.0
         has_stats = False
-        scenario_metrics = {
-            key: {"passed": 0, "total": 0, "rate": 0.0} for key, _ in _DIAGNOSTIC_METRICS
-        }
-        has_scenario_metrics = False
+        diagnostic = {key: [0, 0] for key in _DIAGNOSTIC_FIELDS}
+        has_metrics = False
         for task in tasks:
             entry = cells.get((task, family))
             result = entry and (entry["local"] or entry["docker"])
@@ -121,25 +119,19 @@ def collect(reports_dir: Path) -> dict[str, Any]:
             covered.append(task)
             if result.get("fully_migrated") is True:
                 migrated.append(task)
-            metrics = result.get("metrics")
-            if isinstance(metrics, dict):
-                for key, _ in _DIAGNOSTIC_METRICS:
-                    item = metrics.get(key)
-                    if not isinstance(item, dict):
-                        continue
-                    passed = int(item.get("passed") or 0)
-                    total = int(item.get("total") or 0)
-                    scenario_metrics[key]["passed"] += passed
-                    scenario_metrics[key]["total"] += total
-                    has_scenario_metrics = has_scenario_metrics or total > 0
             stats = result.get("provenance", {}).get("candidate_stats")
             if isinstance(stats, dict):
                 has_stats = True
                 cost_usd += float(stats.get("cost_usd") or 0)
                 duration_seconds += float(stats.get("duration_seconds") or 0)
-        if has_scenario_metrics:
-            for item in scenario_metrics.values():
-                item["rate"] = item["passed"] / item["total"] if item["total"] else 0.0
+            metrics = result.get("metrics")
+            if isinstance(metrics, dict):
+                for key, field in _DIAGNOSTIC_FIELDS.items():
+                    fraction = metrics.get(field)
+                    if isinstance(fraction, dict):
+                        has_metrics = True
+                        diagnostic[key][0] += int(fraction.get("passed") or 0)
+                        diagnostic[key][1] += int(fraction.get("total") or 0)
         rows.append(
             {
                 "family": family,
@@ -148,7 +140,7 @@ def collect(reports_dir: Path) -> dict[str, Any]:
                 "covered": covered,
                 "cost_usd": cost_usd if has_stats else None,
                 "duration_seconds": duration_seconds if has_stats else None,
-                "scenario_metrics": scenario_metrics if has_scenario_metrics else None,
+                "diagnostic": diagnostic if has_metrics else None,
             }
         )
 
@@ -204,30 +196,26 @@ def _tally_row(row: dict[str, Any], tasks: list[str]) -> str:
             f'<span class="tally-stats">${row["cost_usd"]:.2f}'
             f" · {minutes:.0f} min agent time</span>"
         )
-    diagnostics_note = ""
-    diagnostics = row.get("scenario_metrics")
-    if isinstance(diagnostics, dict):
-        values = []
-        for key, label in _DIAGNOSTIC_METRICS:
-            metric = diagnostics.get(key)
-            if not isinstance(metric, dict) or not metric.get("total"):
-                continue
-            values.append(
-                f"{label} {float(metric.get('rate') or 0) * 100:.1f}% "
-                f"({int(metric.get('passed') or 0)}/{int(metric['total'])})"
-            )
-        if values:
-            diagnostics_note = (
-                f'<span class="tally-diagnostics">non-scoring: {_esc(" · ".join(values))}</span>'
-            )
     return (
         '<div class="tally-row">'
         f'<span class="tally-label">{_esc(row["label"])}</span>'
         f'<span class="tally-cells">{"".join(cells)}</span>'
         f'<span class="tally-count">{_esc(count)}</span>'
-        f"{stats_note}{diagnostics_note}"
+        f"{stats_note}"
         "</div>"
     )
+
+
+def _scenario_summary(result: dict[str, Any]) -> str:
+    metrics = result.get("metrics")
+    if not isinstance(metrics, dict):
+        return "—"
+    parts = []
+    for label, field in (("HTTP", "behavioral_parity"), ("DB", "database_parity")):
+        fraction = metrics.get(field)
+        if isinstance(fraction, dict):
+            parts.append(f"{label} {fraction.get('passed')}/{fraction.get('total')}")
+    return " · ".join(parts) if parts else "—"
 
 
 def _gate_table(task: str, data: dict[str, Any]) -> str:
@@ -258,19 +246,55 @@ def _gate_table(task: str, data: dict[str, Any]) -> str:
         )
         body_rows.append(
             f'<tr><th scope="row">{_esc(family_label(family))}</th>'
-            f"{''.join(cells_html)}<td>{verdict}</td></tr>"
+            f"{''.join(cells_html)}"
+            f'<td class="scenario-summary">{_esc(_scenario_summary(result))}</td>'
+            f"<td>{verdict}</td></tr>"
         )
     return (
         f'<section class="task"><h3>{_esc(task)}</h3>'
         '<div class="table-wrap"><table>'
-        f'<thead><tr><th scope="col">Candidate</th>{heads}<th scope="col">Verdict</th></tr></thead>'
+        f'<thead><tr><th scope="col">Candidate</th>{heads}'
+        '<th scope="col"><abbr title="Per-scenario parity (diagnostic; a task passes '
+        'only when every scenario passes)">Scenarios</abbr></th>'
+        '<th scope="col">Verdict</th></tr></thead>'
         f"<tbody>{''.join(body_rows)}</tbody></table></div></section>"
+    )
+
+
+def _diagnostic_table(data: dict[str, Any]) -> str:
+    rows_with_metrics = [row for row in data["rows"] if row.get("diagnostic")]
+    if not rows_with_metrics:
+        return ""
+    body_rows = []
+    for row in rows_with_metrics:
+        cells = []
+        for key in _DIAGNOSTIC_FIELDS:
+            passed, total = row["diagnostic"][key]
+            rate = f"{passed / total:.1%}" if total else "—"
+            cells.append(
+                f'<td class="diag-cell">{passed}/{total}'
+                f'<span class="diag-rate"> ({rate})</span></td>'
+            )
+        body_rows.append(f'<tr><th scope="row">{_esc(row["label"])}</th>{"".join(cells)}</tr>')
+    return (
+        '<h2>Diagnostic scenario parity <span class="tag">score v0.3 preview</span></h2>'
+        '<p class="note">Per-scenario pass rates summed across every covered task — the '
+        "same evidence the binary verdict gates on, published so a near-miss (31/32 "
+        "scenarios) is distinguishable from an empty candidate. Diagnostic only: the "
+        "headline stays binary per task, and these rates never compensate for a failed "
+        "hard gate.</p>"
+        '<div class="table-wrap"><table>'
+        '<thead><tr><th scope="col">Candidate</th>'
+        '<th scope="col">HTTP behavior</th><th scope="col">Database</th>'
+        '<th scope="col">Native serving</th></tr></thead>'
+        f"<tbody>{''.join(body_rows)}</tbody></table></div>"
     )
 
 
 def render_html(data: dict[str, Any]) -> str:
     tasks = data["tasks"]
     tally = "".join(_tally_row(row, tasks) for row in data["rows"])
+    diagnostics = _diagnostic_table(data)
     tables = "".join(_gate_table(task, data) for task in tasks)
     parity = (
         f"{data['parity_matched']}/{data['parity_checked']} local↔Docker runs agree"
@@ -287,13 +311,6 @@ def render_html(data: dict[str, Any]) -> str:
             "diagnostic arm. Dollar and time figures are the agent's own reported totals "
             "across the covered tasks. The Sanka native converter and the controls run in "
             "seconds at no model cost.</p>"
-        )
-    diagnostics_note = ""
-    if any(row.get("scenario_metrics") is not None for row in data["rows"]):
-        diagnostics_note = (
-            '<p class="note">Scenario percentages are diagnostic only. They explain where a '
-            "candidate failed but never compensate for a failed hard gate or change the v0.2 "
-            "all-or-nothing task score.</p>"
         )
     bridge_note = ""
     if any(row["family"] == "compatibility-bridge" for row in data["rows"]):
@@ -363,11 +380,6 @@ h3 {{ font: 500 15px/1.4 "IBM Plex Mono", ui-monospace, monospace; margin: 24px 
   font: 400 12px/1 "IBM Plex Mono", ui-monospace, monospace;
   font-variant-numeric: tabular-nums; color: var(--ink-2); opacity: .85;
 }}
-.tally-diagnostics {{
-  flex-basis: 100%; margin-left: 254px;
-  font: 400 11.5px/1.4 "IBM Plex Mono", ui-monospace, monospace;
-  font-variant-numeric: tabular-nums; color: var(--ink-2); opacity: .8;
-}}
 .legend {{ color: var(--ink-2); font-size: 13px; margin-top: 10px; }}
 .legend .cell {{ display: inline-block; vertical-align: -3px; width: 16px; margin-right: 4px; }}
 .table-wrap {{ overflow-x: auto; }}
@@ -382,6 +394,17 @@ abbr {{ text-decoration: none; cursor: help; }}
 td.gate-pass, td.gate-fail {{ font: 600 13px/1 "IBM Plex Mono", ui-monospace, monospace; }}
 td.gate-pass {{ color: var(--good); }}
 td.gate-fail {{ color: var(--critical); }}
+td.scenario-summary, td.diag-cell {{
+  font: 400 12.5px/1.4 "IBM Plex Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--ink-2);
+}}
+.diag-rate {{ opacity: .7; }}
+.tag {{
+  font: 500 10px/1 "IBM Plex Mono", ui-monospace, monospace;
+  text-transform: none; letter-spacing: 0.02em; color: var(--accent);
+  border: 1px solid var(--accent); border-radius: 999px; padding: 2px 7px;
+  vertical-align: 2px; margin-left: 6px;
+}}
 .pill {{
   font: 500 11px/1 "IBM Plex Mono", ui-monospace, monospace;
   padding: 4px 8px; border-radius: 999px; white-space: nowrap;
@@ -413,8 +436,8 @@ never averaged into a compensating score.</p>
 &nbsp;&nbsp;<span class="cell cell-fail"></span> failed a hard gate
 &nbsp;&nbsp;one cell per task ({_esc(len(tasks))} task{"s" if len(tasks) != 1 else ""})</p>
 {agent_note}
-{diagnostics_note}
 {bridge_note}
+{diagnostics}
 <h2>Hard gates by task</h2>
 {tables}
 <footer>
