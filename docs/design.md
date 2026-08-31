@@ -37,7 +37,11 @@ verbatim in the candidate's provenance), same model and budget across the
 alone/with-Sanka pair. Candidate schema v0.2 adds an optional ``stats`` block
 (turns, wall time, reported cost) that the evaluator copies into result
 provenance and the report renders beside the tally — the honest comparison
-axis once capable agents pass the synthetic fixtures outright.
+axis once capable agents pass the synthetic fixtures outright. The shared
+deliverable contract discloses the tool-neutral native-serving rule: every
+evaluated request must reach a workspace-owned FastAPI ``APIRoute`` rather
+than a raw Starlette route, implicit framework redirect, mount, bridge, or
+source-framework dispatcher.
 
 The official comparison remains the two pass@1 arms above. A separate
 readiness-aware diagnostic arm may preflight the same task with Sanka before
@@ -395,7 +399,16 @@ recorded turn count so the run driver can classify silent provider failures
 into the infrastructure ledger instead of the quality columns. The Codex CLI
 exposes no turn bound, so codex cells are bounded only by the wall-clock
 timeout — GENERATED.md now states which limit actually applied instead of
-implying a turn cap that never reached the agent.
+implying a turn cap that never reached the agent. If Claude returns success
+while reporting more turns than the requested limit, the candidate is frozen
+once and the overrun is disclosed as a protocol deviation instead of being
+mislabelled as completed within budget.
+
+**Sanka runs in the fixture dependency environment.** The Sanka console script
+may be isolated in an engine virtualenv, but its DRF scanner imports the source
+project. With-Sanka arms pass the benchmark interpreter's installed-package
+paths to the scanner and agent process, preventing model-specific
+``PYTHONPATH`` repairs from becoming an accidental part of the treatment.
 
 **The grading basis is disclosed to the agent.** The prompt now states that
 `public-tests/scenarios.json` is a representative sample and that the evaluator

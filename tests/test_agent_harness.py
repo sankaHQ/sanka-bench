@@ -64,6 +64,8 @@ def test_prompts_differ_only_by_the_sanka_paragraph(harness: object) -> None:
     # the grading basis is disclosed: a hidden superset extends the public sample
     assert "hidden superset" in core
     assert "representative sample" in core
+    assert "FastAPI `APIRoute`" in core
+    assert "raw Starlette `Route`" in core
     # the +Sanka variant is strictly additive: same contract, one extra tool
     assert "scan" in extra and "plan --to fastapi" in extra and "bench-candidate" in extra
     # readiness-aware availability, not a copy mandate: the agent is told to read
@@ -139,8 +141,7 @@ def test_readiness_context_abstains_and_renders_route_checklist(harness: object)
     assert "SANKA_DRF_ROUTE_PATTERN_UNSUPPORTED" in prompt
     assert "api/class/entries/ -> legacy_project.urls.permanent_style_redirect" in prompt
     assert "Allow, Location, and WWW-Authenticate" in prompt
-    assert "FastAPI `APIRoute`" in prompt
-    assert "raw Starlette\n  `Route`" in prompt
+    assert prompt.count("GET /api/dynamic/entries/{code}/") == 1
 
 
 def test_readiness_context_emits_scaffold_at_threshold(harness: object) -> None:
@@ -241,6 +242,22 @@ def test_as_text_normalizes_timeout_output(harness: object) -> None:
     assert as_text("already text") == "already text"
 
 
+def test_sanka_runtime_env_adds_fixture_packages_without_mutating_input(
+    harness: object, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(
+        harness.sys,  # type: ignore[attr-defined]
+        "path",
+        ["/bench/repo", "/bench/.venv/lib/python3.14/site-packages"],
+    )
+    original = {"PYTHONPATH": "/existing/packages", "BENCH": "1"}
+    result = harness._sanka_runtime_env(original)  # type: ignore[attr-defined]
+    assert original == {"PYTHONPATH": "/existing/packages", "BENCH": "1"}
+    assert result["PYTHONPATH"].split(harness.os.pathsep) == [  # type: ignore[attr-defined]
+        "/bench/.venv/lib/python3.14/site-packages",
+    ]
+
+
 def test_codex_command_uses_responses_and_custom_openai_provider(
     harness: object, tmp_path: Path
 ) -> None:
@@ -337,6 +354,29 @@ def test_turn_budget_exhaustion_freezes_the_workspace(tmp_path: Path) -> None:
     disclosure = (out / "GENERATED.md").read_text(encoding="utf-8")
     assert "turn budget (60) exhausted" in disclosure
     assert "frozen as-is" in disclosure
+
+
+def test_successful_claude_turn_overrun_is_disclosed(tmp_path: Path) -> None:
+    task = Path(__file__).resolve().parents[1] / "tasks" / "drf-fastapi" / "drf-fastapi-001"
+    agent = _fake_agent(
+        tmp_path,
+        result={
+            "num_turns": 67,
+            "duration_ms": 1000,
+            "total_cost_usd": 0.1,
+            "is_error": False,
+            "subtype": "success",
+            "result": "done",
+        },
+        touch="target_app.py",
+    )
+    out = tmp_path / "candidate"
+    outcome = _run_adapter(task, agent, out)
+    assert outcome.returncode == 0, outcome.stderr
+    disclosure = (out / "GENERATED.md").read_text(encoding="utf-8")
+    assert "successful completion after 67 turns" in disclosure
+    assert "exceeding the requested 60-turn limit" in disclosure
+    assert "completed within budget" not in disclosure
 
 
 def test_empty_workspace_exits_with_classification_code(tmp_path: Path) -> None:
