@@ -21,7 +21,7 @@ check: lint typecheck test
 	uv run sanka-bench validate
 
 # task-id:candidate-name pairs; baselines live at baselines/<task>/<candidate>/
-BASELINE_TASKS = 001 002 003 004 005 006 007 008 009 010
+BASELINE_TASKS = 001 002 003 004 005 006 007 008 009 010 011
 BASELINES_001 = noop compatibility-bridge claude-code-alone claude-code-with-sanka native-reference sanka-native
 BASELINES_002 = noop compatibility-bridge claude-code-alone claude-code-with-sanka native-reference sanka-native
 BASELINES_003 = noop compatibility-bridge claude-code-alone claude-code-with-sanka native-reference sanka-native
@@ -32,6 +32,7 @@ BASELINES_007 = noop compatibility-bridge native-reference sanka-native
 BASELINES_008 = noop compatibility-bridge native-reference sanka-native
 BASELINES_009 = noop compatibility-bridge native-reference sanka-native
 BASELINES_010 = noop compatibility-bridge native-reference sanka-native
+BASELINES_011 = noop compatibility-bridge native-reference sanka-native
 
 define BASELINE_RULES
 .PHONY: baselines-$(1) docker-baselines-$(1)
