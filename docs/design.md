@@ -423,3 +423,25 @@ plus per-task scenario counts in the gate matrix. The headline stays binary
 per task — a 36-route task is still all-or-nothing — but a candidate at 31/32
 scenarios is now distinguishable from an empty one without reweighting or
 blending anything into the verdict.
+
+## Task-sharded baseline CI
+
+Baseline evaluations are independent only at the task boundary: every
+task/candidate pair already receives isolated temporary workspaces and a
+task-specific report path, while a single evaluator run owns its scenario
+sequence and determinism repetitions. CI therefore shards the ten task suites
+across GitHub-hosted runners with a bounded five-task concurrency limit instead
+of starting multiple evaluators inside one two-core runner.
+
+The stable required checks remain `check` and `docker-baselines`. Each is an
+aggregate gate over its underlying unit/local or Docker task shards, so branch
+protection still fails closed when any shard fails or is cancelled. The
+Makefile retains the full sequential `baselines` and `docker-baselines` targets
+for local control-set proof and exposes task-scoped targets such as
+`baselines-008` and `docker-baselines-008` for CI.
+
+Docker evaluator images are content-addressed from the repository tree. A task
+shard builds its image on the first candidate and reuses that exact local image
+for the remaining candidates; a changed task, candidate, lockfile, or evaluator
+source produces a different tag. Evaluation containers keep the existing
+network, filesystem, capability, memory, CPU, and process isolation controls.
