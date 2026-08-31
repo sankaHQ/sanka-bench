@@ -39,6 +39,18 @@ alone/with-Sanka pair. Candidate schema v0.2 adds an optional ``stats`` block
 provenance and the report renders beside the tally — the honest comparison
 axis once capable agents pass the synthetic fixtures outright.
 
+The official comparison remains the two pass@1 arms above. A separate
+readiness-aware diagnostic arm may preflight the same task with Sanka before
+the agent runs. It freezes the plan-derived readiness decision and route gaps;
+at the default 50% threshold it supplies only the unsupported and unscanned
+route checklist instead of a low-readiness scaffold. The evaluator remains
+tool-neutral and unchanged.
+
+Result reports aggregate the already-recorded per-scenario HTTP, database, and
+native-serving counters. They are explicitly diagnostic: the
+v0.2 verdict is still task-level all-or-nothing, with no partial-credit or
+compensating-score path.
+
 ## drf-fastapi-009: multipart files and explicit format negotiation
 
 The ninth fixture makes request transport, stored bytes, and binary response

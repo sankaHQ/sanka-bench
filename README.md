@@ -139,6 +139,14 @@ and reported cost; `make report` renders those figures beside the tally.
 Agent results are empirical, not pinned by tests — the report shows the
 current state.
 
+Experiments may add a separately labelled
+`*-with-sanka-readiness-aware` arm. Before the agent starts, the harness runs
+`sanka scan` and `sanka plan`, freezes `sanka-readiness.json`, and emits a
+scaffold only when native readiness reaches the configured threshold (50% by
+default). Below it, the agent receives the structured unsupported/unscanned
+route inventory and no scaffold. This diagnostic arm never replaces or
+rewrites the official alone/with-Sanka pass@1 result.
+
 `drf-fastapi-003` carries noop, compatibility-bridge, human
 native-reference, and Sanka native-converter baselines. The converter's
 envelope caught up again (sanka PR #21): writable nested serializers are
@@ -319,7 +327,7 @@ uv run python scripts/run_agent_candidate.py \
   --candidate-id claude-code-alone \
   --out baselines/drf-fastapi-001/claude-code-alone \
   --agent-bin ~/.claude/local/claude
-# claude-code-with-sanka additionally takes --sanka-bin <path to sanka>
+# with-Sanka arms additionally take --sanka-bin <path to sanka>
 ```
 
 The same harness can drive Codex against OpenAI or a supported
@@ -339,9 +347,11 @@ uv run python scripts/run_agent_candidate.py \
   --out baselines/drf-fastapi-001/codex-gpt-5-3-codex-with-sanka
 ```
 
-The two configurations share the same model, budget, and contract; the
-with-Sanka prompt is strictly additive — it only tells the agent the Sanka
-CLI exists. The frozen overlay is graded by the same evaluator as every
+The two official configurations share the same model, budget, and contract;
+the ordinary with-Sanka prompt is strictly additive — it offers the Sanka CLI
+with readiness-aware usage guidance. A third, diagnostic candidate id ending in
+`-with-sanka-readiness-aware` adds a preflight threshold decision and frozen
+gap checklist. The frozen overlay is graded by the same evaluator as every
 other candidate.
 
 Render the collected reports into a static page and summary SVG — the hero
@@ -353,7 +363,9 @@ make report                               # -> reports/index.html + reports/summ
 ```
 
 The render is deterministic for a given set of reports; the headline stays the
-binary Fully Migrated count, never a blended score.
+binary Fully Migrated count, never a blended score. Scenario-level HTTP,
+database, and native-serving percentages appear underneath as
+non-scoring diagnostics only; they cannot compensate for a failed hard gate.
 
 See [docs/design.md](docs/design.md) for the implemented slice and next gates.
 

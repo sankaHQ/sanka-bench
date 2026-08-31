@@ -8,12 +8,18 @@ duration, and reported cost. The agent runs unattended — no human
 intervention — and the frozen overlay is then graded by the ordinary
 tool-neutral evaluator like any other candidate.
 
-Two configurations, identical except for one paragraph of the prompt:
+Three configurations preserve the official two-arm benchmark and add one
+separate diagnostic arm:
 
 - ``--candidate-id claude-code-alone`` — the agent and the task, nothing else;
 - ``--candidate-id claude-code-with-sanka`` (with ``--sanka-bin``) — the same
-  agent, same budget, same contract, plus the Sanka CLI and three lines
-  telling it that Sanka can generate the native candidate.
+  agent, same budget, same contract, plus the Sanka CLI and readiness-aware
+  guidance for adopting or declining its generated candidate.
+- ``--candidate-id claude-code-with-sanka-readiness-aware`` — the harness runs
+  scan/plan first, generates a scaffold only at or above the configured native
+  readiness threshold, and otherwise gives the agent a structured unsupported-
+  route checklist. This arm is diagnostic and never replaces the official
+  pass@1 configurations.
 
 Two agent families share the same contract, prompt, and freezing logic:
 
@@ -27,8 +33,8 @@ Two agent families share the same contract, prompt, and freezing logic:
   tokens) — the disclosure names that basis explicitly.
 
 Candidate ids stay free-form (``<agent>-<model-slug>-alone`` /
-``...-with-sanka``); the ``*-with-sanka`` suffix selects the extra prompt
-paragraph.
+``...-with-sanka`` / ``...-with-sanka-readiness-aware``); the suffix selects
+the run configuration.
 
 Budget enforcement differs by agent and is disclosed, never papered over:
 ``--max-turns`` reaches the Claude CLI, while Codex CLI 0.150 exposes no turn
@@ -117,6 +123,34 @@ from the source and verify by differential testing against it, never against
 the generated code.
 """
 
+PROMPT_SANKA_READINESS = """
+The Sanka migration CLI preflight has already scanned and planned this source.
+Native readiness is {readiness_percent:.1f}% ({native_routes}/{eligible_routes}
+non-alias routes) against a {threshold_percent:.1f}% scaffold threshold.
+Plan hash: {plan_hash}
+
+{decision}
+
+Unsupported-route checklist from the frozen Sanka plan:
+{checklist}
+
+URL patterns the Sanka scan saw but did not classify as DRF routes:
+{skipped_checklist}
+
+Post-generation critic checklist (the evaluator checks these independently):
+- Every source route is covered, including explicit slash/no-slash variants.
+- Status, JSON/body bytes, Allow, Location, and WWW-Authenticate match exactly.
+- Each request is served by a workspace FastAPI `APIRoute`, not a raw Starlette
+  `Route`, framework redirect, mount, compatibility bridge, or source-framework
+  dispatcher.
+- Successful and rejected mutations leave every database table in the same
+  state as the source application.
+
+Treat this checklist as migration guidance, not as permission to weaken the
+deliverable contract. Verify the public scenarios and the exact FastAPI serving
+behavior before you finish.
+"""
+
 EXCLUDED_PARTS = {
     ".claude",
     ".git",
@@ -129,6 +163,172 @@ EXCLUDED_PARTS = {
 }
 EXCLUDED_SUFFIXES = {".log", ".pyc", ".sqlite3"}
 EXCLUDED_NAMES = {".DS_Store", "AGENT_TASK.md", "CLAUDE.md"}
+
+
+def _candidate_mode(candidate_id: str) -> str | None:
+    if candidate_id.endswith("-with-sanka-readiness-aware"):
+        return "readiness-aware"
+    if candidate_id.endswith("-with-sanka"):
+        return "with-sanka"
+    if candidate_id.endswith("-alone"):
+        return "alone"
+    return None
+
+
+def _readiness_context(
+    plan: dict[str, object],
+    threshold: float,
+    scan: dict[str, object] | None = None,
+) -> dict[str, object]:
+    readiness = float(plan.get("readiness") or 0.0)
+    native_routes = int(plan.get("native_routes") or 0)
+    eligible_routes = int(plan.get("native_eligible_routes") or 0)
+    routes: list[dict[str, object]] = []
+    for item in plan.get("routes") or []:
+        if not isinstance(item, dict) or item.get("automatic") is True:
+            continue
+        if item.get("strategy") == "dropped-format-suffix-alias":
+            continue
+        reasons = [
+            reason for reason in item.get("adaptation_reasons") or [] if isinstance(reason, dict)
+        ]
+        routes.append(
+            {
+                "method": str(item.get("method") or ""),
+                "path": str(item.get("path") or ""),
+                "operation": str(item.get("operation") or ""),
+                "reasons": reasons,
+            }
+        )
+    return {
+        "schema": "sanka-bench/readiness-preflight/v1",
+        "threshold": threshold,
+        "readiness": readiness,
+        "native_routes": native_routes,
+        "native_eligible_routes": eligible_routes,
+        "needs_adaptation_routes": int(plan.get("needs_adaptation_routes") or len(routes)),
+        "plan_hash": str(plan.get("plan_hash") or ""),
+        "decision": "emit-scaffold"
+        if native_routes > 0 and readiness >= threshold
+        else "gap-report-only",
+        "unsupported_routes": routes,
+        "skipped_routes": [
+            {
+                "pattern": str(item.get("pattern") or ""),
+                "view": str(item.get("view") or ""),
+                "reason": str(item.get("reason") or "not classified as a DRF route"),
+            }
+            for item in (scan or {}).get("skipped_routes", [])
+            if isinstance(item, dict)
+        ],
+    }
+
+
+def _readiness_prompt(context: dict[str, object]) -> str:
+    routes = context["unsupported_routes"]
+    assert isinstance(routes, list)
+    lines: list[str] = []
+    for route in routes:
+        assert isinstance(route, dict)
+        reasons = route.get("reasons") or []
+        rendered = "; ".join(
+            f"{reason.get('code')} ({reason.get('feature')}): {reason.get('message')}"
+            for reason in reasons
+            if isinstance(reason, dict)
+        )
+        route_label = f"{route.get('method')} {route.get('path')}"
+        lines.append(f"- {route_label}: {rendered or 'manual adaptation required'}")
+    checklist = "\n".join(lines) or "- none"
+    skipped = context.get("skipped_routes") or []
+    assert isinstance(skipped, list)
+    skipped_checklist = (
+        "\n".join(
+            f"- {item.get('pattern')} -> {item.get('view')} ({item.get('reason')})"
+            for item in skipped
+            if isinstance(item, dict)
+        )
+        or "- none"
+    )
+    if context["decision"] == "emit-scaffold":
+        decision = (
+            "The harness generated `bench-candidate/overlay/`. Copy the complete "
+            "overlay to the repository root, including non-Python artifacts, then "
+            "adapt every checklist route."
+        )
+    else:
+        decision = (
+            "The harness intentionally did not generate a scaffold because readiness "
+            "is below the threshold. Do not run `sanka apply`; implement the native "
+            "FastAPI target from the source while using the checklist as guidance."
+        )
+    return PROMPT_SANKA_READINESS.format(
+        readiness_percent=float(context["readiness"]) * 100,
+        native_routes=context["native_routes"],
+        eligible_routes=context["native_eligible_routes"],
+        threshold_percent=float(context["threshold"]) * 100,
+        plan_hash=context["plan_hash"],
+        decision=decision,
+        checklist=checklist,
+        skipped_checklist=skipped_checklist,
+    )
+
+
+def _run_sanka_command(
+    command: list[str], *, workspace: Path, env: dict[str, str]
+) -> subprocess.CompletedProcess[str]:
+    outcome = subprocess.run(
+        command,
+        cwd=workspace,
+        env=env,
+        stdin=subprocess.DEVNULL,
+        capture_output=True,
+        text=True,
+        timeout=120,
+        check=False,
+    )
+    if outcome.returncode != 0:
+        detail = outcome.stderr.strip() or outcome.stdout.strip() or "no output"
+        raise RuntimeError(f"Sanka preflight failed ({' '.join(command[:2])}): {detail[:2000]}")
+    return outcome
+
+
+def _prepare_readiness_context(
+    workspace: Path,
+    sanka_bin: Path,
+    env: dict[str, str],
+    threshold: float,
+) -> dict[str, object]:
+    _run_sanka_command([str(sanka_bin), "scan", "."], workspace=workspace, env=env)
+    _run_sanka_command(
+        [str(sanka_bin), "plan", ".", "--to", "fastapi"],
+        workspace=workspace,
+        env=env,
+    )
+    plan_path = workspace / ".sanka" / "plan-fastapi.json"
+    plan = json.loads(plan_path.read_text(encoding="utf-8"))
+    if not isinstance(plan, dict):
+        raise RuntimeError(f"Sanka plan is not an object: {plan_path}")
+    scan_path = workspace / ".sanka" / "scan.json"
+    scan = json.loads(scan_path.read_text(encoding="utf-8"))
+    if not isinstance(scan, dict):
+        raise RuntimeError(f"Sanka scan is not an object: {scan_path}")
+    context = _readiness_context(plan, threshold, scan)
+    if context["decision"] == "emit-scaffold":
+        _run_sanka_command(
+            [
+                str(sanka_bin),
+                "apply",
+                "--root",
+                ".",
+                "--plan-hash",
+                str(context["plan_hash"]),
+                "--bench-candidate",
+                "./bench-candidate",
+            ],
+            workspace=workspace,
+            env=env,
+        )
+    return context
 
 
 def main() -> int:
@@ -163,6 +363,12 @@ def main() -> int:
     )
     parser.add_argument("--max-turns", type=int, default=60)
     parser.add_argument("--sanka-bin", type=Path, default=None)
+    parser.add_argument(
+        "--sanka-readiness-threshold",
+        type=float,
+        default=0.5,
+        help="diagnostic readiness-aware arm: minimum native readiness for a scaffold",
+    )
     parser.add_argument("--attempt", type=int, default=1)
     parser.add_argument(
         "--prior-failure",
@@ -177,12 +383,18 @@ def main() -> int:
     if not source.is_dir() or not scenarios.is_file():
         print(f"not a benchmark task: {task_dir}", file=sys.stderr)
         return 2
-    with_sanka = args.candidate_id.endswith("-with-sanka")
-    if not with_sanka and not args.candidate_id.endswith("-alone"):
-        print("candidate id must end in -alone or -with-sanka", file=sys.stderr)
+    mode = _candidate_mode(args.candidate_id)
+    if mode is None:
+        print(
+            "candidate id must end in -alone, -with-sanka, or -with-sanka-readiness-aware",
+            file=sys.stderr,
+        )
         return 2
-    if with_sanka and args.sanka_bin is None:
+    if mode != "alone" and args.sanka_bin is None:
         print(f"{args.candidate_id} requires --sanka-bin", file=sys.stderr)
+        return 2
+    if not 0 <= args.sanka_readiness_threshold <= 1:
+        print("--sanka-readiness-threshold must be between 0 and 1", file=sys.stderr)
         return 2
     if args.agent_bin is None:
         args.agent_bin = "claude" if args.agent == "claude-code" else "codex"
@@ -198,10 +410,6 @@ def main() -> int:
         public_tests.mkdir()
         shutil.copy2(scenarios, public_tests / "scenarios.json")
 
-        prompt = PROMPT_CORE.format(python=sys.executable)
-        if with_sanka:
-            prompt += PROMPT_SANKA.format(sanka=args.sanka_bin.resolve())
-
         env = dict(os.environ)
         for name in (
             "DJANGO_SETTINGS_MODULE",
@@ -210,6 +418,24 @@ def main() -> int:
             "CLAUDE_CODE_ENTRYPOINT",
         ):
             env.pop(name, None)
+        readiness_context: dict[str, object] | None = None
+        prompt = PROMPT_CORE.format(python=sys.executable)
+        if mode == "with-sanka":
+            assert args.sanka_bin is not None
+            prompt += PROMPT_SANKA.format(sanka=args.sanka_bin.resolve())
+        elif mode == "readiness-aware":
+            assert args.sanka_bin is not None
+            try:
+                readiness_context = _prepare_readiness_context(
+                    workspace,
+                    args.sanka_bin.resolve(),
+                    env,
+                    args.sanka_readiness_threshold,
+                )
+            except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:
+                print(f"readiness-aware Sanka preflight failed: {exc}", file=sys.stderr)
+                return 1
+            prompt += _readiness_prompt(readiness_context)
         if args.agent == "codex":
             codex_home = Path(temp) / "codex-home"
             command = _codex_command(args, prompt, codex_home)
@@ -269,6 +495,11 @@ def main() -> int:
             (out_dir / "agent-log.jsonl").write_text(outcome.stdout, encoding="utf-8")
         if outcome.stderr:
             (out_dir / "agent-stderr.log").write_text(outcome.stderr, encoding="utf-8")
+        if readiness_context is not None:
+            (out_dir / "sanka-readiness.json").write_text(
+                json.dumps(readiness_context, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
         if not timed_out and outcome.returncode != 0 and not stats:
             detail = outcome.stderr.strip()[:2000] or "no output"
             print(f"agent run failed: {detail}", file=sys.stderr)
@@ -333,6 +564,7 @@ def main() -> int:
             stats=stats,
             added=added,
             modified=modified,
+            readiness_context=readiness_context,
             terminal_reason=terminal_reason,
         )
     print(
@@ -529,6 +761,7 @@ def _write_disclosure(
     stats: dict[str, object],
     added: list[str],
     modified: list[str],
+    readiness_context: dict[str, object] | None,
     terminal_reason: str | None = None,
 ) -> None:
     duration = stats.get("duration_ms")
@@ -557,6 +790,18 @@ def _write_disclosure(
     agent_label = "Claude Code" if args.agent == "claude-code" else "Codex CLI"
     provider = "anthropic" if args.agent == "claude-code" else args.provider
     version = agent_version or args.agent_bin
+    readiness_value = "not run"
+    readiness_section = ""
+    if readiness_context is not None:
+        readiness_value = (
+            f"{float(readiness_context['readiness']) * 100:.1f}% → {readiness_context['decision']}"
+        )
+        readiness_section = (
+            "\n## Sanka readiness preflight\n\n"
+            "The machine-readable preflight is preserved in "
+            "`sanka-readiness.json`. Its threshold decision was made before the "
+            "agent started; the official v0.2 score remains unchanged.\n"
+        )
     (out_dir / "GENERATED.md").write_text(
         f"""# Coding-agent baseline provenance: {args.candidate_id}
 
@@ -575,11 +820,13 @@ intervention between prompt and frozen overlay.
 | Reported cost | {cost_text} |
 | Terminal | {terminal_reason or "completed within budget"} |
 | Attempt | {attempt_text} |
+| Sanka readiness preflight | {readiness_value} |
 
 Files added by the agent: {len(added)}. Contract-violating modifications to
 existing source files (dropped from the overlay, since candidates are
 add-only):
 {modified_text}
+{readiness_section}
 
 ## Prompt (verbatim)
 
