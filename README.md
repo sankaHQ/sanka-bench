@@ -137,7 +137,10 @@ contract (the with-Sanka prompt only adds that the Sanka CLI exists). Each
 candidate's `GENERATED.md` discloses the prompt verbatim, turns, wall time,
 and reported cost; `make report` renders those figures beside the tally.
 Agent results are empirical, not pinned by tests — the report shows the
-current state.
+current state. The shared contract explicitly requires every evaluated
+request to reach a workspace-owned FastAPI `APIRoute`; raw Starlette routes,
+implicit framework redirects, mounts, and compatibility dispatchers do not
+satisfy native-serving evidence in any arm.
 
 Experiments may add a separately labelled
 `*-with-sanka-readiness-aware` arm. Before the agent starts, the harness runs

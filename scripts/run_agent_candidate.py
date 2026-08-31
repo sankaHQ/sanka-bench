@@ -94,6 +94,10 @@ Deliverable contract (an automated evaluator enforces all of it):
    than tuning for the public list alone.
 5. The database path comes from the BENCH_DB_PATH environment variable through
    the existing settings module; reuse that mechanism unchanged.
+6. Every evaluated request must be served by a FastAPI `APIRoute` whose endpoint
+   code lives inside the candidate workspace. Do not use a raw Starlette `Route`,
+   an automatic framework redirect, a mount, a compatibility bridge, or a
+   source-framework dispatcher to serve evaluated requests.
 
 A Python interpreter with django, djangorestframework, and fastapi installed
 is available at: {python}
@@ -140,9 +144,6 @@ URL patterns the Sanka scan saw but did not classify as DRF routes:
 Post-generation critic checklist (the evaluator checks these independently):
 - Every source route is covered, including explicit slash/no-slash variants.
 - Status, JSON/body bytes, Allow, Location, and WWW-Authenticate match exactly.
-- Each request is served by a workspace FastAPI `APIRoute`, not a raw Starlette
-  `Route`, framework redirect, mount, compatibility bridge, or source-framework
-  dispatcher.
 - Successful and rejected mutations leave every database table in the same
   state as the source application.
 
@@ -292,6 +293,22 @@ def _run_sanka_command(
     return outcome
 
 
+def _sanka_runtime_env(env: dict[str, str]) -> dict[str, str]:
+    """Expose fixture dependencies to a Sanka CLI in an isolated virtualenv."""
+    updated = dict(env)
+    fixture_paths = [
+        entry
+        for entry in sys.path
+        if entry and Path(entry).name in {"site-packages", "dist-packages"}
+    ]
+    paths = list(dict.fromkeys(fixture_paths))
+    if paths:
+        updated["PYTHONPATH"] = os.pathsep.join(paths)
+    else:
+        updated.pop("PYTHONPATH", None)
+    return updated
+
+
 def _prepare_readiness_context(
     workspace: Path,
     sanka_bin: Path,
@@ -418,6 +435,8 @@ def main() -> int:
             "CLAUDE_CODE_ENTRYPOINT",
         ):
             env.pop(name, None)
+        if mode != "alone":
+            env = _sanka_runtime_env(env)
         readiness_context: dict[str, object] | None = None
         prompt = PROMPT_CORE.format(python=sys.executable)
         if mode == "with-sanka":
@@ -515,6 +534,18 @@ def main() -> int:
             else:
                 print(f"agent reported an error: {stats.get('result') or stats}", file=sys.stderr)
                 return 1
+        reported_turns = stats.get("num_turns")
+        if (
+            args.agent == "claude-code"
+            and terminal_reason is None
+            and isinstance(reported_turns, int | float)
+            and reported_turns > args.max_turns
+        ):
+            terminal_reason = (
+                f"Claude CLI reported successful completion after {int(reported_turns)} turns, "
+                f"exceeding the requested {args.max_turns}-turn limit; the workspace was "
+                "frozen as-is and the overrun is disclosed"
+            )
 
         pristine = {
             path.relative_to(source).as_posix(): path.read_bytes()
