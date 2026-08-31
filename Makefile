@@ -21,6 +21,7 @@ check: lint typecheck test
 	uv run sanka-bench validate
 
 # task-id:candidate-name pairs; baselines live at baselines/<task>/<candidate>/
+BASELINE_TASKS = 001 002 003 004 005 006 007 008 009 010
 BASELINES_001 = noop compatibility-bridge claude-code-alone claude-code-with-sanka native-reference sanka-native
 BASELINES_002 = noop compatibility-bridge claude-code-alone claude-code-with-sanka native-reference sanka-native
 BASELINES_003 = noop compatibility-bridge claude-code-alone claude-code-with-sanka native-reference sanka-native
@@ -32,69 +33,25 @@ BASELINES_008 = noop compatibility-bridge native-reference sanka-native
 BASELINES_009 = noop compatibility-bridge native-reference sanka-native
 BASELINES_010 = noop compatibility-bridge native-reference sanka-native
 
-baselines:
-	@for name in $(BASELINES_001); do \
-		uv run sanka-bench evaluate --runner local --task tasks/drf-fastapi/drf-fastapi-001 --candidate baselines/drf-fastapi-001/$$name --output reports/drf-fastapi-001-$$name.json || exit 1; \
-	done
-	@for name in $(BASELINES_002); do \
-		uv run sanka-bench evaluate --runner local --task tasks/drf-fastapi/drf-fastapi-002 --candidate baselines/drf-fastapi-002/$$name --output reports/drf-fastapi-002-$$name.json || exit 1; \
-	done
-	@for name in $(BASELINES_003); do \
-		uv run sanka-bench evaluate --runner local --task tasks/drf-fastapi/drf-fastapi-003 --candidate baselines/drf-fastapi-003/$$name --output reports/drf-fastapi-003-$$name.json || exit 1; \
-	done
-	@for name in $(BASELINES_004); do \
-		uv run sanka-bench evaluate --runner local --task tasks/drf-fastapi/drf-fastapi-004 --candidate baselines/drf-fastapi-004/$$name --output reports/drf-fastapi-004-$$name.json || exit 1; \
-	done
-	@for name in $(BASELINES_005); do \
-		uv run sanka-bench evaluate --runner local --task tasks/drf-fastapi/drf-fastapi-005 --candidate baselines/drf-fastapi-005/$$name --output reports/drf-fastapi-005-$$name.json || exit 1; \
-	done
-	@for name in $(BASELINES_006); do \
-		uv run sanka-bench evaluate --runner local --task tasks/drf-fastapi/drf-fastapi-006 --candidate baselines/drf-fastapi-006/$$name --output reports/drf-fastapi-006-$$name.json || exit 1; \
-	done
-	@for name in $(BASELINES_007); do \
-		uv run sanka-bench evaluate --runner local --task tasks/drf-fastapi/drf-fastapi-007 --candidate baselines/drf-fastapi-007/$$name --output reports/drf-fastapi-007-$$name.json || exit 1; \
-	done
-	@for name in $(BASELINES_008); do \
-		uv run sanka-bench evaluate --runner local --task tasks/drf-fastapi/drf-fastapi-008 --candidate baselines/drf-fastapi-008/$$name --output reports/drf-fastapi-008-$$name.json || exit 1; \
-	done
-	@for name in $(BASELINES_009); do \
-		uv run sanka-bench evaluate --runner local --task tasks/drf-fastapi/drf-fastapi-009 --candidate baselines/drf-fastapi-009/$$name --output reports/drf-fastapi-009-$$name.json || exit 1; \
-	done
-	@for name in $(BASELINES_010); do \
-		uv run sanka-bench evaluate --runner local --task tasks/drf-fastapi/drf-fastapi-010 --candidate baselines/drf-fastapi-010/$$name --output reports/drf-fastapi-010-$$name.json || exit 1; \
+define BASELINE_RULES
+.PHONY: baselines-$(1) docker-baselines-$(1)
+
+baselines-$(1):
+	@for name in $$(BASELINES_$(1)); do \
+		uv run sanka-bench evaluate --runner local --task tasks/drf-fastapi/drf-fastapi-$(1) --candidate baselines/drf-fastapi-$(1)/$$$$name --output reports/drf-fastapi-$(1)-$$$$name.json || exit 1; \
 	done
 
-docker-baselines:
-	@for name in $(BASELINES_001); do \
-		uv run sanka-bench evaluate --runner docker --task tasks/drf-fastapi/drf-fastapi-001 --candidate baselines/drf-fastapi-001/$$name --output reports/drf-fastapi-001-$$name-docker.json || exit 1; \
+docker-baselines-$(1):
+	@for name in $$(BASELINES_$(1)); do \
+		uv run sanka-bench evaluate --runner docker --task tasks/drf-fastapi/drf-fastapi-$(1) --candidate baselines/drf-fastapi-$(1)/$$$$name --output reports/drf-fastapi-$(1)-$$$$name-docker.json || exit 1; \
 	done
-	@for name in $(BASELINES_002); do \
-		uv run sanka-bench evaluate --runner docker --task tasks/drf-fastapi/drf-fastapi-002 --candidate baselines/drf-fastapi-002/$$name --output reports/drf-fastapi-002-$$name-docker.json || exit 1; \
-	done
-	@for name in $(BASELINES_003); do \
-		uv run sanka-bench evaluate --runner docker --task tasks/drf-fastapi/drf-fastapi-003 --candidate baselines/drf-fastapi-003/$$name --output reports/drf-fastapi-003-$$name-docker.json || exit 1; \
-	done
-	@for name in $(BASELINES_004); do \
-		uv run sanka-bench evaluate --runner docker --task tasks/drf-fastapi/drf-fastapi-004 --candidate baselines/drf-fastapi-004/$$name --output reports/drf-fastapi-004-$$name-docker.json || exit 1; \
-	done
-	@for name in $(BASELINES_005); do \
-		uv run sanka-bench evaluate --runner docker --task tasks/drf-fastapi/drf-fastapi-005 --candidate baselines/drf-fastapi-005/$$name --output reports/drf-fastapi-005-$$name-docker.json || exit 1; \
-	done
-	@for name in $(BASELINES_006); do \
-		uv run sanka-bench evaluate --runner docker --task tasks/drf-fastapi/drf-fastapi-006 --candidate baselines/drf-fastapi-006/$$name --output reports/drf-fastapi-006-$$name-docker.json || exit 1; \
-	done
-	@for name in $(BASELINES_007); do \
-		uv run sanka-bench evaluate --runner docker --task tasks/drf-fastapi/drf-fastapi-007 --candidate baselines/drf-fastapi-007/$$name --output reports/drf-fastapi-007-$$name-docker.json || exit 1; \
-	done
-	@for name in $(BASELINES_008); do \
-		uv run sanka-bench evaluate --runner docker --task tasks/drf-fastapi/drf-fastapi-008 --candidate baselines/drf-fastapi-008/$$name --output reports/drf-fastapi-008-$$name-docker.json || exit 1; \
-	done
-	@for name in $(BASELINES_009); do \
-		uv run sanka-bench evaluate --runner docker --task tasks/drf-fastapi/drf-fastapi-009 --candidate baselines/drf-fastapi-009/$$name --output reports/drf-fastapi-009-$$name-docker.json || exit 1; \
-	done
-	@for name in $(BASELINES_010); do \
-		uv run sanka-bench evaluate --runner docker --task tasks/drf-fastapi/drf-fastapi-010 --candidate baselines/drf-fastapi-010/$$name --output reports/drf-fastapi-010-$$name-docker.json || exit 1; \
-	done
+endef
+
+$(foreach task,$(BASELINE_TASKS),$(eval $(call BASELINE_RULES,$(task))))
+
+baselines: $(addprefix baselines-,$(BASELINE_TASKS))
+
+docker-baselines: $(addprefix docker-baselines-,$(BASELINE_TASKS))
 
 report:
 	uv run sanka-bench report

@@ -29,16 +29,7 @@ def evaluate_docker(
     root = repository_root()
     task_relative = _relative_to_root(task_dir, root)
     candidate_relative = _relative_to_root(candidate_dir, root)
-    image_tag = f"sanka-bench:{digest_tree(root).removeprefix('sha256:')[:16]}"
-
-    build = run_command(
-        ["docker", "build", "--pull=false", "--tag", image_tag, "."],
-        cwd=root,
-        timeout=900,
-    )
-    if not build.passed:
-        detail = build.stderr.strip() or build.stdout.strip()
-        raise DockerEvaluationError(f"evaluator image build failed: {detail}")
+    image_tag = _ensure_evaluator_image(root)
 
     # Docker Desktop shares /Users by default, but not macOS's resolved
     # /var/folders temporary path. Keep the bind source inside the repository
@@ -99,6 +90,27 @@ def evaluate_docker(
                 encoding="utf-8",
             )
         return result
+
+
+def _ensure_evaluator_image(root: Path) -> str:
+    image_tag = f"sanka-bench:{digest_tree(root).removeprefix('sha256:')[:16]}"
+    inspect = run_command(
+        ["docker", "image", "inspect", image_tag],
+        cwd=root,
+        timeout=30,
+    )
+    if inspect.passed:
+        return image_tag
+
+    build = run_command(
+        ["docker", "build", "--pull=false", "--tag", image_tag, "."],
+        cwd=root,
+        timeout=900,
+    )
+    if not build.passed:
+        detail = build.stderr.strip() or build.stdout.strip()
+        raise DockerEvaluationError(f"evaluator image build failed: {detail}")
+    return image_tag
 
 
 def _relative_to_root(path: Path, root: Path) -> Path:
