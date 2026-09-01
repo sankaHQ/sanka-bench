@@ -441,6 +441,17 @@ while reporting more turns than the requested limit, the candidate is frozen
 once and the overrun is disclosed as a protocol deviation instead of being
 mislabelled as completed within budget.
 
+The parsed result event, not the process exit code, decides which of these
+paths applies. Claude Code exits 1 on `error_max_turns` while still printing
+a complete result; a runner revision that treated any non-zero exit as an
+agent-run failure before reading the result silently discarded every
+turn-capped Claude workspace it saw (the ten unevaluated v4 cells all ran
+under that revision). Only a non-zero exit *with no parseable result* is an
+agent-run failure now, the test double exits 1 whenever it reports an error
+so the real CLI contract is what the suite pins, and Claude runs are captured
+as `stream-json` so `agent-log.jsonl` is the per-turn transcript rather than
+a copy of the final result line.
+
 **Sanka runs in the fixture dependency environment.** The Sanka console script
 may be isolated in an engine virtualenv, but its DRF scanner imports the source
 project. With-Sanka arms pass the benchmark interpreter's installed-package

@@ -51,7 +51,16 @@ evaluated while infrastructure failures stay out of the quality columns:
   unevaluated zero.
 - ``1`` — the agent reported an error (other than budget exhaustion) or the
   run produced no parseable result; nothing is frozen. Classify before any
-  authorized rerun.
+  authorized rerun. The process exit code alone never decides this: Claude
+  Code exits 1 on ``error_max_turns`` while still printing a complete result
+  event, so the parsed result is authoritative and only an unparseable run
+  with a non-zero exit is an agent-run failure.
+
+Claude cells are captured with ``--output-format stream-json --verbose``:
+``agent-log.jsonl`` holds the whole per-turn transcript (assistant events,
+tool calls, tool results, final result) and ``agent-result.json`` holds the
+final result event, so turn accounting never depends on the CLI's own session
+store.
 - ``2`` — usage error (bad arguments / not a benchmark task).
 - ``3`` — the agent finished without adding a single file; nothing is frozen.
   An empty workspace together with no error event and no recorded turns is the
@@ -484,8 +493,12 @@ def main() -> int:
                 args.model,
                 "--max-turns",
                 str(args.max_turns),
+                # stream-json keeps every assistant/tool event, so
+                # agent-log.jsonl is the per-turn transcript instead of a copy
+                # of the final result line; the result event stays last.
                 "--output-format",
-                "json",
+                "stream-json",
+                "--verbose",
                 "--dangerously-skip-permissions",
             ]
         terminal_reason: str | None = None
@@ -535,7 +548,12 @@ def main() -> int:
                 json.dumps(readiness_context, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
                 encoding="utf-8",
             )
-        if not timed_out and outcome.returncode != 0:
+        if not timed_out and outcome.returncode != 0 and not stats:
+            # Only a run with no parseable terminal result is an agent-run
+            # failure. A parseable result is authoritative over the process exit
+            # code: Claude Code exits 1 on ``error_max_turns`` (verified against
+            # CLI 2.1.241), and that budget outcome must reach the freeze branch
+            # below instead of being misfiled as an infrastructure failure.
             detail = outcome.stderr.strip()[:2000] or "no output"
             print(f"agent run failed: {detail}", file=sys.stderr)
             return 1

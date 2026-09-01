@@ -370,15 +370,32 @@ def test_codex_timeout_without_terminal_event_remains_gradable(harness: object) 
     assert should_fail({"is_error": True, "subtype": "codex-turn-failed"}, timed_out=True)
 
 
-def _fake_agent(tmp_path: Path, *, result: dict, touch: str | None) -> Path:
+def _fake_agent(
+    tmp_path: Path,
+    *,
+    result: dict | None,
+    touch: str | None,
+    exit_code: int | None = None,
+    preamble: list[dict] | None = None,
+) -> Path:
+    """Emulate the Claude CLI: print stream events then the result, and exit 1
+    whenever the result reports ``is_error`` (the real CLI does exactly that on
+    ``error_max_turns``). ``result=None`` prints nothing at all."""
     script = tmp_path / "fake-agent"
-    payload = json.dumps(result)
+    if exit_code is None:
+        exit_code = 1 if (result or {}).get("is_error") else 0
+    lines = [json.dumps(event) for event in (preamble or [])]
+    if result is not None:
+        lines.append(json.dumps(result))
+    prints = "".join(f"printf '%s\\n' '{line}'\n" for line in lines)
     touch_line = f"touch '{touch}'" if touch else ":"
     script.write_text(
         "#!/bin/sh\n"
         'if [ "$1" = "--version" ]; then echo fake-agent-1.0; exit 0; fi\n'
+        f"printf '%s\\n' \"$@\" > '{tmp_path / 'fake-agent-argv.txt'}'\n"
         f"{touch_line}\n"
-        f"printf '%s\\n' '{payload}'\n",
+        f"{prints}"
+        f"exit {exit_code}\n",
         encoding="utf-8",
     )
     script.chmod(0o755)
@@ -424,11 +441,58 @@ def test_turn_budget_exhaustion_freezes_the_workspace(tmp_path: Path) -> None:
     )
     out = tmp_path / "candidate"
     outcome = _run_adapter(task, agent, out)
+    # The fake exits 1 like the real CLI does on error_max_turns; the parsed
+    # result must still win over the exit code and the workspace must freeze.
     assert outcome.returncode == 0, outcome.stderr
     assert (out / "overlay" / "target_app.py").is_file()
     disclosure = (out / "GENERATED.md").read_text(encoding="utf-8")
     assert "turn budget (60) exhausted" in disclosure
     assert "frozen as-is" in disclosure
+    argv = (tmp_path / "fake-agent-argv.txt").read_text(encoding="utf-8").splitlines()
+    assert argv[argv.index("--output-format") + 1] == "stream-json"
+    assert "--verbose" in argv
+
+
+def test_stream_transcript_is_preserved_and_result_is_last_event(tmp_path: Path) -> None:
+    task = Path(__file__).resolve().parents[1] / "tasks" / "drf-fastapi" / "drf-fastapi-001"
+    preamble = [
+        {"type": "system", "subtype": "init", "model": "fake"},
+        {"type": "assistant", "message": {"role": "assistant", "content": []}},
+        {"type": "user", "message": {"role": "user", "content": []}},
+    ]
+    result = {
+        "type": "result",
+        "num_turns": 3,
+        "duration_ms": 1000,
+        "total_cost_usd": 0.1,
+        "is_error": False,
+        "subtype": "success",
+        "result": "done",
+    }
+    agent = _fake_agent(tmp_path, result=result, touch="target_app.py", preamble=preamble)
+    out = tmp_path / "candidate"
+    outcome = _run_adapter(task, agent, out)
+    assert outcome.returncode == 0, outcome.stderr
+    log_lines = (out / "agent-log.jsonl").read_text(encoding="utf-8").splitlines()
+    assert [json.loads(line)["type"] for line in log_lines] == [
+        "system",
+        "assistant",
+        "user",
+        "result",
+    ]
+    assert json.loads((out / "agent-result.json").read_text(encoding="utf-8")) == result
+    disclosure = (out / "GENERATED.md").read_text(encoding="utf-8")
+    assert "completed within budget" in disclosure
+
+
+def test_unparseable_nonzero_exit_is_an_agent_run_failure(tmp_path: Path) -> None:
+    task = Path(__file__).resolve().parents[1] / "tasks" / "drf-fastapi" / "drf-fastapi-001"
+    agent = _fake_agent(tmp_path, result=None, touch="target_app.py", exit_code=1)
+    out = tmp_path / "candidate"
+    outcome = _run_adapter(task, agent, out)
+    assert outcome.returncode == 1
+    assert "agent run failed" in outcome.stderr
+    assert not (out / "overlay").exists()
 
 
 def test_successful_claude_turn_overrun_is_disclosed(tmp_path: Path) -> None:
