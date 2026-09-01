@@ -424,6 +424,22 @@ workspace probe on top. Only change kinds enter the evidence, so files whose
 contents legitimately vary between clean runs still fingerprint identically
 for the determinism gate.
 
+**Included routers resolve to the route that serves (evaluator 0.0.2).** FastAPI
+0.141, the version pinned since the first commit, keeps `app.include_router(router)`
+targets as lazy `fastapi.routing._IncludedRouter` entries in `app.routes` instead
+of copying the router's `APIRoute` objects. The serving guard recorded that wrapper
+as the matched route: it has no endpoint, so every candidate built the ordinary
+FastAPI way (a router module plus `include_router`) was reported as served by a
+non-`APIRoute` class with its endpoint outside the workspace, and failed the native
+gate on every scenario while behaviour, database and side-effect parity passed. The
+guard now walks the wrapper's effective candidates with the request scope and
+records the underlying route, recursing through nested and prefixed includes; raw
+Starlette routes, mounts and bridges are still recorded as themselves and still fail.
+Reports carry `evaluator_version` `0.0.2` from this change, so a re-evaluation of a
+frozen candidate is distinguishable from its original verdict. Frozen matrix rows are
+never rescored in place; a corrected verdict is published as a labelled
+re-evaluation beside the original.
+
 **Budget exhaustion is graded; infrastructure death is classified.** The agent
 harness previously discarded any run whose agent reported an error — including
 `error_max_turns` — so a turn-capped workspace that might have passed scored

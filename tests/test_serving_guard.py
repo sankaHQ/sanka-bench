@@ -62,6 +62,64 @@ def test_clean_fastapi_app_produces_compliant_evidence(tmp_path: Path) -> None:
     assert native["socket_events"] == []
 
 
+def test_include_router_resolves_to_the_underlying_apiroute(tmp_path: Path) -> None:
+    # FastAPI >= 0.141 keeps included routers as lazy `_IncludedRouter` entries;
+    # the evidence must name the APIRoute that actually serves the request.
+    (tmp_path / "svc.py").write_text(
+        "from fastapi import APIRouter, FastAPI\n"
+        "router = APIRouter()\n"
+        '@router.get("/ping/")\n'
+        "def ping():\n"
+        '    return {"ok": True}\n'
+        "app = FastAPI()\n"
+        "app.include_router(router)\n",
+        encoding="utf-8",
+    )
+    payload = _payload(_run_guard(tmp_path))
+    assert payload["response"] == {"status": 200, "body": {"ok": True}}
+    native = payload["native"]
+    assert native["route_class"] == "fastapi.routing.APIRoute"
+    assert native["endpoint_in_workspace"] is True
+    assert native["forbidden_imports"] == []
+
+
+def test_nested_prefixed_include_router_resolves_to_the_apiroute(tmp_path: Path) -> None:
+    (tmp_path / "svc.py").write_text(
+        "from fastapi import APIRouter, FastAPI\n"
+        "inner = APIRouter()\n"
+        '@inner.get("/ping/")\n'
+        "def ping():\n"
+        '    return {"ok": True}\n'
+        "outer = APIRouter()\n"
+        'outer.include_router(inner, prefix="/v1")\n'
+        "app = FastAPI()\n"
+        'app.include_router(outer, prefix="/api")\n',
+        encoding="utf-8",
+    )
+    payload = _payload(_run_guard(tmp_path, scenario={"method": "GET", "path": "/api/v1/ping/"}))
+    assert payload["response"] == {"status": 200, "body": {"ok": True}}
+    native = payload["native"]
+    assert native["route_class"] == "fastapi.routing.APIRoute"
+    assert native["endpoint_in_workspace"] is True
+
+
+def test_included_raw_starlette_route_is_still_rejected(tmp_path: Path) -> None:
+    (tmp_path / "svc.py").write_text(
+        "from fastapi import APIRouter, FastAPI\n"
+        "from starlette.responses import JSONResponse\n"
+        "async def ping(request):\n"
+        '    return JSONResponse({"ok": True})\n'
+        "router = APIRouter()\n"
+        'router.add_route("/ping/", ping, methods=["GET"])\n'
+        "app = FastAPI()\n"
+        "app.include_router(router)\n",
+        encoding="utf-8",
+    )
+    payload = _payload(_run_guard(tmp_path))
+    native = payload["native"]
+    assert native["route_class"] != "fastapi.routing.APIRoute"
+
+
 def test_query_string_is_excluded_from_route_matching(tmp_path: Path) -> None:
     (tmp_path / "svc.py").write_text(
         "from fastapi import FastAPI, Request\n"
