@@ -94,21 +94,21 @@ def test_native_reference_passes_every_hard_gate(
         assert evidence["settings_module"] == "target_settings"
 
 
-def test_sanka_native_records_the_partial_readiness_outcome(
+def test_sanka_native_records_the_readiness_abstention(
     baseline_008_results: dict[str, dict[str, Any]],
 ) -> None:
-    """Mixed view kinds, a custom lookup, and dynamic regex leave only the
-    API root inside the pinned converter's native generation envelope."""
+    """Mixed legacy view kinds leave readiness below the default threshold,
+    so apply emits a gap report instead of a partial overlay."""
     result = baseline_008_results["sanka-native"]
     assert result["candidate_id"] == "sanka-native"
     assert result["status"] == "failed"
     assert result["fully_migrated"] is False
     assert result["hard_gates"]["source_qualified"] is True
     assert result["hard_gates"]["regression_tests"] is True
-    assert result["hard_gates"]["target_boot"] is True
+    assert result["hard_gates"]["target_boot"] is False
     assert result["hard_gates"]["behavior_parity"] is False
     assert result["hard_gates"]["database_parity"] is False
     assert result["hard_gates"]["native_target"] is False
     assert result["metrics"]["behavioral_parity"]["passed"] == 0
-    assert result["metrics"]["database_parity"]["passed"] == 19
+    assert result["metrics"]["database_parity"]["passed"] == 0
     assert result["metrics"]["native_compliance"]["passed"] == 0

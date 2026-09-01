@@ -94,21 +94,21 @@ def test_native_reference_passes_every_hard_gate(
         assert evidence["settings_module"] == "target_settings"
 
 
-def test_sanka_native_records_the_partial_readiness_outcome(
+def test_sanka_native_records_the_readiness_abstention(
     baseline_006_results: dict[str, dict[str, Any]],
 ) -> None:
-    """Only the API root is emitted, so every graded order request receives
-    an unrouted response even though the generated app itself boots."""
+    """Only the API root is generatable, leaving readiness below the default
+    threshold, so apply emits a gap report instead of an overlay."""
     result = baseline_006_results["sanka-native"]
     assert result["candidate_id"] == "sanka-native"
     assert result["status"] == "failed"
     assert result["fully_migrated"] is False
     assert result["hard_gates"]["source_qualified"] is True
     assert result["hard_gates"]["regression_tests"] is True
-    assert result["hard_gates"]["target_boot"] is True
+    assert result["hard_gates"]["target_boot"] is False
     assert result["hard_gates"]["behavior_parity"] is False
     assert result["hard_gates"]["database_parity"] is False
     assert result["hard_gates"]["native_target"] is False
     assert result["metrics"]["behavioral_parity"]["passed"] == 0
-    assert result["metrics"]["database_parity"]["passed"] == 22
+    assert result["metrics"]["database_parity"]["passed"] == 0
     assert result["metrics"]["native_compliance"]["passed"] == 0

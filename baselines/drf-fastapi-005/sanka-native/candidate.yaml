@@ -3,5 +3,5 @@ id: sanka-native
 kind: noop
 provenance:
   producer: sanka
-  revision: sha256:058667c1568c4f354c1e74b2112c0e6e548dd79a3cf410dde96603b92a91c456
-  command: sanka scan && sanka plan --to fastapi && sanka apply --bench-candidate <dir>
+  revision: sha256:09e0249c005628c35677d7073663f7df0d47df87bb82144443233bbc5c6a4f0b
+  command: sanka scan && sanka plan --to fastapi && sanka apply --plan-hash <hash> --bench-candidate <dir>

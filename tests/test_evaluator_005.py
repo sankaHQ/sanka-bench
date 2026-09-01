@@ -94,11 +94,11 @@ def test_native_reference_passes_every_hard_gate(
         assert evidence["settings_module"] == "target_settings"
 
 
-def test_sanka_native_records_the_zero_readiness_outcome(
+def test_sanka_native_records_the_readiness_abstention(
     baseline_005_results: dict[str, dict[str, Any]],
 ) -> None:
-    """Middleware blocks every non-alias route in the frozen native plan,
-    so apply emits no overlay and the honest candidate cannot boot."""
+    """The permission matrix leaves readiness below the default threshold,
+    so apply emits a gap report instead of an overlay."""
     result = baseline_005_results["sanka-native"]
     assert result["candidate_id"] == "sanka-native"
     assert result["status"] == "failed"

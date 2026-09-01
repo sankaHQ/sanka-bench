@@ -30,6 +30,7 @@
     "user": "",
     "vendor": "sqlite"
   },
+  "database_required": true,
   "dropped_routes": [
     {
       "method": "GET",
@@ -98,18 +99,47 @@
     }
   ],
   "entrypoint": "target_app.py",
+  "generated_file_hashes": {
+    "README.md": "sha256:9990ee550e8b5adc6f7eb17dcc24e2285a181c0310b0ec779fa7d3d3ca9c9b7a",
+    "pyproject.toml": "sha256:8f8a66bf33b2b85e28a707ddf58214c0af54f6f0c3697e32d140684320b521af",
+    "requirements-test.txt": "sha256:dd0a554e22fe8430558e1368da32d3ae6225abb5f3a3edeb21d5ec0940ec086a",
+    "requirements.txt": "sha256:48227fcccda73204d669b52433ecdddce6f4dd3244ea6450727b53fdcea9307c",
+    "sanka_native.py": "sha256:73a404d23ac9fa54d57cc821d9056e162b7c8cfa5622eb291d7658e0e12d650e",
+    "sanka_settings.py": "sha256:961f6f2651aab332d4202f3d932886e59d8576b6d89f52e01066fd66a22da4fd",
+    "sanka_store.py": "sha256:c5ff5fb6668b27bb9f408c8bc9684f6986f41a9ef33b3361f51ad3aab9434450",
+    "target_app.py": "sha256:23bb9b23ec767d34060c6027a9df1834eccabefa83e58a64cb5d2f6e4e30cca5"
+  },
   "generated_files": [
     "target_app.py",
     "sanka_native.py",
     "sanka_store.py",
     "sanka_settings.py"
   ],
+  "generation_mode": "minimal",
   "generator": "sanka",
   "generic_messages": {
     "not_found": "Not found."
   },
+  "http_security": {
+    "allowed_hosts": [
+      "testserver",
+      "localhost"
+    ],
+    "content_type_nosniff": false,
+    "cross_origin_opener_policy": null,
+    "hsts_include_subdomains": false,
+    "hsts_preload": false,
+    "hsts_seconds": 0,
+    "referrer_policy": null,
+    "ssl_redirect": false,
+    "x_frame_options": null
+  },
   "mode": "native",
-  "plan_hash": "sha256:68162c9f7e9bf13aea681080dd22d69c526fac7a179b395a35bca7b6b2d32e91",
+  "native_eligible_routes": 13,
+  "needs_adaptation_routes": 6,
+  "package_manager": "uv",
+  "plan_hash": "sha256:cecb1753b48ca78ac67828a2a1316b04c956a10938a1d88a172aff0f6e1e099c",
+  "readiness": 0.5384615384615384,
   "resources": [
     {
       "auth": null,
@@ -210,6 +240,7 @@
         }
       ],
       "lookup": "pk",
+      "lookup_regex": "[^/.]+",
       "model_class": "Account",
       "model_module": "ledger.models",
       "object_name": "Account",
@@ -307,7 +338,94 @@
   ],
   "schema_version": 1,
   "settings_module": "ledger_project.settings",
+  "skipped_routes": [],
   "source_root": ".",
-  "source_scan_hash": "sha256:aeab60aef901aad0e486c8bdb244a68e26808a79b14fba2da4db7f65db047c1e",
-  "sql_engine": "django"
+  "source_scan_hash": "sha256:9d5c71ab9d78a7f738dfa040005eb465e2c36b7662277cbd684bac3f6c954bf1",
+  "sql_engine": "django",
+  "unsupported_routes": [
+    {
+      "method": "POST",
+      "operation": "transfer",
+      "path": "/api/accounts/{pk}/transfer/",
+      "reasons": [
+        {
+          "code": "SANKA_DRF_CUSTOM_ACTION_UNSUPPORTED",
+          "feature": "viewset-actions",
+          "message": "Custom or unsupported viewset actions are present: transfer"
+        }
+      ],
+      "source_view": "ledger.views.AccountViewSet",
+      "stubbed": true
+    },
+    {
+      "method": "GET",
+      "operation": "list",
+      "path": "/api/audit/",
+      "reasons": [
+        {
+          "code": "SANKA_DRF_VIEWSET_KIND_UNSUPPORTED",
+          "feature": "view-kind",
+          "message": "ledger.views.AuditLogViewSet is not a ModelViewSet."
+        }
+      ],
+      "source_view": "ledger.views.AuditLogViewSet",
+      "stubbed": true
+    },
+    {
+      "method": "GET",
+      "operation": "list",
+      "path": "/api/entries/",
+      "reasons": [
+        {
+          "code": "SANKA_DRF_VIEWSET_KIND_UNSUPPORTED",
+          "feature": "view-kind",
+          "message": "ledger.views.LedgerEntryViewSet is not a ModelViewSet."
+        }
+      ],
+      "source_view": "ledger.views.LedgerEntryViewSet",
+      "stubbed": true
+    },
+    {
+      "method": "POST",
+      "operation": "create",
+      "path": "/api/entries/",
+      "reasons": [
+        {
+          "code": "SANKA_DRF_VIEWSET_KIND_UNSUPPORTED",
+          "feature": "view-kind",
+          "message": "ledger.views.LedgerEntryViewSet is not a ModelViewSet."
+        }
+      ],
+      "source_view": "ledger.views.LedgerEntryViewSet",
+      "stubbed": true
+    },
+    {
+      "method": "DELETE",
+      "operation": "destroy",
+      "path": "/api/entries/{pk}/",
+      "reasons": [
+        {
+          "code": "SANKA_DRF_VIEWSET_KIND_UNSUPPORTED",
+          "feature": "view-kind",
+          "message": "ledger.views.LedgerEntryViewSet is not a ModelViewSet."
+        }
+      ],
+      "source_view": "ledger.views.LedgerEntryViewSet",
+      "stubbed": true
+    },
+    {
+      "method": "GET",
+      "operation": "retrieve",
+      "path": "/api/entries/{pk}/",
+      "reasons": [
+        {
+          "code": "SANKA_DRF_VIEWSET_KIND_UNSUPPORTED",
+          "feature": "view-kind",
+          "message": "ledger.views.LedgerEntryViewSet is not a ModelViewSet."
+        }
+      ],
+      "source_view": "ledger.views.LedgerEntryViewSet",
+      "stubbed": true
+    }
+  ]
 }

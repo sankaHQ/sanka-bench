@@ -15,6 +15,14 @@
       "path": "/api/"
     }
   ],
+  "database": {
+    "host": "",
+    "name": "db.sqlite3",
+    "port": "",
+    "user": "",
+    "vendor": "sqlite"
+  },
+  "database_required": true,
   "dropped_routes": [
     {
       "method": "GET",
@@ -53,26 +61,65 @@
     }
   ],
   "entrypoint": "target_app.py",
+  "generated_file_hashes": {
+    "README.md": "sha256:7317c7e44bd1304893e735693a8d0bc61ade5e3c1a1abdf7a52d58467bfc43d5",
+    "pyproject.toml": "sha256:8f8a66bf33b2b85e28a707ddf58214c0af54f6f0c3697e32d140684320b521af",
+    "requirements-test.txt": "sha256:dd0a554e22fe8430558e1368da32d3ae6225abb5f3a3edeb21d5ec0940ec086a",
+    "requirements.txt": "sha256:48227fcccda73204d669b52433ecdddce6f4dd3244ea6450727b53fdcea9307c",
+    "sanka_native.py": "sha256:73a404d23ac9fa54d57cc821d9056e162b7c8cfa5622eb291d7658e0e12d650e",
+    "sanka_settings.py": "sha256:d3e0c2731fcfe832ad22d5b916a5c060a7a7f2bbc68f990210b8f3841887be2f",
+    "sanka_store.py": "sha256:c5ff5fb6668b27bb9f408c8bc9684f6986f41a9ef33b3361f51ad3aab9434450",
+    "target_app.py": "sha256:a98f3178d6af37aa5cd9416c97e67eb2ed822fcccf218efd768a0c5d9dad1e9e"
+  },
   "generated_files": [
     "target_app.py",
     "sanka_native.py",
+    "sanka_store.py",
     "sanka_settings.py"
   ],
+  "generation_mode": "minimal",
   "generator": "sanka",
   "generic_messages": {
     "not_found": "Not found."
   },
+  "http_security": {
+    "allowed_hosts": [
+      "testserver",
+      "localhost"
+    ],
+    "content_type_nosniff": false,
+    "cross_origin_opener_policy": null,
+    "hsts_include_subdomains": false,
+    "hsts_preload": false,
+    "hsts_seconds": 0,
+    "referrer_policy": null,
+    "ssl_redirect": false,
+    "x_frame_options": null
+  },
   "mode": "native",
-  "plan_hash": "sha256:9b90ffb455265a3369ee41f74ff5292bd695e7b251c47c75a713682e83a6b2cd",
+  "native_eligible_routes": 7,
+  "needs_adaptation_routes": 0,
+  "package_manager": "uv",
+  "plan_hash": "sha256:b75bfdde7be13b8c9a05865be37b61058d9ec17dcf3ffe2a1e37060a192fe894",
+  "readiness": 1.0,
   "resources": [
     {
+      "auth": null,
+      "create": {
+        "style": "default"
+      },
+      "db_table": "widgets_widget",
       "fields": [
         {
           "allow_blank": false,
           "allow_null": false,
+          "attname": null,
+          "choices": [],
+          "decimal_places": null,
           "default": null,
           "has_default": false,
           "kind": "integer",
+          "max_digits": null,
           "max_length": null,
           "max_value": null,
           "messages": {
@@ -88,14 +135,20 @@
           "name": "id",
           "read_only": true,
           "required": false,
-          "trim_whitespace": true
+          "trim_whitespace": true,
+          "unique": false,
+          "unique_message": null
         },
         {
           "allow_blank": false,
           "allow_null": false,
+          "attname": null,
+          "choices": [],
+          "decimal_places": null,
           "default": null,
           "has_default": false,
           "kind": "char",
+          "max_digits": null,
           "max_length": 80,
           "max_value": null,
           "messages": {
@@ -113,14 +166,20 @@
           "name": "name",
           "read_only": false,
           "required": true,
-          "trim_whitespace": true
+          "trim_whitespace": true,
+          "unique": false,
+          "unique_message": null
         },
         {
           "allow_blank": false,
           "allow_null": false,
-          "default": null,
-          "has_default": false,
+          "attname": null,
+          "choices": [],
+          "decimal_places": null,
+          "default": 0,
+          "has_default": true,
           "kind": "integer",
+          "max_digits": null,
           "max_length": null,
           "max_value": null,
           "messages": {
@@ -136,16 +195,20 @@
           "name": "quantity",
           "read_only": false,
           "required": true,
-          "trim_whitespace": true
+          "trim_whitespace": true,
+          "unique": false,
+          "unique_message": null
         }
       ],
       "lookup": "pk",
+      "lookup_regex": "[^/.]+",
       "model_class": "Widget",
       "model_module": "widgets.models",
       "object_name": "Widget",
       "ordering": [
         "id"
       ],
+      "pk_attname": "id",
       "routes": [
         {
           "method": "GET",
@@ -178,7 +241,9 @@
           "path": "/api/widgets/{pk}/"
         }
       ],
-      "serializer": "widgets.serializers.WidgetSerializer"
+      "serializer": "widgets.serializers.WidgetSerializer",
+      "update_drops": null,
+      "view": "widgets.views.WidgetViewSet"
     }
   ],
   "routes": [
@@ -233,8 +298,10 @@
     }
   ],
   "schema_version": 1,
-  "serving_settings": "sanka_settings",
   "settings_module": "fixture_project.settings",
+  "skipped_routes": [],
   "source_root": ".",
-  "source_scan_hash": "sha256:5a1a25ec7b5b33a501a26d37556ec65b484baf5e16a94c35c9d6e60cd2e80eec"
+  "source_scan_hash": "sha256:41a1bd39dc6cd03d40602be8eb7b8f469fba8ccbaa67179446e9aaae826ef98a",
+  "sql_engine": "django",
+  "unsupported_routes": []
 }
