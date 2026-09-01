@@ -1,6 +1,6 @@
 [project]
 name = "sanka-bench"
-version = "0.0.1"
+version = "0.0.2"
 description = "Tool-neutral repository-level migration benchmark and evaluator"
 readme = "README.md"
 requires-python = ">=3.12"

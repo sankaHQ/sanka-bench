@@ -134,10 +134,51 @@ def _matched_route(app: Any, method: str, path: str) -> Any:
     for route in routes:
         match, _ = route.matches(scope)
         if match == Match.FULL:
-            return route
+            return _resolve_included_router(route, scope)
         if match == Match.PARTIAL and partial is None:
             partial = route
-    return partial
+    return _resolve_included_router(partial, scope) if partial is not None else None
+
+
+def _resolve_included_router(route: Any, scope: dict[str, Any], depth: int = 0) -> Any:
+    """Resolve FastAPI's lazy ``include_router`` entries to the route that serves.
+
+    Since FastAPI 0.141 ``app.include_router(router)`` leaves a
+    ``fastapi.routing._IncludedRouter`` in ``app.routes`` instead of copying the
+    router's ``APIRoute`` objects. That wrapper matches the request but carries no
+    endpoint, so recording it as the matched route misreported every candidate
+    built the ordinary FastAPI way (a router module plus ``include_router``) as
+    non-native. Walk the wrapper's effective candidates with the same scope and
+    return the underlying route, recursing through nested includes. Anything
+    that is not an ``_IncludedRouter`` is returned unchanged, so raw Starlette
+    routes, mounts and bridges keep failing the gate exactly as before.
+    """
+    from starlette.routing import Match
+
+    if route is None or depth > 16 or type(route).__qualname__ != "_IncludedRouter":
+        return route
+    candidates = getattr(route, "effective_candidates", None)
+    if not callable(candidates):
+        return route
+    partial = None
+    try:
+        effective = list(candidates())
+    except Exception:
+        return route
+    for candidate in effective:
+        try:
+            match, _ = candidate.matches(scope)
+        except Exception:
+            continue
+        if match == Match.FULL:
+            resolved = _resolve_included_router(candidate, scope, depth + 1)
+            return getattr(resolved, "original_route", resolved)
+        if match == Match.PARTIAL and partial is None:
+            partial = candidate
+    if partial is not None:
+        resolved = _resolve_included_router(partial, scope, depth + 1)
+        return getattr(resolved, "original_route", resolved)
+    return route
 
 
 def _endpoint_in_workspace(route: Any, workspace: Path) -> bool:
