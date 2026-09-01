@@ -64,6 +64,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -367,6 +368,14 @@ def main() -> int:
         help="codex only: which OpenAI-compatible API serves the model",
     )
     parser.add_argument(
+        "--provider-variant",
+        default="standard",
+        help=(
+            "disclosed provider serving tier/deployment, for example "
+            "serverless-standard or on-demand-fast; never changes implicitly"
+        ),
+    )
+    parser.add_argument(
         "--price-in",
         type=float,
         default=None,
@@ -393,6 +402,13 @@ def main() -> int:
         help="disclosed reason the previous attempt failed (infrastructure retries only)",
     )
     args = parser.parse_args()
+
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", args.provider_variant):
+        print(
+            "--provider-variant must be a slug containing only letters, digits, '.', '_' or '-'",
+            file=sys.stderr,
+        )
+        return 2
 
     task_dir = args.task.resolve()
     source = task_dir / "source"
@@ -519,11 +535,11 @@ def main() -> int:
                 json.dumps(readiness_context, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
                 encoding="utf-8",
             )
-        if not timed_out and outcome.returncode != 0 and not stats:
+        if not timed_out and outcome.returncode != 0:
             detail = outcome.stderr.strip()[:2000] or "no output"
             print(f"agent run failed: {detail}", file=sys.stderr)
             return 1
-        if stats.get("is_error"):
+        if _agent_error_is_terminal(stats, timed_out=timed_out):
             if str(stats.get("subtype") or "") == "error_max_turns":
                 # Budget exhaustion is a pass@1 quality outcome, not an
                 # infrastructure failure: freeze and let the evaluator grade
@@ -657,8 +673,10 @@ def _codex_command(args: argparse.Namespace, prompt: str, codex_home: Path) -> l
 def _codex_stats(stdout: str, args: argparse.Namespace, measured_ms: float) -> dict[str, object]:
     turns = 0
     input_tokens = 0
+    cached_input_tokens = 0
     output_tokens = 0
-    is_error = False
+    terminal_kind: str | None = None
+    error_events = 0
     last_error: str | None = None
     for line in stdout.splitlines():
         line = line.strip()
@@ -671,17 +689,37 @@ def _codex_stats(stdout: str, args: argparse.Namespace, measured_ms: float) -> d
         if not isinstance(event, dict):
             continue
         kind = str(event.get("type") or event.get("msg", {}).get("type") or "")
-        if "turn" in kind and kind.endswith("completed"):
+        if kind == "turn.completed":
             turns += 1
-        if kind in {"error", "turn.failed"}:
-            is_error = True
+            terminal_kind = kind
+        elif kind == "turn.failed":
+            terminal_kind = kind
+            error_events += 1
+            last_error = json.dumps(event)[:500]
+        elif kind == "error":
+            # Codex emits top-level error events while it reconnects. A later
+            # turn.completed is authoritative proof that the retry recovered.
+            # Keep the notice for diagnostics, but do not poison the result.
+            error_events += 1
             last_error = json.dumps(event)[:500]
         usage = _find_usage(event)
         if usage:
             input_tokens = max(input_tokens, int(usage.get("input_tokens") or 0)) or input_tokens
+            cached_input_tokens = (
+                max(cached_input_tokens, int(usage.get("cached_input_tokens") or 0))
+                or cached_input_tokens
+            )
             output_tokens = (
                 max(output_tokens, int(usage.get("output_tokens") or 0)) or output_tokens
             )
+    is_error = terminal_kind != "turn.completed"
+    subtype = "codex-exec"
+    if terminal_kind == "turn.failed":
+        subtype = "codex-turn-failed"
+    elif terminal_kind is None:
+        subtype = "codex-no-terminal-event"
+        if last_error is None:
+            last_error = "Codex transcript ended without turn.completed or turn.failed"
     cost: float | None = None
     basis = "measured wall-clock; token usage unavailable"
     if input_tokens or output_tokens:
@@ -694,11 +732,14 @@ def _codex_stats(stdout: str, args: argparse.Namespace, measured_ms: float) -> d
         "duration_ms": measured_ms,
         "total_cost_usd": cost,
         "is_error": is_error,
-        "subtype": "codex-exec",
+        "subtype": subtype,
         "result": last_error,
         "cost_basis": basis,
         "input_tokens": input_tokens or None,
+        "cached_input_tokens": cached_input_tokens or None,
         "output_tokens": output_tokens or None,
+        "recovered_error_events": error_events if terminal_kind == "turn.completed" else 0,
+        "terminal_event": terminal_kind,
     }
     return stats
 
@@ -734,6 +775,16 @@ def _as_text(value: object) -> str:
     return str(value)
 
 
+def _agent_error_is_terminal(stats: dict[str, object], *, timed_out: bool) -> bool:
+    if not stats.get("is_error"):
+        return False
+    # A killed Codex process necessarily lacks a terminal JSONL event. Timeout
+    # is already disclosed as the binding budget; freeze any non-empty work so
+    # it can be graded instead of misclassifying budget exhaustion as provider
+    # infrastructure. A real turn.failed remains terminal even at the deadline.
+    return not (timed_out and stats.get("subtype") == "codex-no-terminal-event")
+
+
 def _agent_stats(stdout: str) -> dict[str, object]:
     for line in reversed([line for line in stdout.splitlines() if line.strip()]):
         try:
@@ -767,6 +818,7 @@ def _write_candidate(
         "provenance:",
         f"  producer: {args.agent}",
         f"  revision: {args.model} via {agent_version or 'claude cli'}",
+        f"  provider_variant: {args.provider_variant}",
         "  command: scripts/run_agent_candidate.py (prompt and budget in GENERATED.md)",
     ]
     duration = stats.get("duration_ms")
@@ -843,6 +895,8 @@ intervention between prompt and frozen overlay.
 |---|---|
 | Agent | {agent_label} (`{version}`) |
 | Provider | {provider} |
+| Provider variant | {args.provider_variant} |
+| Recovered transport notices | {stats.get("recovered_error_events", 0)} |
 | Cost basis | {stats.get("cost_basis", "agent-reported")} |
 | Model | `{args.model}` |
 | Turn budget | {budget_text} |

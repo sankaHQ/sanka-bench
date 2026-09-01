@@ -382,6 +382,13 @@ with readiness-aware usage guidance. A third, diagnostic candidate id ending in
 gap checklist. The frozen overlay is graded by the same evaluator as every
 other candidate.
 
+For larger model matrices, use `scripts/run_agent_matrix.py` as the single
+foreground coordinator. It preserves generated candidates across resumes,
+drains their evaluations after a provider failure, records serving tiers with
+`provider_variant`, and never activates a declared backup automatically. The
+provider qualification and recovery contract is documented in
+[docs/measurement-runs.md](docs/measurement-runs.md).
+
 Render the collected reports into a static page and summary SVG — the hero
 tally (tasks fully migrated per approach) and the per-task hard-gate matrix:
 

@@ -262,7 +262,12 @@ def test_codex_command_uses_responses_and_custom_openai_provider(
     harness: object, tmp_path: Path
 ) -> None:
     command = harness._codex_command(  # type: ignore[attr-defined]
-        SimpleNamespace(agent_bin="codex", model="gpt-test", provider="openai"),
+        SimpleNamespace(
+            agent_bin="codex",
+            model="gpt-test",
+            provider="openai",
+            provider_variant="serverless-standard",
+        ),
         "migrate it",
         tmp_path,
     )
@@ -293,6 +298,76 @@ def test_codex_stats_reads_usage_and_computes_disclosed_cost(harness: object) ->
     assert stats["output_tokens"] == 500_000
     assert stats["total_cost_usd"] == 3.0
     assert stats["is_error"] is False
+    assert stats["terminal_event"] == "turn.completed"
+
+
+def test_codex_stats_treats_recovered_stream_error_as_success(harness: object) -> None:
+    transcript = "\n".join(
+        [
+            json.dumps(
+                {
+                    "type": "error",
+                    "message": "Reconnecting... 1/5 (incomplete response)",
+                }
+            ),
+            json.dumps(
+                {
+                    "type": "turn.completed",
+                    "usage": {
+                        "input_tokens": 200,
+                        "cached_input_tokens": 150,
+                        "output_tokens": 25,
+                    },
+                }
+            ),
+        ]
+    )
+    stats = harness._codex_stats(  # type: ignore[attr-defined]
+        transcript,
+        SimpleNamespace(price_in=None, price_out=None),
+        1000.0,
+    )
+    assert stats["is_error"] is False
+    assert stats["terminal_event"] == "turn.completed"
+    assert stats["recovered_error_events"] == 1
+    assert stats["cached_input_tokens"] == 150
+
+
+def test_codex_stats_requires_a_terminal_turn_event(harness: object) -> None:
+    stats = harness._codex_stats(  # type: ignore[attr-defined]
+        json.dumps({"type": "error", "message": "connection closed"}),
+        SimpleNamespace(price_in=None, price_out=None),
+        1000.0,
+    )
+    assert stats["is_error"] is True
+    assert stats["subtype"] == "codex-no-terminal-event"
+    assert stats["terminal_event"] is None
+
+
+def test_codex_stats_uses_the_final_terminal_turn_event(harness: object) -> None:
+    recovered = "\n".join(
+        [
+            json.dumps({"type": "turn.failed", "error": {"message": "temporary"}}),
+            json.dumps({"type": "turn.completed", "usage": {"output_tokens": 10}}),
+        ]
+    )
+    failed = "\n".join(
+        [
+            json.dumps({"type": "turn.completed", "usage": {"output_tokens": 10}}),
+            json.dumps({"type": "turn.failed", "error": {"message": "terminal"}}),
+        ]
+    )
+    args = SimpleNamespace(price_in=None, price_out=None)
+    assert harness._codex_stats(recovered, args, 1.0)["is_error"] is False  # type: ignore[attr-defined]
+    assert harness._codex_stats(failed, args, 1.0)["is_error"] is True  # type: ignore[attr-defined]
+
+
+def test_codex_timeout_without_terminal_event_remains_gradable(harness: object) -> None:
+    stats = {"is_error": True, "subtype": "codex-no-terminal-event"}
+    should_fail = harness._agent_error_is_terminal  # type: ignore[attr-defined]
+    assert should_fail(stats, timed_out=True) is False
+    assert should_fail(stats, timed_out=False) is True
+    assert should_fail({"is_error": True, "subtype": "codex-turn-failed"}, timed_out=True)
 
 
 def _fake_agent(tmp_path: Path, *, result: dict, touch: str | None) -> Path:
