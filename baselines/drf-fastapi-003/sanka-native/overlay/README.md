@@ -1,19 +1,24 @@
 # Generated native FastAPI application
 
-Sanka generated this application from plan `sha256:f18fe9b6e4706c50295f732887fd407e7124efab2606d32ae971abd61057c42d`.
+Sanka generated this application from plan `sha256:221a3d35b244b7358349ac831bce73d28222aa00265da2cff301e4d0da727465`.
 
-FastAPI owns the request layer. Django is configured through the generated
-`sanka_settings` module, which removes the DRF request layer and keeps the
-original models, migrations, ORM, and synchronous transactions. Validation is
-a native reimplementation of the serializer semantics captured at scan time,
-including the exact error strings.
+Routes are declared with FastAPI decorators in `target_app.py` (`@app.get`,
+`@app.post`, ...). Shared DRF-parity validation lives in `sanka_native.py`.
+Persistence uses the retained Django ORM through the async facade in `sanka_store.py`. Generated `sanka_settings.py` removes DRF apps; Django is loaded for ORM access only, never as the request server.
+
+
+Set `SANKA_DATABASE_URL` for PostgreSQL (the scan never stores a password).
+SQLite uses the captured database path, overridable with `SANKA_DATABASE_URL`
+or `SANKA_TEST_DB`.
+
+
+`sanka test` writes `test_generated.py` and runs it. SQLite write tests
+use an isolated copy of the database.
 
 Format-suffix alias routes from the source router are dropped as a disclosed
 contract change; clients negotiate content types with headers instead.
 
-Run locally from the Django repository root:
-
 ```bash
-python -m pip install -r .sanka/output/fastapi/requirements.txt
-uvicorn --app-dir .sanka/output/fastapi app:app --reload
+uv sync
+uv run uvicorn target_app:app --reload
 ```

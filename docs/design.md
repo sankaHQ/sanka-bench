@@ -22,7 +22,7 @@ pagination and mutations instead of treating them as serializer decoration.
   scenarios;
 - the native reference passes all 32 HTTP, database, side-effect, rerun, and
   serving checks. The compatibility bridge preserves the full contract but
-  fails native evidence. With `sanka-cli` 0.1.8 and `sanka-migrate` 0.1.0a8,
+  fails native evidence. With `sanka-cli` 0.1.8 and `sanka-migrate` 0.1.0a10,
   native readiness is 0%: two non-viewset aggregate routes and three
   slug-related serializer routes require adaptation, so apply emits no
   candidate and the frozen sanka-native outcome fails boot.
@@ -51,7 +51,7 @@ and rejected-write atomicity part of the migration contract.
 - the native reference passes all 32 HTTP, database, side-effect, rerun, and
   serving checks. The compatibility bridge preserves behavior and both tables
   but fails native evidence. With `sanka-cli` 0.1.8 and `sanka-migrate`
-  0.1.0a8, native readiness is 0%: four viewset-override routes and the custom
+  0.1.0a10, native readiness is 0%: four viewset-override routes and the custom
   transition action require adaptation, so apply emits no candidate and the
   frozen sanka-native outcome fails boot.
 
@@ -109,7 +109,7 @@ semantics part of the migration contract.
 - the native reference passes all HTTP, database, file-side-effect, rerun, and
   serving checks. The compatibility bridge preserves those behavioral outputs
   while its imported Django/DRF serving stack fails native evidence. With
-  `sanka-cli` 0.1.8 and `sanka-migrate` 0.1.0a8, native readiness is 0%: nine
+  `sanka-cli` 0.1.8 and `sanka-migrate` 0.1.0a10, native readiness is 0%: nine
   serializer routes and three custom download routes require adaptation, so
   apply emits no candidate and the frozen sanka-native outcome fails boot.
 
@@ -141,11 +141,11 @@ of one migration contract.
 - the native reference passes all 32 HTTP, database, side-effect, and serving
   checks. The compatibility bridge also preserves all HTTP/database outcomes
   but fails native evidence. With `sanka-cli` 0.1.8 and `sanka-migrate`
-  0.1.0a8, the native plan reports 3% readiness: 1 of 29 non-alias routes is
-  emitted, 7 aliases are dropped, and 28 routes require manual adaptation for
-  legacy view kinds, the custom lookup field, or the dynamic regex. Its frozen
-  pass@1 output boots and records 0/32 behavior, 19/32 database, and 0/32 native
-  matches.
+  0.1.0a10, the native plan reports 24% readiness: 7 of 29 non-alias routes are
+  generatable, 7 aliases are dropped, and 22 routes require manual adaptation
+  for legacy view kinds. Since readiness is below the default 50% gate, apply
+  emits a structured gap report instead of a scaffold; the frozen noop outcome
+  fails target boot.
 
 ## drf-fastapi-007: response-shape precision and stable cursors
 
@@ -171,10 +171,11 @@ behavior rather than presentation polish.
   and fails 19 of the 24 hidden scenarios;
 - the DRF-free reference matches all 30 HTTP and database results. The
   compatibility bridge also matches them but fails native serving evidence.
-  With `sanka-cli` 0.1.8 and `sanka-migrate` 0.1.0a8, the native plan reports
+  With `sanka-cli` 0.1.8 and `sanka-migrate` 0.1.0a10, the native plan reports
   14% readiness: one API-root route emitted, seven aliases dropped, and all six
-  record routes marked `SANKA_DRF_VIEWSET_OVERRIDES_UNSUPPORTED`. Its untouched
-  output matches 0/30 responses and 21/30 database states.
+  record routes marked `SANKA_DRF_VIEWSET_OVERRIDES_UNSUPPORTED`. Since
+  readiness is below the default 50% gate, apply emits a structured gap report
+  instead of a scaffold and the frozen noop outcome fails target boot.
 
 Query-bearing scenarios also pin a serving-guard correctness boundary: route
 evidence matches on the URL path while the full URL, including its query
@@ -208,10 +209,12 @@ two independently constrained lists: `Order -> OrderItem -> Adjustment`.
 - the DRF-free reference reproduces all 32 response and database results. The
   compatibility bridge does the same through Django and therefore fails the
   native serving-evidence gate. With `sanka-cli` 0.1.8 and `sanka-migrate`
-  0.1.0a8, the native plan reports 14% readiness: one API-root route emitted,
+  0.1.0a10, the native plan reports 14% readiness: one API-root route is
+  generatable,
   seven format-suffix aliases dropped, and all six order routes marked
-  `SANKA_DRF_SERIALIZER_SEMANTICS_UNSUPPORTED`. The untouched candidate boots
-  but matches 0/32 responses and 22/32 database states.
+  `SANKA_DRF_SERIALIZER_SEMANTICS_UNSUPPORTED`. Since readiness is below the
+  default 50% gate, apply emits a structured gap report instead of a scaffold
+  and the frozen noop outcome fails target boot.
 
 ## drf-fastapi-005: authentication and permission matrix
 
@@ -246,10 +249,12 @@ All response formats were captured from the source application before the
 native reference was written. The DRF-free reference reads the retained token
 and session tables through Django's model layer, validates session hashes and
 CSRF tokens natively, and passes all 31 scenarios. The compatibility bridge
-also preserves all behavior but fails recorded serving evidence. The pinned
-converter reports 0% native readiness because both configured Django
-middleware classes are unsupported, emits no candidate, and is recorded as
-the honest empty/no-boot outcome rather than repaired.
+also preserves all behavior but fails recorded serving evidence. With
+`sanka-cli` 0.1.8 and `sanka-migrate` 0.1.0a10, the pinned converter reports
+12.5% native readiness: the API root is generatable, while the six
+permission-matrix routes and custom review action require adaptation. Since
+readiness is below the default 50% gate, apply emits a structured gap report
+instead of a scaffold and the frozen noop outcome fails target boot.
 
 ## drf-fastapi-004: signal-driven side effects, hidden scenario split
 
@@ -285,10 +290,12 @@ application before the native reference was written. The reference serves
 through settings that install the ledger app via a plain `AppConfig`
 (source receivers never connected) and reapplies every side effect
 explicitly in the same transaction as its cause. The shipped converter
-(`sanka-cli` 0.1.8 / `sanka-migrate` 0.1.0a8) honestly reports 54% native
+(`sanka-cli` 0.1.8 / `sanka-migrate` 0.1.0a10) honestly reports 54% native
 readiness — mixin-composed viewsets and custom actions are outside the
-envelope — and its frozen output fails at 5/17 behavior parity, so 004
-ships without a passing converter baseline.
+envelope — and its frozen output fails at 5/17 behavior and 10/17 database
+parity. Explicit 501 adaptation stubs keep native route evidence at 17/17,
+but do not earn behavioral credit, so 004 ships without a passing converter
+baseline.
 
 ## drf-fastapi-003: nested writes, transactions, validation edges
 
@@ -306,9 +313,10 @@ The third fixture covers the validation and transaction surface:
   choice-field errors, and cascade deletion.
 
 All response formats were captured empirically from the live source
-application before the native reference was written. Native plan readiness
-for the current Sanka converter is 57% (nested serializers are outside the
-envelope), so 003 ships without a converter baseline.
+application before the native reference was written. With `sanka-cli` 0.1.8
+and `sanka-migrate` 0.1.0a10, native readiness is 100% (7/7 non-alias routes).
+The untouched converter output passes all 16 behavior, database, side-effect,
+and native-serving comparisons.
 
 ## drf-fastapi-002: authentication and object permissions
 
@@ -326,9 +334,11 @@ A native candidate must reimplement token authentication without loading DRF:
 the token table stays, owned by the retained Django half, and the reference
 implementation reads it through an unmanaged model mirror. Baselines are
 noop, the Sanka compatibility bridge generated from merged Sanka main
-(behavior passes — auth included — native gate fails on evidence), and the
-human native reference. The Sanka converter's native envelope does not cover
-authentication yet, so 002 intentionally has no passing converter baseline.
+(behavior passes — auth included — native gate fails on evidence), the human
+native reference, and the untouched Sanka-native output. With `sanka-cli`
+0.1.8 and `sanka-migrate` 0.1.0a10, native readiness is 100% (7/7 non-alias
+routes) and the converter output passes all 13 comparisons without loading
+DRF in the serving process.
 
 Baselines are laid out per task: `baselines/<task-id>/<candidate>/`.
 
@@ -362,8 +372,8 @@ is allowed to claim a successful DRF-to-FastAPI migration.
   retained Django test suite still exercises the source application.
 - Two clean evaluation repetitions and variance detection; recorded serving
   evidence participates in the determinism fingerprint.
-- No-op, Sanka PR #13 compatibility-bridge, and native human-reference
-  baselines.
+- No-op, Sanka compatibility-bridge, native human-reference, and frozen
+  Sanka-native baselines for every task.
 
 ## Deliberate limits
 

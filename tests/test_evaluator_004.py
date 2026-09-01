@@ -109,8 +109,10 @@ def test_sanka_native_converter_fails_the_signal_fixture_honestly(
     assert result["fully_migrated"] is False
     assert result["hard_gates"]["behavior_parity"] is False
     assert result["hard_gates"]["database_parity"] is False
-    assert result["hard_gates"]["native_target"] is False
+    assert result["hard_gates"]["native_target"] is True
     assert result["metrics"]["behavioral_parity"]["passed"] == 5
+    assert result["metrics"]["database_parity"]["passed"] == 10
+    assert result["metrics"]["native_compliance"]["passed"] == 17
     passing = {
         scenario["id"]
         for scenario in result["scenarios"]

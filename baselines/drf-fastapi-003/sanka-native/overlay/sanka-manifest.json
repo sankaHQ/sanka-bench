@@ -15,6 +15,14 @@
       "path": "/api/"
     }
   ],
+  "database": {
+    "host": "",
+    "name": "db.sqlite3",
+    "port": "",
+    "user": "",
+    "vendor": "sqlite"
+  },
+  "database_required": true,
   "dropped_routes": [
     {
       "method": "GET",
@@ -53,19 +61,50 @@
     }
   ],
   "entrypoint": "target_app.py",
+  "generated_file_hashes": {
+    "README.md": "sha256:46bf70daf03834b891d24f338209744891d4a122f00d12d32fc46a0fa37383d1",
+    "pyproject.toml": "sha256:8f8a66bf33b2b85e28a707ddf58214c0af54f6f0c3697e32d140684320b521af",
+    "requirements-test.txt": "sha256:dd0a554e22fe8430558e1368da32d3ae6225abb5f3a3edeb21d5ec0940ec086a",
+    "requirements.txt": "sha256:48227fcccda73204d669b52433ecdddce6f4dd3244ea6450727b53fdcea9307c",
+    "sanka_native.py": "sha256:73a404d23ac9fa54d57cc821d9056e162b7c8cfa5622eb291d7658e0e12d650e",
+    "sanka_settings.py": "sha256:2e107bd4553c8e09abb07bd1fe8da364f574cccaf413c1b2d7566240dbdaf3cb",
+    "sanka_store.py": "sha256:c5ff5fb6668b27bb9f408c8bc9684f6986f41a9ef33b3361f51ad3aab9434450",
+    "sanka_user_logic.py": "sha256:a71de056425cc2d2de3e5b7a2e2094b7740c83ffad4c4233a79ac54b601bf987",
+    "target_app.py": "sha256:6bc426453c14b0bccc6ce95726c46cabf571d7e03207caf7200d055305accf4b"
+  },
   "generated_files": [
     "target_app.py",
     "sanka_native.py",
+    "sanka_store.py",
     "sanka_settings.py",
     "sanka_user_logic.py"
   ],
+  "generation_mode": "minimal",
   "generator": "sanka",
   "generic_messages": {
     "not_found": "Not found."
   },
   "has_user_logic": true,
+  "http_security": {
+    "allowed_hosts": [
+      "testserver",
+      "localhost"
+    ],
+    "content_type_nosniff": false,
+    "cross_origin_opener_policy": null,
+    "hsts_include_subdomains": false,
+    "hsts_preload": false,
+    "hsts_seconds": 0,
+    "referrer_policy": null,
+    "ssl_redirect": false,
+    "x_frame_options": null
+  },
   "mode": "native",
-  "plan_hash": "sha256:f18fe9b6e4706c50295f732887fd407e7124efab2606d32ae971abd61057c42d",
+  "native_eligible_routes": 7,
+  "needs_adaptation_routes": 0,
+  "package_manager": "uv",
+  "plan_hash": "sha256:221a3d35b244b7358349ac831bce73d28222aa00265da2cff301e4d0da727465",
+  "readiness": 1.0,
   "resources": [
     {
       "auth": null,
@@ -73,6 +112,7 @@
         "function": "create_orders_serializers_orderserializer",
         "style": "carryover"
       },
+      "db_table": "orders_order",
       "fields": [
         {
           "allow_blank": false,
@@ -144,8 +184,8 @@
             "cancelled"
           ],
           "decimal_places": null,
-          "default": null,
-          "has_default": false,
+          "default": "new",
+          "has_default": true,
           "kind": "choice",
           "max_digits": null,
           "max_length": null,
@@ -170,8 +210,8 @@
           "attname": null,
           "choices": [],
           "decimal_places": null,
-          "default": null,
-          "has_default": false,
+          "default": "",
+          "has_default": true,
           "kind": "char",
           "max_digits": null,
           "max_length": 200,
@@ -198,8 +238,9 @@
         {
           "allow_blank": false,
           "allow_null": false,
-          "attname": "order",
+          "attname": "order_id",
           "child": {
+            "db_table": "orders_orderitem",
             "fields": [
               {
                 "allow_blank": false,
@@ -323,9 +364,11 @@
             ],
             "model_class": "OrderItem",
             "model_module": "orders.models",
+            "object_name": "OrderItem",
             "ordering": [
               "id"
-            ]
+            ],
+            "pk_attname": "id"
           },
           "choices": [],
           "decimal_places": null,
@@ -351,12 +394,14 @@
         }
       ],
       "lookup": "pk",
+      "lookup_regex": "[^/.]+",
       "model_class": "Order",
       "model_module": "orders.models",
       "object_name": "Order",
       "ordering": [
         "id"
       ],
+      "pk_attname": "id",
       "routes": [
         {
           "method": "GET",
@@ -448,8 +493,10 @@
     }
   ],
   "schema_version": 1,
-  "serving_settings": "sanka_settings",
   "settings_module": "shop_config.settings",
+  "skipped_routes": [],
   "source_root": ".",
-  "source_scan_hash": "sha256:fcc5e4c89eae806acc8e16069be6a1fc76c0be532d476f177b766ba2082b1274"
+  "source_scan_hash": "sha256:9841422a5cf2a0190404fb8dfa072d400e5c130e1bebf4d4300611a4b89cec9d",
+  "sql_engine": "django",
+  "unsupported_routes": []
 }

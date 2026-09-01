@@ -167,32 +167,36 @@ rule, rollback and all — is carried over verbatim with its DRF exception
 swapped for a native shim.
 
 `drf-fastapi-004` carries noop, compatibility-bridge, human
-native-reference, and Sanka native-converter baselines, all produced with
-the shipped engine (`sanka-cli` 0.1.8 / `sanka-migrate` 0.1.0a8). The
+native-reference, and Sanka native-converter baselines. The current converter
+evidence was generated with the shipped engine (`sanka-cli` 0.1.8 /
+`sanka-migrate` 0.1.0a10). The
 bridge proxies the signals along with everything else, so it passes
 behavior and database parity while failing the anti-proxy gate; the native
 reference reimplements every signal side effect explicitly in a serving
 process whose ledger app config never connects the source receivers. The
 converter's native plan honestly reports 54% readiness — mixin-composed
 viewsets and the `transfer` custom action are outside today's envelope —
-and its untouched output fails evaluation at 5/17 behavior parity: the
-benchmark leads the converter again.
+and its untouched output fails evaluation at 5/17 behavior and 10/17 database
+parity. Explicit 501 adaptation stubs keep native route evidence at 17/17, but
+do not earn behavioral credit: the benchmark leads the converter again.
 
 `drf-fastapi-005` carries the same four controls. The compatibility bridge
 passes all 31 behavior and database comparisons but fails native serving
 evidence; the native reference passes every hard gate. With the pinned
-`sanka-cli` 0.1.8 / `sanka-migrate` 0.1.0a8 engine, configured Django session
-and authentication middleware makes all 8 non-alias routes unsupported, so
-native readiness is honestly 0%. Apply emits no overlay, and the frozen empty
+`sanka-cli` 0.1.8 / `sanka-migrate` 0.1.0a10 engine, the API root is generatable
+but the six permission-matrix routes and custom review action require
+adaptation. Native readiness is 12.5% (1/8), below the default 50% gate, so
+apply emits a structured gap report rather than a scaffold. The frozen noop
 outcome fails target boot rather than receiving a hand-written repair.
 
 `drf-fastapi-006` also carries all four controls. The compatibility bridge
 passes all 32 behavior and database comparisons but fails native serving
 evidence, while the DRF-free reference passes every hard gate. The pinned
 engine reports 14% native readiness: it drops 7 format-suffix aliases, marks
-all 6 order CRUD routes `SANKA_DRF_SERIALIZER_SEMANTICS_UNSUPPORTED`, and emits
-only the API root. Its untouched output boots but matches 0/32 responses and
-22/32 database states; the nested serializer and transactional replacement
+all 6 order CRUD routes `SANKA_DRF_SERIALIZER_SEMANTICS_UNSUPPORTED`, and can
+generate only the API root. Because 14% is below the default 50% gate, apply
+emits a structured gap report rather than a scaffold; the frozen noop outcome
+fails target boot, and the nested serializer and transactional replacement
 logic are not hand-repaired.
 
 `drf-fastapi-007` carries the same four controls. Its compatibility bridge
@@ -200,22 +204,23 @@ matches all 30 HTTP and database outcomes but fails native serving evidence;
 the DRF-free reference passes every hard gate. The pinned engine reports 14%
 native readiness: it drops 7 format-suffix aliases, marks all 6 record CRUD
 routes `SANKA_DRF_VIEWSET_OVERRIDES_UNSUPPORTED` because `retrieve()` and
-`update()` are overridden, and emits only the API root. The untouched output
-boots but matches 0/30 responses and 21/30 database states; cursor, filter,
+`update()` are overridden, and can generate only the API root. Because 14% is
+below the default 50% gate, apply emits a structured gap report rather than a
+scaffold; the frozen noop outcome fails target boot, and cursor, filter,
 representation, and conditional-response behavior is not hand-repaired.
 
 `drf-fastapi-008` carries the same four controls. Its compatibility bridge
 matches all 32 HTTP and database outcomes but fails native serving evidence;
-the DRF-free reference passes every hard gate. The pinned engine reports 3%
-native readiness: it emits 1 of 29 non-alias routes, drops 7 format-suffix
-aliases, and marks the remaining 28 routes unsupported across legacy view kind,
-custom lookup-field, and dynamic-regex reasons. The untouched output boots but
-matches 0/32 responses and 19/32 database states; no generated route was
-hand-repaired.
+the DRF-free reference passes every hard gate. The pinned engine reports 24%
+native readiness: 7 of 29 non-alias routes are generatable, 7 format-suffix
+aliases are dropped, and the remaining 22 routes require adaptation for legacy
+view kinds. Because 24% is below the default 50% gate, apply emits a structured
+gap report rather than a scaffold; the frozen noop outcome fails target boot
+and no route is hand-repaired.
 
 `drf-fastapi-009` carries all four controls. The compatibility bridge preserves
 all 32 HTTP, database, and stored-file outcomes but fails native serving
-evidence; the DRF-free reference passes every hard gate. The pinned engine
+evidence; the DRF-free reference passes every hard gate. The pinned a10 engine
 reports 0% native readiness: nine serializer routes require
 `SANKA_DRF_SERIALIZER_SEMANTICS_UNSUPPORTED`, three download routes require
 `SANKA_DRF_CUSTOM_ACTION_UNSUPPORTED`, and apply emits no candidate. The honest
@@ -224,7 +229,7 @@ multipart or binary-response repair.
 
 `drf-fastapi-010` carries all four controls. The compatibility bridge preserves
 all 32 HTTP and two-table database outcomes but fails native serving evidence;
-the DRF-free reference passes every hard gate. The pinned engine reports 0%
+the DRF-free reference passes every hard gate. The pinned a10 engine reports 0%
 native readiness: four routes require
 `SANKA_DRF_VIEWSET_OVERRIDES_UNSUPPORTED` for the transactional create and
 partial-update overrides, while the transition route requires
@@ -234,7 +239,7 @@ state-machine or optimistic-locking repair.
 
 `drf-fastapi-011` carries all four controls. The compatibility bridge preserves
 all 32 HTTP and database outcomes but fails native serving evidence; the
-DRF-free reference passes every hard gate. The pinned engine reports 0% native
+DRF-free reference passes every hard gate. The pinned a10 engine reports 0% native
 readiness: the annotated list and grouped summary are unsupported non-viewset
 view kinds, while all three transaction routes require
 `SANKA_DRF_SERIALIZER_SEMANTICS_UNSUPPORTED` for their slug-related account

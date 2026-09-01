@@ -1,34 +1,44 @@
 # Sanka native-converter provenance (drf-fastapi-008)
 
-Generated once with PyPI `sanka-cli` 0.1.8 delegating to `sanka-migrate`
-0.1.0a8, installed inside the fixture virtualenv with Python 3.12.13,
-Django 5.2.17, Django REST Framework 3.18.0, and FastAPI 0.141.1.
+Generated once with published PyPI `sanka-cli` 0.1.8 delegating to
+`sanka-migrate` 0.1.0a10, installed inside the fixture-capable virtualenv with
+Python 3.12.13, Django 5.2.17, Django REST Framework 3.18.0, and FastAPI
+0.141.1.
 
-The pass@1 run was executed from
+The unattended pass@1 run was executed from
 `<repo>/tasks/drf-fastapi/drf-fastapi-008/source`:
 
 ```bash
-sanka scan .
-sanka plan . --to fastapi
-sanka apply --root . --to fastapi --bench-candidate <local-path>
+sanka scan . --artifact-dir <local-path> --json --no-color
+sanka plan . --to fastapi --strategy native --generation minimal \
+  --package-manager uv --output <local-path> --artifact-dir <local-path> \
+  --json --no-color
+sanka apply --root . --artifact-dir <local-path> --output <local-path> \
+  --plan-hash sha256:e3623b585c2cd50368fe87543d0ad3718fa6745c20d6a07766dab99e14870c7d --bench-candidate <local-path> \
+  --json --no-color
 ```
 
-Scan reported 36 endpoints and scan hash
-`sha256:69a673430c0d2cfb8f0e40337fb53dc5b1909dce08cff6d82177f84db6aba7d9`.
-The native plan hash was
-`sha256:828cb33d720a97dfec9e1125f49094b9dca00dfa540e5b138413b1441d315aa7`.
+Scan reported 36 endpoints and scan hash `sha256:8fcfb1f0ae49ad26b14965b2f26bf888ab20439a6e73639dc6652716a4603d59`. The
+native plan hash is `sha256:e3623b585c2cd50368fe87543d0ad3718fa6745c20d6a07766dab99e14870c7d` with readiness
+24.14%: 7 of 29
+non-alias routes generatable and 22 requiring adaptation.
+Adaptation codes: `SANKA_DRF_VIEW_KIND_UNSUPPORTED`.
 
-## Honest outcome: 3% readiness and only the API root emitted
+The raw engine artifact is preserved locally with digest `sha256:3abc7e0bdb2ae1f9dfdbf28d3a557c751f4035159f018e3ffca50bc56a66021a`. The
+committed copy changes only machine-local absolute path strings to `<repo>` or
+`<local-path>`; generated application code and behavioral content are otherwise
+untouched.
 
-The native plan generated 1 of 29 non-alias routes and dropped 7 format-suffix
-aliases. The remaining 28 non-alias routes require manual adaptation: 18
-function/APIView methods report `SANKA_DRF_VIEW_KIND_UNSUPPORTED`, 6 viewset
-methods report `SANKA_DRF_LOOKUP_FIELD_UNSUPPORTED`, and 4 dynamic-regex
-methods report `SANKA_DRF_ROUTE_PATTERN_UNSUPPORTED`.
+## Honest outcome: readiness-aware abstention
 
-The untouched candidate therefore serves only `/api/viewset/`. It boots, but
-the 32-scenario evaluator records 0/32 behavior matches, 19/32 database-state
-matches, 32/32 empty side-effect ledgers, and 0/32 native route checks. Nothing
-was retried or hand-fixed; this fixture deliberately leads the converter on
-mixed legacy view kinds, non-slug lookup semantics, and dynamic regex
-adaptation.
+Apply returned `SANKA_READINESS` with `readiness is below --min-readiness 50%` under the default
+50% readiness threshold. The engine emitted `GAP-REPORT.md`,
+`gap-report.json`, and `plan-fastapi.json` instead of a scaffold. Benchmark
+packaging adds only the required noop `candidate.yaml`; no overlay exists.
+Nothing was retried or hand-fixed.
+
+## Evaluator outcome
+
+Local and network-disabled Docker evaluation have identical gates and metrics.
+Source qualification and regression pass; target boot fails, and behavior,
+database, side-effect, route, and native-serving comparisons are 0/32.

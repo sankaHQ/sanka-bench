@@ -4,5 +4,5 @@ kind: overlay
 overlay: overlay
 provenance:
   producer: sanka
-  revision: sha256:68162c9f7e9bf13aea681080dd22d69c526fac7a179b395a35bca7b6b2d32e91
-  command: sanka scan && sanka plan --to fastapi && sanka apply --bench-candidate <dir>
+  revision: sha256:cecb1753b48ca78ac67828a2a1316b04c956a10938a1d88a172aff0f6e1e099c
+  command: sanka scan && sanka plan --to fastapi && sanka apply --plan-hash <hash> --bench-candidate <dir>
