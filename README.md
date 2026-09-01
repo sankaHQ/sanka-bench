@@ -147,7 +147,7 @@ candidate's `GENERATED.md` discloses the prompt verbatim, turns, wall time,
 and reported cost; `make report` renders those figures beside the tally.
 Agent results are empirical, not pinned by tests — the report shows the
 current state. The shared contract explicitly requires every evaluated
-request to reach a workspace-owned FastAPI `APIRoute`; raw Starlette routes,
+request to reach a workspace-owned FastAPI `APIRoute` (subclasses included); raw Starlette routes,
 implicit framework redirects, mounts, and compatibility dispatchers do not
 satisfy native-serving evidence in any arm.
 

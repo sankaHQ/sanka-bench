@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import sys
 import tempfile
@@ -162,11 +163,18 @@ def evaluate_local(task_dir: Path, candidate_dir: Path) -> dict[str, Any]:
             "native_compliance": _fraction(scenario_reports, "native_compliant"),
         },
         "scenarios": [
-            {key: value for key, value in report.items() if key != "native_detail"}
+            {
+                key: value
+                for key, value in report.items()
+                if key not in {"native_detail", "catch_all_served"}
+            }
             for report in scenario_reports
         ],
         "diagnostics": {
             "static_patterns": _static_pattern_diagnostics(task, candidate, candidate_dir),
+            "catch_all_served_scenarios": [
+                report["id"] for report in scenario_reports if report["catch_all_served"]
+            ],
         },
         "provenance": {
             "task_digest": digest_tree(task_dir),
@@ -296,6 +304,24 @@ def _static_pattern_diagnostics(
     return {"required_missing": required_missing, "forbidden_present": forbidden_present}
 
 
+_CATCH_ALL_PATH = re.compile(r"^/?\{[A-Za-z_][A-Za-z0-9_]*:path\}/?$")
+
+
+def _served_by_catch_all(
+    evidence: dict[str, Any] | None, source_payload: dict[str, Any] | None
+) -> bool:
+    """A catch-all route (``/{anything:path}``) that serves a request the source
+    application answered with anything but 404 is worth a diagnostic: the route is
+    still native FastAPI, but the per-route evidence is weaker than an explicit
+    path. Serving genuine 404s through a catch-all mirrors Django and is fine."""
+    path = (evidence or {}).get("route_path")
+    if not isinstance(path, str) or not _CATCH_ALL_PATH.match(path):
+        return False
+    response = _view(source_payload, "response")
+    status = response.get("status") if isinstance(response, dict) else None
+    return status != 404
+
+
 def _native_verdict(payload: dict[str, Any] | None) -> tuple[bool, str]:
     if payload is None:
         return False, "candidate produced no serving evidence"
@@ -306,7 +332,12 @@ def _native_verdict(payload: dict[str, Any] | None) -> tuple[bool, str]:
     if not native.get("app_is_fastapi"):
         problems.append("entrypoint `app` is not a FastAPI application")
     route_class = native.get("route_class")
-    if route_class != _NATIVE_ROUTE_CLASS:
+    is_apiroute = native.get("route_is_apiroute")
+    if not isinstance(is_apiroute, bool):
+        # Evidence recorded by guards before evaluator 0.0.3 carries only the
+        # class name; keep the exact-class reading for those reports.
+        is_apiroute = route_class == _NATIVE_ROUTE_CLASS
+    if not is_apiroute:
         problems.append(
             f"scenario served by {route_class}" if route_class else "no FastAPI route matched"
         )
@@ -402,6 +433,7 @@ def _scenario_reports(
             ),
             None,
         )
+        catch_all_served = _served_by_catch_all(evidence, sources[0] if sources else None)
         candidate_fingerprints = [
             digest_payload(candidate) for candidate in candidates if candidate is not None
         ]
@@ -431,6 +463,7 @@ def _scenario_reports(
                 "detail": "; ".join(mismatches) if mismatches else "ok",
                 "native": evidence,
                 "native_detail": native_detail,
+                "catch_all_served": catch_all_served,
             }
         )
     return reports

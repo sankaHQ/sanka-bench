@@ -205,6 +205,13 @@
               }
             }
           }
+        },
+        "catch_all_served_scenarios": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Scenario ids served by a catch-all route (/{name:path}) although the source application did not answer 404. Diagnostic only; never a gate."
         }
       }
     },
@@ -338,6 +345,17 @@
             "string",
             "null"
           ]
+        },
+        "route_is_apiroute": {
+          "type": "boolean",
+          "description": "True when the matched route is a fastapi.routing.APIRoute or a subclass; absent in evidence recorded before evaluator 0.0.3."
+        },
+        "route_path": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Path template of the matched route, so catch-all serving can be flagged."
         }
       }
     }
