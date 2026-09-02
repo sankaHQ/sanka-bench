@@ -1,0 +1,195 @@
+{
+  "authorization": {
+    "paid_run_authorized": true,
+    "authorization_scope": "132-cell-v5",
+    "authorized_by": "haegwan via Claude Code session (AskUserQuestion answer: 'Go, $60 metered ceiling (Recommended)')",
+    "authorized_at": "2026-09-02T00:54:55Z",
+    "run_id": "v5-20260902T005455Z-ab4d94f3",
+    "metered_ceiling_usd": 60.0,
+    "metered_scope": "OpenAI + Fireworks API charges only; Claude cells run on Claude Max",
+    "claude_auth": "Claude Max (user decision 2026-09-02)"
+  },
+  "benchmark_sha": "bb51edf6d8a42b9bcb0d4507a2abdc211fb0c56d",
+  "cost_plan": {
+    "authorization_ceiling_metered_usd": 60.0,
+    "basis": "v4 metered spend (Fireworks rated readback $17.70; OpenAI organization bill unread, estimated ~$9) scaled 1:1 \u2014 same 11 tasks, same models",
+    "central_estimate_metered_usd": 30.0,
+    "claude": "Claude Max (user decision 2026-09-02): $0 marginal while subscription limits hold; API-equivalent self-report recorded per cell (v4: $227 across 44 Claude cells)",
+    "note": "The ceiling covers OpenAI + Fireworks metered charges only. Any account credit, tax, subscription fee, or provider-side pricing change is outside the estimate and must be read back.",
+    "v4_fireworks_rated_usd": 17.698495,
+    "v4_openai_estimated_usd": 9.0
+  },
+  "execution": {
+    "agent_timeout_seconds": 3600,
+    "aggregate_command": [
+      "PYTHON",
+      "build_matrix_v5.py"
+    ],
+    "configurations": [
+      "alone",
+      "with-sanka-readiness-aware"
+    ],
+    "expected_rows": 132,
+    "first_with_sanka_cell": "drf-fastapi-001-claude-opus48-with-sanka-readiness-aware",
+    "first_with_sanka_gate": "target_boot must pass before any remaining with-sanka-readiness-aware cell",
+    "max_turns": 120,
+    "mode": "foreground rolling coordinator with calibrated provider queues",
+    "parallelism": {
+      "agent_concurrency_ceiling": 18,
+      "aggregate_writer_count": 1,
+      "boot_gate_concurrency": 1,
+      "calibration_models": [
+        "opus48",
+        "gpt56sol",
+        "deepseekv4pro"
+      ],
+      "calibration_provider_caps": [
+        1,
+        3,
+        4,
+        6
+      ],
+      "evaluation_concurrency_ceiling": 4,
+      "model_concurrency_ceiling": 3,
+      "provider_concurrency_ceiling": 6
+    },
+    "pass_at": 1,
+    "retry_policy": "none; stop and classify infrastructure failures before any separately authorized rerun",
+    "turn_budget_policy": "Claude --max-turns 120 intended to be non-binding (v4 cap 60 bound Sonnet in 17/22 cells); the turn distribution is published; Codex has no turn cap and is bounded by agent_timeout_seconds; v5 turn counts are not comparable with v4",
+    "with_sanka_arm": "readiness-aware: the harness runs sanka scan + plan before the agent starts, freezes sanka-readiness.json, injects readiness/unsupported/skipped checklists, scaffold only at >= 50% readiness (runner mode selected by the candidate suffix)"
+  },
+  "models": [
+    {
+      "agent": "claude-code",
+      "candidate_slug": "claude-opus48",
+      "label": "Claude Opus 4.8",
+      "model_id": "claude-opus-4-8",
+      "provider": "anthropic",
+      "slug": "opus48"
+    },
+    {
+      "agent": "claude-code",
+      "candidate_slug": "claude-sonnet5",
+      "label": "Claude Sonnet 5",
+      "model_id": "claude-sonnet-5",
+      "provider": "anthropic",
+      "slug": "sonnet5"
+    },
+    {
+      "agent": "codex",
+      "candidate_slug": "codex-gpt-5-6-sol",
+      "label": "gpt-5.6-sol",
+      "model_id": "gpt-5.6-sol",
+      "provider": "openai",
+      "slug": "gpt56sol"
+    },
+    {
+      "agent": "codex",
+      "candidate_slug": "codex-deepseek-v4-pro",
+      "label": "DeepSeek V4 Pro",
+      "model_id": "accounts/fireworks/models/deepseek-v4-pro-0813",
+      "provider": "fireworks",
+      "slug": "deepseekv4pro"
+    },
+    {
+      "agent": "codex",
+      "candidate_slug": "codex-glm-5-3-flash",
+      "label": "GLM-5.3-Flash",
+      "model_id": "accounts/fireworks/models/glm-5p3-flash",
+      "provider": "fireworks",
+      "slug": "glm53flash"
+    },
+    {
+      "agent": "codex",
+      "candidate_slug": "codex-gpt-5-6-luna",
+      "label": "gpt-5.6-luna",
+      "model_id": "gpt-5.6-luna",
+      "provider": "openai",
+      "slug": "gpt56luna"
+    }
+  ],
+  "pre_declared_deltas": [
+    "D1 runner exit-code fix + stream-json transcripts (PR #27)",
+    "D2 evaluator 0.0.3: include_router resolution (#28), APIRoute subclasses, catch-all diagnostic (#29)",
+    "D3 Claude max_turns 120 (non-binding target)",
+    "D4 readiness-aware arm is the official with-Sanka arm",
+    "D5 two arms only",
+    "D6 Claude Max",
+    "D7 v4 calibration ladder",
+    "D8 metered ceiling $60",
+    "D9 publish v5 as the sanka.com/bench headline; v3/v4 history + errata",
+    "D10 pass@1, no retries"
+  ],
+  "schema": "sanka-bench/model-matrix-run-manifest/v5",
+  "status": "authorized-models-ready",
+  "suite": {
+    "lane": "drf-fastapi",
+    "route_weights": {
+      "drf-fastapi-001": 14,
+      "drf-fastapi-002": 14,
+      "drf-fastapi-003": 14,
+      "drf-fastapi-004": 26,
+      "drf-fastapi-005": 16,
+      "drf-fastapi-006": 14,
+      "drf-fastapi-007": 14,
+      "drf-fastapi-008": 36,
+      "drf-fastapi-009": 12,
+      "drf-fastapi-010": 5,
+      "drf-fastapi-011": 5
+    },
+    "score_version": "Migration Quality Score v0.2",
+    "tasks": [
+      "drf-fastapi-001",
+      "drf-fastapi-002",
+      "drf-fastapi-003",
+      "drf-fastapi-004",
+      "drf-fastapi-005",
+      "drf-fastapi-006",
+      "drf-fastapi-007",
+      "drf-fastapi-008",
+      "drf-fastapi-009",
+      "drf-fastapi-010",
+      "drf-fastapi-011"
+    ],
+    "verified_route_denominator": 170
+  },
+  "toolchain": {
+    "agent_runner": "<workspace>/.worktrees/sanka-bench-matrix-v5/scripts/run_agent_candidate.py",
+    "agent_runner_sha256": "aaa3fee19756318dcbf93c82d10b5758813a3705b1427ea84725fc8eda0a6b23",
+    "claude_bin": "<claude-cli>",
+    "claude_cli": "2.1.241 (Claude Code)",
+    "codex_bin": "<workspace>/.worktrees/sanka-bench-matrix-v5/.bench-tools/codex-cli/node_modules/@openai/codex/bin/codex.js",
+    "codex_cli": "codex-cli 0.150.1",
+    "env_evidence": {
+      "is_symlink": true,
+      "path": "<workspace>/.worktrees/sanka-bench-matrix-v5/.env",
+      "target_mode": "0600",
+      "target_outside_worktree": true
+    },
+    "env_path": "<workspace>/.worktrees/sanka-bench-matrix-v5/.env",
+    "sanka_bench": "0.0.3",
+    "sanka_cli": "0.1.8",
+    "sanka_migrate": "0.1.0a10",
+    "worktree": "<workspace>/.worktrees/sanka-bench-matrix-v5",
+    "agent_runner_revision": "bb51edf6d8a42b9bcb0d4507a2abdc211fb0c56d",
+    "cell_driver": "<workspace>/tracking/bench-model-matrix-v5-11task-2026-09-02/cell_driver_v5.py",
+    "cell_driver_sha256": "eee7d878c07982d095c928bfe4bdb5406184fde3e838040b2405cd7c878e0963",
+    "aggregate_builder": "<workspace>/tracking/bench-model-matrix-v5-11task-2026-09-02/build_matrix_v5.py",
+    "aggregate_builder_sha256": "6ca6a8c7a81ae6639bf6e53c88309649552a0d95cbeab295aa65369f48411018",
+    "coordinator": "<workspace>/tracking/bench-model-matrix-v5-11task-2026-09-02/rolling_coordinator.py",
+    "coordinator_sha256": "4fe446b3c8761ec13a69b5f49e8d35e6db47a8352f353ce0e24d25d509970938",
+    "matrix_runner": "not used (rolling_coordinator.py drives cell_driver_v5.py)",
+    "platform_cost_collector": "<workspace>/tracking/bench-model-matrix-v5-11task-2026-09-02/collect_fireworks_costs_v5.py",
+    "platform_cost_collector_sha256": "f619e7db1bc63ae56014c9503dcc3f3fef0b4b5bb5f9a7bc4de618c7e4634d27",
+    "aggregate_builder_note": "build_matrix_v5.py fixed after the boot-gate stage: isinstance(x, int | float) is a TypeError on the system Python 3.9 that runs the coordinator; the fix touches only the readiness-percent row field. The boot-gate cell itself generated (exit 0, 48 turns) and evaluated (exit 0, passed) before the aggregate step failed; it is a legitimate terminal pass@1 cell and is never re-run."
+  },
+  "deviations": [
+    {
+      "at": "2026-09-02T01:10:55Z",
+      "stage": "v5-boot-gate",
+      "kind": "aggregate-builder-bug",
+      "effect": "stage reported failures=1 because build_matrix_v5.py crashed; no cell artifact affected; boot gate re-checked with the fixed builder (terminal cell skipped, never overwritten)",
+      "quality_effect": "none"
+    }
+  ]
+}

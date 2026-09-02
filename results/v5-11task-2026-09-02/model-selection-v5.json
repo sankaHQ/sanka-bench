@@ -1,0 +1,80 @@
+{
+  "all_ready": true,
+  "benchmark_sha": "bb51edf6d8a42b9bcb0d4507a2abdc211fb0c56d",
+  "checked_at": "2026-09-02T00:41:37Z",
+  "models": [
+    {
+      "availability_probe": "live Claude CLI invocation",
+      "available": true,
+      "canonical_models": [
+        "claude-haiku-4-5",
+        "claude-opus-4-8"
+      ],
+      "execution_probe": "live Claude CLI smoke call returned the requested canonical model",
+      "execution_ready": true,
+      "model_id": "claude-opus-4-8",
+      "provider": "anthropic"
+    },
+    {
+      "availability_probe": "live Claude CLI invocation",
+      "available": true,
+      "canonical_models": [
+        "claude-haiku-4-5",
+        "claude-sonnet-5"
+      ],
+      "execution_probe": "live Claude CLI smoke call returned the requested canonical model",
+      "execution_ready": true,
+      "model_id": "claude-sonnet-5",
+      "provider": "anthropic"
+    },
+    {
+      "availability_probe": "OpenAI GET /v1/models",
+      "available": true,
+      "execution_probe": "live Responses API smoke call returned the exact model",
+      "execution_ready": true,
+      "model_id": "gpt-5.6-sol",
+      "provider": "openai",
+      "response_id_present": true,
+      "returned_model": "gpt-5.6-sol"
+    },
+    {
+      "availability_probe": "Fireworks GET /inference/v1/models",
+      "available": true,
+      "execution_probe": "live Responses API smoke call returned the exact model",
+      "execution_ready": true,
+      "model_id": "accounts/fireworks/models/deepseek-v4-pro-0813",
+      "provider": "fireworks",
+      "response_id_present": true,
+      "returned_model": "accounts/fireworks/models/deepseek-v4-pro-0813"
+    },
+    {
+      "availability_probe": "Fireworks GET /inference/v1/models",
+      "available": true,
+      "execution_probe": "live Responses API smoke call returned the exact model",
+      "execution_ready": true,
+      "model_id": "accounts/fireworks/models/glm-5p3-flash",
+      "provider": "fireworks",
+      "response_id_present": true,
+      "returned_model": "accounts/fireworks/models/glm-5p3-flash"
+    },
+    {
+      "availability_probe": "OpenAI GET /v1/models",
+      "available": true,
+      "execution_probe": "live Responses API smoke call returned the exact model",
+      "execution_ready": true,
+      "model_id": "gpt-5.6-luna",
+      "provider": "openai",
+      "response_id_present": true,
+      "returned_model": "gpt-5.6-luna"
+    }
+  ],
+  "run_id": null,
+  "runner_readiness": {
+    "claude_cli_authenticated": true,
+    "claude_cli_provider": "claude.ai",
+    "env_values_recorded": false,
+    "fireworks_api_key_present": true,
+    "openai_api_key_present": true
+  },
+  "schema": "sanka-bench/model-selection/v5"
+}

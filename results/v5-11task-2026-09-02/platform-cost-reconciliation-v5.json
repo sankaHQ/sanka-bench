@@ -1,0 +1,509 @@
+{
+  "account_id_sha256_prefix": "276f6c9bc3121471",
+  "attribution_completeness": "COMPLETE",
+  "billing_scope_note": "Rated serverless usage before credits, fixed fees, invoice discounts, and taxes.",
+  "billing_session_count": 44,
+  "cell_attributed_subtotal": {
+    "currencyCode": "USD",
+    "nanos": 186341038,
+    "units": "36"
+  },
+  "cell_count": 44,
+  "cells": [
+    {
+      "candidate_id": "drf-fastapi-001-codex-deepseek-v4-pro-alone",
+      "model": "accounts/fireworks/models/deepseek-v4-pro-0813",
+      "session_id_sha256": "f29827a0425da60f05ce1f744494db2805792267fb49a6542358310b825de3e2",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 300480720,
+        "units": "1"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-001-codex-deepseek-v4-pro-with-sanka-readiness-aware",
+      "model": "accounts/fireworks/models/deepseek-v4-pro-0813",
+      "session_id_sha256": "5245fb327bc8ee4518b134772c12a62e6ce6dcf46d9d46b6f864429f227b82ba",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 820570916,
+        "units": "0"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-001-codex-glm-5-3-flash-alone",
+      "model": "accounts/fireworks/models/glm-5p3-flash",
+      "session_id_sha256": "a2500d6b9a7dcd9743039d567f7f2a2b01c1ff2e42d6fbcba69f46655029981e",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 273235750,
+        "units": "0"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-001-codex-glm-5-3-flash-with-sanka-readiness-aware",
+      "model": "accounts/fireworks/models/glm-5p3-flash",
+      "session_id_sha256": "1dc7418100c0de91bd024133b37f8bcb6e31a6821dd00ead1d1a3bfa2674f6b6",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 142874960,
+        "units": "0"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-002-codex-deepseek-v4-pro-alone",
+      "model": "accounts/fireworks/models/deepseek-v4-pro-0813",
+      "session_id_sha256": "715516dc515f485bd751599801536d6a0267600a0ccbe9509ac1fbe4ae666e56",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 893411596,
+        "units": "0"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-002-codex-deepseek-v4-pro-with-sanka-readiness-aware",
+      "model": "accounts/fireworks/models/deepseek-v4-pro-0813",
+      "session_id_sha256": "4137b841577e16a0e31ba71c27b3e7197ad8364fb7e8bbd5f70b1eb82b31545a",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 62431392,
+        "units": "1"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-002-codex-glm-5-3-flash-alone",
+      "model": "accounts/fireworks/models/glm-5p3-flash",
+      "session_id_sha256": "2672bd7f308ba67963f916dcba9262308d0d8a8bce9de78f65f4c07e7013ddff",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 156726200,
+        "units": "0"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-002-codex-glm-5-3-flash-with-sanka-readiness-aware",
+      "model": "accounts/fireworks/models/glm-5p3-flash",
+      "session_id_sha256": "498d029f155c61186f0f06096c4bbfb3cdea32d67d611ed520f0d751138a9163",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 162157280,
+        "units": "0"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-003-codex-deepseek-v4-pro-alone",
+      "model": "accounts/fireworks/models/deepseek-v4-pro-0813",
+      "session_id_sha256": "8185f0f590d8a8314d9fde84fb3d09522a974eb4ebed8850606a876d71ac8581",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 143368996,
+        "units": "1"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-003-codex-deepseek-v4-pro-with-sanka-readiness-aware",
+      "model": "accounts/fireworks/models/deepseek-v4-pro-0813",
+      "session_id_sha256": "741574603c19aeb93ecddedccad71692fca294c64dc791efc24ae5992c49936d",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 232678040,
+        "units": "1"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-003-codex-glm-5-3-flash-alone",
+      "model": "accounts/fireworks/models/glm-5p3-flash",
+      "session_id_sha256": "2e15f835d5f240c3ef73fe540eece70bb0bbe64d462f5e38b5d62010301ec351",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 290730020,
+        "units": "0"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-003-codex-glm-5-3-flash-with-sanka-readiness-aware",
+      "model": "accounts/fireworks/models/glm-5p3-flash",
+      "session_id_sha256": "bfa3ab9c557f357d9e71027d548d51e9f262fc5149c987c0fb40427255543ace",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 266400700,
+        "units": "0"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-004-codex-deepseek-v4-pro-alone",
+      "model": "accounts/fireworks/models/deepseek-v4-pro-0813",
+      "session_id_sha256": "0fcf496f5a1a2874ed81b5b2a1c056cf6ec3d29862089fa77c9dcc4d746e38fe",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 180966864,
+        "units": "1"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-004-codex-deepseek-v4-pro-with-sanka-readiness-aware",
+      "model": "accounts/fireworks/models/deepseek-v4-pro-0813",
+      "session_id_sha256": "7245eeaf228713fa8f0b8f10bdf7820a3f5cb28bc5942de0f7ddf4638e4428ff",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 657505004,
+        "units": "2"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-004-codex-glm-5-3-flash-alone",
+      "model": "accounts/fireworks/models/glm-5p3-flash",
+      "session_id_sha256": "a9474b1a6367da4a07a8b9adc629a7312fe0a7b86a5baa8097fa7c8a64030e45",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 302066390,
+        "units": "0"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-004-codex-glm-5-3-flash-with-sanka-readiness-aware",
+      "model": "accounts/fireworks/models/glm-5p3-flash",
+      "session_id_sha256": "8c2225d6873f2e7683ec3df5e133d6c76a6f523a54073341e1f983affed8008a",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 314687810,
+        "units": "0"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-005-codex-deepseek-v4-pro-alone",
+      "model": "accounts/fireworks/models/deepseek-v4-pro-0813",
+      "session_id_sha256": "4d1309e3efaa87c81373ada98aa05bd2885b9c9727a7683c365b48eecafd9d15",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 292867136,
+        "units": "1"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-005-codex-deepseek-v4-pro-with-sanka-readiness-aware",
+      "model": "accounts/fireworks/models/deepseek-v4-pro-0813",
+      "session_id_sha256": "47e8d3864a989f6fdcb05ecb23ef8361edcafe90e362185f865168b3057f1930",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 787051024,
+        "units": "1"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-005-codex-glm-5-3-flash-alone",
+      "model": "accounts/fireworks/models/glm-5p3-flash",
+      "session_id_sha256": "aca0fbe75807fca14eb241026ba5cf3b6f150a7d36c9b4e7536197966191887a",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 306239040,
+        "units": "0"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-005-codex-glm-5-3-flash-with-sanka-readiness-aware",
+      "model": "accounts/fireworks/models/glm-5p3-flash",
+      "session_id_sha256": "2b60ac0bd636388d0e45455dcef128e382f074e7507a1d582a7046eb57ad122f",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 429487510,
+        "units": "0"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-006-codex-deepseek-v4-pro-alone",
+      "model": "accounts/fireworks/models/deepseek-v4-pro-0813",
+      "session_id_sha256": "c3d0395c2e7a112d005b8653aba4fc9e34a1af9b1ec7c21596698dd7d712fd58",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 548179380,
+        "units": "1"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-006-codex-deepseek-v4-pro-with-sanka-readiness-aware",
+      "model": "accounts/fireworks/models/deepseek-v4-pro-0813",
+      "session_id_sha256": "504528435be848a5580cce3ead9b8799e5cc70b0fdd808266bc6217d968b59e8",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 852409800,
+        "units": "0"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-006-codex-glm-5-3-flash-alone",
+      "model": "accounts/fireworks/models/glm-5p3-flash",
+      "session_id_sha256": "96ddcd91314c43cc17c2440d6fc701536fefb12880f11922ce3079764e27e4df",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 237394610,
+        "units": "0"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-006-codex-glm-5-3-flash-with-sanka-readiness-aware",
+      "model": "accounts/fireworks/models/glm-5p3-flash",
+      "session_id_sha256": "91721a39ea0fc0bf908512e78333bf162b95cc74d72e391ce2b7f61ec128035e",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 596390270,
+        "units": "0"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-007-codex-deepseek-v4-pro-alone",
+      "model": "accounts/fireworks/models/deepseek-v4-pro-0813",
+      "session_id_sha256": "be9dfeb0624c5c2f09a26ad8a7bc43759aac66eefd570c4b04fc4aa8f217b996",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 581825960,
+        "units": "1"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-007-codex-deepseek-v4-pro-with-sanka-readiness-aware",
+      "model": "accounts/fireworks/models/deepseek-v4-pro-0813",
+      "session_id_sha256": "0a3a018f242e6f82bcbcdec67844aa8845a39a791ad9ca9315a02aca4f9a7590",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 403061904,
+        "units": "3"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-007-codex-glm-5-3-flash-alone",
+      "model": "accounts/fireworks/models/glm-5p3-flash",
+      "session_id_sha256": "8728e941ba27cf8ead111df4bc0c23a5ce328ec24798562d340fd38e7d226cf0",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 408508470,
+        "units": "0"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-007-codex-glm-5-3-flash-with-sanka-readiness-aware",
+      "model": "accounts/fireworks/models/glm-5p3-flash",
+      "session_id_sha256": "153109d15a3bdd26d358b85f529a8671ba252b399e8f71968de75cf40dce379f",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 412187570,
+        "units": "0"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-008-codex-deepseek-v4-pro-alone",
+      "model": "accounts/fireworks/models/deepseek-v4-pro-0813",
+      "session_id_sha256": "5ba5419f8bbc5e140ac2277b4820805057a6e6cd14304d1c4788ccc1fbcc9a56",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 467746148,
+        "units": "1"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-008-codex-deepseek-v4-pro-with-sanka-readiness-aware",
+      "model": "accounts/fireworks/models/deepseek-v4-pro-0813",
+      "session_id_sha256": "dd0453ca14e3c199a589d8ebe581b970815dfd64cd32e9f45fdd0d1834048e00",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 477863332,
+        "units": "1"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-008-codex-glm-5-3-flash-alone",
+      "model": "accounts/fireworks/models/glm-5p3-flash",
+      "session_id_sha256": "7dd77777d4048517731d32513265828d9220045f30da3eee437488731f0c7f84",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 183342340,
+        "units": "0"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-008-codex-glm-5-3-flash-with-sanka-readiness-aware",
+      "model": "accounts/fireworks/models/glm-5p3-flash",
+      "session_id_sha256": "25db2132a1d79f66776219064ea24b8907c3c3be580757d439e6cdbdf645b0e8",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 259550400,
+        "units": "0"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-009-codex-deepseek-v4-pro-alone",
+      "model": "accounts/fireworks/models/deepseek-v4-pro-0813",
+      "session_id_sha256": "0cf10fd0e7c2cd4bd63e9ea5786ee8a891228467aded5cf978667a903f6ad947",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 230819876,
+        "units": "1"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-009-codex-deepseek-v4-pro-with-sanka-readiness-aware",
+      "model": "accounts/fireworks/models/deepseek-v4-pro-0813",
+      "session_id_sha256": "93b4f227a1b4aef2fb1fa4a51338138cc891519a992a8247a350a9d67f8aa049",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 68071004,
+        "units": "1"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-009-codex-glm-5-3-flash-alone",
+      "model": "accounts/fireworks/models/glm-5p3-flash",
+      "session_id_sha256": "d9bb4c772937ce2f49c75d739be65f9d06654d3af387b364679bf11b228145d2",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 225240170,
+        "units": "0"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-009-codex-glm-5-3-flash-with-sanka-readiness-aware",
+      "model": "accounts/fireworks/models/glm-5p3-flash",
+      "session_id_sha256": "34bd304e6a2742676bd5f6db43dd51df2bc65d33ca0bd1c9d13ace7251820d22",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 576335750,
+        "units": "0"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-010-codex-deepseek-v4-pro-alone",
+      "model": "accounts/fireworks/models/deepseek-v4-pro-0813",
+      "session_id_sha256": "15c2be1d8c5cb86a4c9a11c68fbdc608b016e1b8db6002d0236d104a967801f9",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 618879272,
+        "units": "0"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-010-codex-deepseek-v4-pro-with-sanka-readiness-aware",
+      "model": "accounts/fireworks/models/deepseek-v4-pro-0813",
+      "session_id_sha256": "638330f6600db02b47feba84069f54a59e155401e1d8c54be5ff18d8cd20ee49",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 735844692,
+        "units": "0"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-010-codex-glm-5-3-flash-alone",
+      "model": "accounts/fireworks/models/glm-5p3-flash",
+      "session_id_sha256": "ad7c63b58ab590a32f303f6b94aeef547325538650c8bbf999a1eda96546d836",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 166299960,
+        "units": "0"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-010-codex-glm-5-3-flash-with-sanka-readiness-aware",
+      "model": "accounts/fireworks/models/glm-5p3-flash",
+      "session_id_sha256": "13fd312b668271d00793b347bed92b1ec400669027df3e677af79e23e0eee5b4",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 169735410,
+        "units": "0"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-011-codex-deepseek-v4-pro-alone",
+      "model": "accounts/fireworks/models/deepseek-v4-pro-0813",
+      "session_id_sha256": "d0fb1bb0ac509a1ca4e36b262e8ee205ffc25d644f32d6af174e0e2c9fb3572f",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 16757368,
+        "units": "1"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-011-codex-deepseek-v4-pro-with-sanka-readiness-aware",
+      "model": "accounts/fireworks/models/deepseek-v4-pro-0813",
+      "session_id_sha256": "4e9ac8307a077a168f6ec88f1b2b10e00857f09279d98754d34d5b189ba47d3c",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 511269584,
+        "units": "1"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-011-codex-glm-5-3-flash-alone",
+      "model": "accounts/fireworks/models/glm-5p3-flash",
+      "session_id_sha256": "93f8d256c87dfcfaa8c1539bcfa23ef3c67a9aa74040cc4f3cbb2d6366376663",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 247744730,
+        "units": "0"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-011-codex-glm-5-3-flash-with-sanka-readiness-aware",
+      "model": "accounts/fireworks/models/glm-5p3-flash",
+      "session_id_sha256": "74ec79976066e6bae58b0dd09c12b3deeaea30e455d1e8990434139cb46484f5",
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 174945690,
+        "units": "0"
+      }
+    }
+  ],
+  "cohort_rows": [
+    {
+      "dimensions": {
+        "apiKeyId": "",
+        "model": "accounts/fireworks/models/deepseek-v4-pro-0813",
+        "modelTier": "",
+        "startTime": null,
+        "unattributedDimensions": [],
+        "unknownModel": false,
+        "user": ""
+      },
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 884060008,
+        "units": "29"
+      }
+    },
+    {
+      "dimensions": {
+        "apiKeyId": "",
+        "model": "accounts/fireworks/models/glm-5p3-flash",
+        "modelTier": "",
+        "startTime": null,
+        "unattributedDimensions": [],
+        "unknownModel": false,
+        "user": ""
+      },
+      "subtotal": {
+        "currencyCode": "USD",
+        "nanos": 302281030,
+        "units": "6"
+      }
+    }
+  ],
+  "cohort_subtotal": {
+    "currencyCode": "USD",
+    "nanos": 186341038,
+    "units": "36"
+  },
+  "evaluation_time": "2026-09-02T07:02:04.682410656Z",
+  "non_cell_overhead": [],
+  "non_cell_overhead_subtotal": {
+    "currencyCode": "USD",
+    "nanos": 0,
+    "units": "0"
+  },
+  "provider": "fireworks",
+  "provider_variant": "serverless-standard",
+  "query_window": {
+    "end_time": "2026-09-02T07:10:00Z",
+    "start_time": "2026-09-02T00:50:00Z"
+  },
+  "reconciled": true,
+  "schema": "sanka-bench-platform-cost-reconciliation-v1",
+  "source": "https://docs.fireworks.ai/api-reference/query-usage-costs"
+}
