@@ -424,6 +424,20 @@ workspace probe on top. Only change kinds enter the evidence, so files whose
 contents legitimately vary between clean runs still fingerprint identically
 for the determinism gate.
 
+**`APIRoute` subclasses are native (evaluator 0.0.3).** The gate asks whether the
+serving route *is* a FastAPI `APIRoute` (`isinstance`) with its endpoint in the
+workspace, not whether its class is named exactly `fastapi.routing.APIRoute`. Three
+v4-era candidates subclassed `APIRoute` only to override `matches()` so the workspace
+endpoint could reproduce DRF's resolve-path-then-405 order, and added a
+`/{name:path}` route to mirror Django's 404 body; the exact-name check rejected them
+although nothing about them was a bridge. The evidence keeps the concrete class name
+(`route_class`), adds `route_is_apiroute` and the matched `route_path`, and the
+report lists scenarios that a catch-all route served although the source answered
+something other than 404 under `diagnostics.catch_all_served_scenarios` — a
+diagnostic, never a gate. Evidence recorded before 0.0.3 has no `route_is_apiroute`
+and keeps the exact-class reading, so old reports keep their verdicts. The agent
+prompt is unchanged: it already says "served by a FastAPI `APIRoute`".
+
 **Included routers resolve to the route that serves (evaluator 0.0.2).** FastAPI
 0.141, the version pinned since the first commit, keeps `app.include_router(router)`
 targets as lazy `fastapi.routing._IncludedRouter` entries in `app.routes` instead

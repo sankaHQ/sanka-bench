@@ -120,6 +120,44 @@ def test_included_raw_starlette_route_is_still_rejected(tmp_path: Path) -> None:
     assert native["route_class"] != "fastapi.routing.APIRoute"
 
 
+def test_apiroute_subclass_is_recorded_as_an_apiroute(tmp_path: Path) -> None:
+    (tmp_path / "svc.py").write_text(
+        "from fastapi import FastAPI\n"
+        "from fastapi.routing import APIRoute\n"
+        "class AnyMethodRoute(APIRoute):\n"
+        "    pass\n"
+        "app = FastAPI()\n"
+        "app.router.route_class = AnyMethodRoute\n"
+        '@app.get("/ping/")\n'
+        "def ping():\n"
+        '    return {"ok": True}\n',
+        encoding="utf-8",
+    )
+    payload = _payload(_run_guard(tmp_path))
+    native = payload["native"]
+    assert native["route_class"] == "svc.AnyMethodRoute"
+    assert native["route_is_apiroute"] is True
+    assert native["route_path"] == "/ping/"
+    assert native["endpoint_in_workspace"] is True
+
+
+def test_raw_starlette_route_is_not_an_apiroute(tmp_path: Path) -> None:
+    (tmp_path / "svc.py").write_text(
+        "from fastapi import FastAPI\n"
+        "from starlette.responses import JSONResponse\n"
+        "async def ping(request):\n"
+        '    return JSONResponse({"ok": True})\n'
+        "app = FastAPI()\n"
+        'app.add_route("/ping/", ping, methods=["GET"])\n',
+        encoding="utf-8",
+    )
+    payload = _payload(_run_guard(tmp_path))
+    native = payload["native"]
+    assert native["route_class"] == "starlette.routing.Route"
+    assert native["route_is_apiroute"] is False
+    assert native["route_path"] == "/ping/"
+
+
 def test_query_string_is_excluded_from_route_matching(tmp_path: Path) -> None:
     (tmp_path / "svc.py").write_text(
         "from fastapi import FastAPI, Request\n"

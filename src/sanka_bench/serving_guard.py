@@ -285,10 +285,17 @@ def main() -> int:
 
     method = str(scenario["method"])
     path = str(scenario["path"])
+    from fastapi.routing import APIRoute
+
     route = _matched_route(app, method, path)
+    route_path = getattr(route, "path", None) if route is not None else None
     native: dict[str, Any] = {
         "app_is_fastapi": isinstance(app, fastapi.FastAPI),
+        # The concrete class stays in the evidence for reviewers; the gate itself
+        # accepts any APIRoute subclass whose endpoint lives in the workspace.
         "route_class": _class_name(route),
+        "route_is_apiroute": isinstance(route, APIRoute),
+        "route_path": route_path if isinstance(route_path, str) else None,
         "endpoint_in_workspace": route is not None and _endpoint_in_workspace(route, workspace),
     }
 
