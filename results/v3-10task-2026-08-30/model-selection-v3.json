@@ -1,0 +1,66 @@
+{
+  "schema": "sanka-bench/model-selection/v3",
+  "checked_at": "2026-08-30T06:29:43+09:00",
+  "all_ready": true,
+  "models": [
+    {
+      "model_id": "claude-opus-4-8",
+      "provider": "anthropic",
+      "availability_probe": "Anthropic GET /v1/models",
+      "available": true,
+      "execution_probe": "prior benchmark artifact plus current Claude CLI authentication",
+      "execution_ready": true
+    },
+    {
+      "model_id": "claude-sonnet-5",
+      "provider": "anthropic",
+      "availability_probe": "Anthropic GET /v1/models",
+      "available": true,
+      "execution_probe": "prior benchmark artifact plus current Claude CLI authentication",
+      "execution_ready": true
+    },
+    {
+      "model_id": "gpt-5.6-sol",
+      "provider": "openai",
+      "availability_probe": "OpenAI GET /v1/models",
+      "available": true,
+      "execution_probe": "live Responses API smoke call returned the exact model",
+      "execution_ready": true
+    },
+    {
+      "model_id": "accounts/fireworks/models/deepseek-v4-pro-0813",
+      "provider": "fireworks",
+      "availability_probe": "Fireworks GET /inference/v1/models",
+      "available": true,
+      "responses_api_supported": true,
+      "tools_supported": true,
+      "execution_ready": true
+    },
+    {
+      "model_id": "accounts/fireworks/models/glm-5p3-flash",
+      "provider": "fireworks",
+      "availability_probe": "Fireworks GET /inference/v1/models",
+      "available": true,
+      "responses_api_supported": true,
+      "tools_supported": true,
+      "execution_probe": "live Responses API smoke call plus rated-cost readback",
+      "execution_ready": true
+    },
+    {
+      "model_id": "gpt-5.6-luna",
+      "provider": "openai",
+      "availability_probe": "OpenAI GET /v1/models",
+      "available": true,
+      "execution_probe": "live Responses API smoke call returned the exact model",
+      "execution_ready": true
+    }
+  ],
+  "runner_readiness": {
+    "claude_cli_authenticated": true,
+    "claude_cli_provider": "firstParty",
+    "claude_cli_subscription": "max",
+    "openai_api_key_present": true,
+    "fireworks_api_key_present": true,
+    "env_values_recorded": false
+  }
+}

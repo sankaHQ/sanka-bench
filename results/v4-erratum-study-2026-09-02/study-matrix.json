@@ -1,0 +1,947 @@
+{
+  "schema": "sanka-bench/erratum-study-matrix/v1",
+  "benchmark_sha": "13bd9a863a76f813495c4483c1e39cd8aa7bba44",
+  "study_of": {
+    "run_id": "v4-20260901T013102Z-3aa1ef3c",
+    "mirror": "../v4-11task-2026-09-01",
+    "erratum": "../v4-11task-2026-09-01/ERRATUM-claude-turn-cap-2026-09-02.md",
+    "reason": "The ten cells below reached the 60-turn cap during the v4 recovery waves and were discarded unevaluated by the PR #26 runner (Claude CLI exits 1 on error_max_turns). This study re-executes exactly those cells, pass@1, with the fixed runner, at the same benchmark SHA, engine pins, prompt, budget and evaluator. It is published beside v4 and never merged into the v4 rows."
+  },
+  "authorization": {
+    "paid_run_authorized": true,
+    "authorization_scope": "10-cell-v4-erratum-study",
+    "authorized_at": "2026-09-01T21:37:00Z",
+    "authorized_by": "haegwan via Claude Code session (AskUserQuestion answer: 'Go, 4 concurrent (Recommended)')",
+    "run_id": "v4-erratum-20260901T213700Z-26d1afdc",
+    "cost_note": "Claude Max subscription cells; v4 recorded API-equivalent cost for these ten cells = $34.7 total (Opus $7.47, Sonnet $27.2). No metered API spend.",
+    "concurrency_authorized": {
+      "opus48": 1,
+      "sonnet5": 3,
+      "anthropic_total": 4
+    }
+  },
+  "toolchain": {
+    "worktree": "<workspace>/.worktrees/sanka-bench-matrix-v4",
+    "env_path": "<workspace>/.worktrees/sanka-bench-matrix-v4/.env",
+    "claude_bin": "<claude-cli>",
+    "claude_cli": "2.1.241 (Claude Code)",
+    "codex_bin": "<workspace>/.worktrees/sanka-bench-matrix-v4/.bench-tools/codex-cli/node_modules/@openai/codex/bin/codex.js",
+    "agent_runner": "<workspace>/.worktrees/sanka-bench-turn-cap-freeze/scripts/run_agent_candidate.py",
+    "agent_runner_revision": "92384056f706b4ff89488c3eed6e0f2b15ba697a",
+    "agent_runner_sha256": "aaa3fee19756318dcbf93c82d10b5758813a3705b1427ea84725fc8eda0a6b23",
+    "agent_runner_change": "sanka-bench PR #27: parsed result authoritative over exit code; Claude captured as stream-json (agent-log.jsonl = full transcript)",
+    "cell_driver": "<workspace>/tracking/bench-v4-erratum-study-2026-09-02/cell_driver_study.py",
+    "cell_driver_sha256": "bbae2f83e903c4e61a8be50c22903d0b0532e2f903fac010d3da79e41f72249a",
+    "cell_driver_provenance": "byte-identical to v4 cell_driver_v4.py except the authorization scope string",
+    "sanka_cli": "0.1.8",
+    "sanka_migrate": "0.1.0a10",
+    "venv_recreated": "2026-09-02: uv sync --frozen --extra fixture --group dev; uv pip install sanka-cli==0.1.8 sanka-migrate==0.1.0a10 (the v4 worktree venv had been deleted after the run)",
+    "agent_runner_provenance": "sanka-bench PR #27 approved head (exact-head human approval by haegwan); the squash-merge onto main carries byte-identical file content \u2014 re-verify the sha256 against origin/main after landing",
+    "matrix_runner": "not used (study coordinator = run_study.py)",
+    "agent_runner_merge_commit": "522666eba90d14860c72edce7689ee4b895253ab (sanka-bench PR #27 squash-merge; sha256 of scripts/run_agent_candidate.py identical to the pinned 9238405 file)"
+  },
+  "expected_rows": 10,
+  "rows": [
+    {
+      "candidate_id": "drf-fastapi-009-claude-opus48-with-sanka",
+      "task": "drf-fastapi-009",
+      "model": "Claude Opus 4.8",
+      "model_slug": "opus48",
+      "model_id": "claude-opus-4-8",
+      "config": "with-sanka",
+      "route_weight": 12,
+      "status": "passed",
+      "fully_migrated": true,
+      "gates_passed": 8,
+      "gates_total": 8,
+      "hard_gates": {
+        "behavior_parity": true,
+        "database_parity": true,
+        "deterministic": true,
+        "native_target": true,
+        "regression_tests": true,
+        "side_effect_parity": true,
+        "source_qualified": true,
+        "target_boot": true
+      },
+      "metrics": {
+        "behavioral_parity": {
+          "passed": 32,
+          "rate": 1.0,
+          "total": 32
+        },
+        "database_parity": {
+          "passed": 32,
+          "rate": 1.0,
+          "total": 32
+        },
+        "native_compliance": {
+          "passed": 32,
+          "rate": 1.0,
+          "total": 32
+        },
+        "route_coverage": {
+          "passed": 32,
+          "rate": 1.0,
+          "total": 32
+        },
+        "scenario_count": 32,
+        "side_effect_parity": {
+          "passed": 32,
+          "rate": 1.0,
+          "total": 32
+        }
+      },
+      "turns": 50,
+      "subtype": "success",
+      "terminal": "completed within budget",
+      "duration_seconds": 1847,
+      "generation_seconds": 1852,
+      "evaluation_seconds": 92,
+      "input_tokens": 4277397,
+      "cached_input_tokens": 4125425,
+      "output_tokens": 99631,
+      "cost_usd": 6.074658500000003,
+      "cost_basis": "Claude Code API-equivalent self-report; Claude Max subscription cell",
+      "models_used": [
+        "claude-haiku-4-5-20251001",
+        "claude-opus-4-8"
+      ],
+      "candidate_digest": "7e6ab3356c7390c49a3165ba9b8572963ca116e1808441c5324049342fc5d8b3",
+      "transcript_lines": 735,
+      "wave_id": "v4-erratum-study",
+      "wave_concurrency": "4",
+      "timing_methodology": "bounded-study-queue",
+      "run_start_utc": "2026-09-01T21:37:16Z",
+      "run_exit": 0,
+      "eval_exit": 0,
+      "v4": {
+        "status": "agent-run-failed",
+        "turns": 61,
+        "duration_seconds": 1405,
+        "cost_usd": 7.472387000000001,
+        "wave_id": "v4-recovery-untouched-resume1",
+        "failure_reason": "Reached maximum number of turns (60)"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-009-claude-sonnet5-alone",
+      "task": "drf-fastapi-009",
+      "model": "Claude Sonnet 5",
+      "model_slug": "sonnet5",
+      "model_id": "claude-sonnet-5",
+      "config": "alone",
+      "route_weight": 12,
+      "status": "passed",
+      "fully_migrated": true,
+      "gates_passed": 8,
+      "gates_total": 8,
+      "hard_gates": {
+        "behavior_parity": true,
+        "database_parity": true,
+        "deterministic": true,
+        "native_target": true,
+        "regression_tests": true,
+        "side_effect_parity": true,
+        "source_qualified": true,
+        "target_boot": true
+      },
+      "metrics": {
+        "behavioral_parity": {
+          "passed": 32,
+          "rate": 1.0,
+          "total": 32
+        },
+        "database_parity": {
+          "passed": 32,
+          "rate": 1.0,
+          "total": 32
+        },
+        "native_compliance": {
+          "passed": 32,
+          "rate": 1.0,
+          "total": 32
+        },
+        "route_coverage": {
+          "passed": 32,
+          "rate": 1.0,
+          "total": 32
+        },
+        "scenario_count": 32,
+        "side_effect_parity": {
+          "passed": 32,
+          "rate": 1.0,
+          "total": 32
+        }
+      },
+      "turns": 61,
+      "subtype": "error_max_turns",
+      "terminal": "turn budget (60) exhausted; the workspace was frozen as-is",
+      "duration_seconds": 965,
+      "generation_seconds": 970,
+      "evaluation_seconds": 109,
+      "input_tokens": 8057401,
+      "cached_input_tokens": 7888565,
+      "output_tokens": 96669,
+      "cost_usd": 3.2210049999999995,
+      "cost_basis": "Claude Code API-equivalent self-report; Claude Max subscription cell",
+      "models_used": [
+        "claude-haiku-4-5-20251001",
+        "claude-sonnet-5"
+      ],
+      "candidate_digest": "2b53a9858b48441faca6dc7c7a3d02beb7ca5ba8a0dda7526b59cfc360ceca10",
+      "transcript_lines": 639,
+      "wave_id": "v4-erratum-study",
+      "wave_concurrency": "4",
+      "timing_methodology": "bounded-study-queue",
+      "run_start_utc": "2026-09-01T21:37:16Z",
+      "run_exit": 0,
+      "eval_exit": 0,
+      "v4": {
+        "status": "agent-run-failed",
+        "turns": 61,
+        "duration_seconds": 1335,
+        "cost_usd": 3.5720343999999984,
+        "wave_id": "v4-recovery-untouched-resume2",
+        "failure_reason": "Reached maximum number of turns (60)"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-009-claude-sonnet5-with-sanka",
+      "task": "drf-fastapi-009",
+      "model": "Claude Sonnet 5",
+      "model_slug": "sonnet5",
+      "model_id": "claude-sonnet-5",
+      "config": "with-sanka",
+      "route_weight": 12,
+      "status": "passed",
+      "fully_migrated": true,
+      "gates_passed": 8,
+      "gates_total": 8,
+      "hard_gates": {
+        "behavior_parity": true,
+        "database_parity": true,
+        "deterministic": true,
+        "native_target": true,
+        "regression_tests": true,
+        "side_effect_parity": true,
+        "source_qualified": true,
+        "target_boot": true
+      },
+      "metrics": {
+        "behavioral_parity": {
+          "passed": 32,
+          "rate": 1.0,
+          "total": 32
+        },
+        "database_parity": {
+          "passed": 32,
+          "rate": 1.0,
+          "total": 32
+        },
+        "native_compliance": {
+          "passed": 32,
+          "rate": 1.0,
+          "total": 32
+        },
+        "route_coverage": {
+          "passed": 32,
+          "rate": 1.0,
+          "total": 32
+        },
+        "scenario_count": 32,
+        "side_effect_parity": {
+          "passed": 32,
+          "rate": 1.0,
+          "total": 32
+        }
+      },
+      "turns": 61,
+      "subtype": "error_max_turns",
+      "terminal": "turn budget (60) exhausted; the workspace was frozen as-is",
+      "duration_seconds": 1091,
+      "generation_seconds": 1097,
+      "evaluation_seconds": 111,
+      "input_tokens": 7980489,
+      "cached_input_tokens": 7805929,
+      "output_tokens": 106740,
+      "cost_usd": 3.3284368000000004,
+      "cost_basis": "Claude Code API-equivalent self-report; Claude Max subscription cell",
+      "models_used": [
+        "claude-haiku-4-5-20251001",
+        "claude-sonnet-5"
+      ],
+      "candidate_digest": "5e9d1280855050538a101ce4c943b1ffb66a4f0e487cee74670fe79fc9e8ba59",
+      "transcript_lines": 710,
+      "wave_id": "v4-erratum-study",
+      "wave_concurrency": "4",
+      "timing_methodology": "bounded-study-queue",
+      "run_start_utc": "2026-09-01T21:37:16Z",
+      "run_exit": 0,
+      "eval_exit": 0,
+      "v4": {
+        "status": "agent-run-failed",
+        "turns": 61,
+        "duration_seconds": 1208,
+        "cost_usd": 3.4578732000000003,
+        "wave_id": "v4-recovery-untouched-resume2",
+        "failure_reason": "Reached maximum number of turns (60)"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-007-claude-sonnet5-with-sanka",
+      "task": "drf-fastapi-007",
+      "model": "Claude Sonnet 5",
+      "model_slug": "sonnet5",
+      "model_id": "claude-sonnet-5",
+      "config": "with-sanka",
+      "route_weight": 14,
+      "status": "failed",
+      "fully_migrated": false,
+      "gates_passed": 7,
+      "gates_total": 8,
+      "hard_gates": {
+        "behavior_parity": false,
+        "database_parity": true,
+        "deterministic": true,
+        "native_target": true,
+        "regression_tests": true,
+        "side_effect_parity": true,
+        "source_qualified": true,
+        "target_boot": true
+      },
+      "metrics": {
+        "behavioral_parity": {
+          "passed": 26,
+          "rate": 0.8666666666666667,
+          "total": 30
+        },
+        "database_parity": {
+          "passed": 30,
+          "rate": 1.0,
+          "total": 30
+        },
+        "native_compliance": {
+          "passed": 30,
+          "rate": 1.0,
+          "total": 30
+        },
+        "route_coverage": {
+          "passed": 30,
+          "rate": 1.0,
+          "total": 30
+        },
+        "scenario_count": 30,
+        "side_effect_parity": {
+          "passed": 30,
+          "rate": 1.0,
+          "total": 30
+        }
+      },
+      "turns": 61,
+      "subtype": "error_max_turns",
+      "terminal": "turn budget (60) exhausted; the workspace was frozen as-is",
+      "duration_seconds": 1170,
+      "generation_seconds": 1175,
+      "evaluation_seconds": 116,
+      "input_tokens": 7702612,
+      "cached_input_tokens": 7540423,
+      "output_tokens": 142422,
+      "cost_usd": 3.5826676,
+      "cost_basis": "Claude Code API-equivalent self-report; Claude Max subscription cell",
+      "models_used": [
+        "claude-haiku-4-5-20251001",
+        "claude-sonnet-5"
+      ],
+      "candidate_digest": "1bceebef5c791c36dd7d4e682270ff06ef16d606fd7f6bc43e805af64fdb0f8e",
+      "transcript_lines": 562,
+      "wave_id": "v4-erratum-study",
+      "wave_concurrency": "4",
+      "timing_methodology": "bounded-study-queue",
+      "run_start_utc": "2026-09-01T21:37:17Z",
+      "run_exit": 0,
+      "eval_exit": 0,
+      "v4": {
+        "status": "agent-run-failed",
+        "turns": 61,
+        "duration_seconds": 1128,
+        "cost_usd": 4.7671759,
+        "wave_id": "v4-recovery-untouched-resume2",
+        "failure_reason": "Reached maximum number of turns (60)"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-011-claude-sonnet5-alone",
+      "task": "drf-fastapi-011",
+      "model": "Claude Sonnet 5",
+      "model_slug": "sonnet5",
+      "model_id": "claude-sonnet-5",
+      "config": "alone",
+      "route_weight": 5,
+      "status": "passed",
+      "fully_migrated": true,
+      "gates_passed": 8,
+      "gates_total": 8,
+      "hard_gates": {
+        "behavior_parity": true,
+        "database_parity": true,
+        "deterministic": true,
+        "native_target": true,
+        "regression_tests": true,
+        "side_effect_parity": true,
+        "source_qualified": true,
+        "target_boot": true
+      },
+      "metrics": {
+        "behavioral_parity": {
+          "passed": 32,
+          "rate": 1.0,
+          "total": 32
+        },
+        "database_parity": {
+          "passed": 32,
+          "rate": 1.0,
+          "total": 32
+        },
+        "native_compliance": {
+          "passed": 32,
+          "rate": 1.0,
+          "total": 32
+        },
+        "route_coverage": {
+          "passed": 32,
+          "rate": 1.0,
+          "total": 32
+        },
+        "scenario_count": 32,
+        "side_effect_parity": {
+          "passed": 32,
+          "rate": 1.0,
+          "total": 32
+        }
+      },
+      "turns": 61,
+      "subtype": "error_max_turns",
+      "terminal": "turn budget (60) exhausted; the workspace was frozen as-is",
+      "duration_seconds": 1112,
+      "generation_seconds": 1118,
+      "evaluation_seconds": 123,
+      "input_tokens": 8652934,
+      "cached_input_tokens": 8467603,
+      "output_tokens": 107162,
+      "cost_usd": 3.5077225999999997,
+      "cost_basis": "Claude Code API-equivalent self-report; Claude Max subscription cell",
+      "models_used": [
+        "claude-haiku-4-5-20251001",
+        "claude-sonnet-5"
+      ],
+      "candidate_digest": "66161f301a97b6c1f17a72ffbf83e3dad8b8ba40f6d15c7b9b8b5f43cb9df883",
+      "transcript_lines": 655,
+      "wave_id": "v4-erratum-study",
+      "wave_concurrency": "4",
+      "timing_methodology": "bounded-study-queue",
+      "run_start_utc": "2026-09-01T21:55:16Z",
+      "run_exit": 0,
+      "eval_exit": 0,
+      "v4": {
+        "status": "agent-run-failed",
+        "turns": 61,
+        "duration_seconds": 1114,
+        "cost_usd": 3.4767664000000003,
+        "wave_id": "v4-recovery-untouched-resume3",
+        "failure_reason": "Reached maximum number of turns (60)"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-011-claude-sonnet5-with-sanka",
+      "task": "drf-fastapi-011",
+      "model": "Claude Sonnet 5",
+      "model_slug": "sonnet5",
+      "model_id": "claude-sonnet-5",
+      "config": "with-sanka",
+      "route_weight": 5,
+      "status": "failed",
+      "fully_migrated": false,
+      "gates_passed": 7,
+      "gates_total": 8,
+      "hard_gates": {
+        "behavior_parity": true,
+        "database_parity": true,
+        "deterministic": true,
+        "native_target": false,
+        "regression_tests": true,
+        "side_effect_parity": true,
+        "source_qualified": true,
+        "target_boot": true
+      },
+      "metrics": {
+        "behavioral_parity": {
+          "passed": 32,
+          "rate": 1.0,
+          "total": 32
+        },
+        "database_parity": {
+          "passed": 32,
+          "rate": 1.0,
+          "total": 32
+        },
+        "native_compliance": {
+          "passed": 0,
+          "rate": 0.0,
+          "total": 32
+        },
+        "route_coverage": {
+          "passed": 32,
+          "rate": 1.0,
+          "total": 32
+        },
+        "scenario_count": 32,
+        "side_effect_parity": {
+          "passed": 32,
+          "rate": 1.0,
+          "total": 32
+        }
+      },
+      "turns": 67,
+      "subtype": "success",
+      "terminal": "Claude CLI reported successful completion after 67 turns, exceeding the requested 60-turn limit; the workspace was frozen as-is and the overrun is disclosed",
+      "duration_seconds": 1092,
+      "generation_seconds": 1100,
+      "evaluation_seconds": 116,
+      "input_tokens": 8381800,
+      "cached_input_tokens": 8205967,
+      "output_tokens": 110640,
+      "cost_usd": 3.4525444000000007,
+      "cost_basis": "Claude Code API-equivalent self-report; Claude Max subscription cell",
+      "models_used": [
+        "claude-haiku-4-5-20251001",
+        "claude-sonnet-5"
+      ],
+      "candidate_digest": "34731f930cde528460db3d6af5ec94a03d9bc7fce58ee7ff9dabe3f9d4248237",
+      "transcript_lines": 699,
+      "wave_id": "v4-erratum-study",
+      "wave_concurrency": "4",
+      "timing_methodology": "bounded-study-queue",
+      "run_start_utc": "2026-09-01T21:57:25Z",
+      "run_exit": 0,
+      "eval_exit": 0,
+      "v4": {
+        "status": "agent-run-failed",
+        "turns": 61,
+        "duration_seconds": 1065,
+        "cost_usd": 3.1937930000000003,
+        "wave_id": "v4-recovery-untouched-resume3",
+        "failure_reason": "Reached maximum number of turns (60)"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-010-claude-sonnet5-alone",
+      "task": "drf-fastapi-010",
+      "model": "Claude Sonnet 5",
+      "model_slug": "sonnet5",
+      "model_id": "claude-sonnet-5",
+      "config": "alone",
+      "route_weight": 5,
+      "status": "passed",
+      "fully_migrated": true,
+      "gates_passed": 8,
+      "gates_total": 8,
+      "hard_gates": {
+        "behavior_parity": true,
+        "database_parity": true,
+        "deterministic": true,
+        "native_target": true,
+        "regression_tests": true,
+        "side_effect_parity": true,
+        "source_qualified": true,
+        "target_boot": true
+      },
+      "metrics": {
+        "behavioral_parity": {
+          "passed": 32,
+          "rate": 1.0,
+          "total": 32
+        },
+        "database_parity": {
+          "passed": 32,
+          "rate": 1.0,
+          "total": 32
+        },
+        "native_compliance": {
+          "passed": 32,
+          "rate": 1.0,
+          "total": 32
+        },
+        "route_coverage": {
+          "passed": 32,
+          "rate": 1.0,
+          "total": 32
+        },
+        "scenario_count": 32,
+        "side_effect_parity": {
+          "passed": 32,
+          "rate": 1.0,
+          "total": 32
+        }
+      },
+      "turns": 61,
+      "subtype": "error_max_turns",
+      "terminal": "turn budget (60) exhausted; the workspace was frozen as-is",
+      "duration_seconds": 1066,
+      "generation_seconds": 1072,
+      "evaluation_seconds": 90,
+      "input_tokens": 8060722,
+      "cached_input_tokens": 7902868,
+      "output_tokens": 97338,
+      "cost_usd": 3.1866276,
+      "cost_basis": "Claude Code API-equivalent self-report; Claude Max subscription cell",
+      "models_used": [
+        "claude-haiku-4-5-20251001",
+        "claude-sonnet-5"
+      ],
+      "candidate_digest": "8634314777430278820cb98c457dd391d0376e32f332561610ed778e1505de19",
+      "transcript_lines": 647,
+      "wave_id": "v4-erratum-study",
+      "wave_concurrency": "4",
+      "timing_methodology": "bounded-study-queue",
+      "run_start_utc": "2026-09-01T21:58:48Z",
+      "run_exit": 0,
+      "eval_exit": 0,
+      "v4": {
+        "status": "agent-run-failed",
+        "turns": 61,
+        "duration_seconds": 1050,
+        "cost_usd": 2.9867154000000005,
+        "wave_id": "v4-recovery-untouched-resume3",
+        "failure_reason": "Reached maximum number of turns (60)"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-003-claude-sonnet5-with-sanka",
+      "task": "drf-fastapi-003",
+      "model": "Claude Sonnet 5",
+      "model_slug": "sonnet5",
+      "model_id": "claude-sonnet-5",
+      "config": "with-sanka",
+      "route_weight": 14,
+      "status": "passed",
+      "fully_migrated": true,
+      "gates_passed": 8,
+      "gates_total": 8,
+      "hard_gates": {
+        "behavior_parity": true,
+        "database_parity": true,
+        "deterministic": true,
+        "native_target": true,
+        "regression_tests": true,
+        "side_effect_parity": true,
+        "source_qualified": true,
+        "target_boot": true
+      },
+      "metrics": {
+        "behavioral_parity": {
+          "passed": 16,
+          "rate": 1.0,
+          "total": 16
+        },
+        "database_parity": {
+          "passed": 16,
+          "rate": 1.0,
+          "total": 16
+        },
+        "native_compliance": {
+          "passed": 16,
+          "rate": 1.0,
+          "total": 16
+        },
+        "route_coverage": {
+          "passed": 16,
+          "rate": 1.0,
+          "total": 16
+        },
+        "scenario_count": 16,
+        "side_effect_parity": {
+          "passed": 16,
+          "rate": 1.0,
+          "total": 16
+        }
+      },
+      "turns": 54,
+      "subtype": "success",
+      "terminal": "completed within budget",
+      "duration_seconds": 1009,
+      "generation_seconds": 1016,
+      "evaluation_seconds": 27,
+      "input_tokens": 5414187,
+      "cached_input_tokens": 5252971,
+      "output_tokens": 99625,
+      "cost_usd": 2.6933792000000003,
+      "cost_basis": "Claude Code API-equivalent self-report; Claude Max subscription cell",
+      "models_used": [
+        "claude-haiku-4-5-20251001",
+        "claude-sonnet-5"
+      ],
+      "candidate_digest": "3c30bf1c1d8202b3b99d4ca7806ac617aef0822af808bc765304dd66e7ee2186",
+      "transcript_lines": 620,
+      "wave_id": "v4-erratum-study",
+      "wave_concurrency": "4",
+      "timing_methodology": "bounded-study-queue",
+      "run_start_utc": "2026-09-01T22:15:57Z",
+      "run_exit": 0,
+      "eval_exit": 0,
+      "v4": {
+        "status": "agent-run-failed",
+        "turns": 61,
+        "duration_seconds": 917,
+        "cost_usd": 2.7939538000000006,
+        "wave_id": "v4-recovery-untouched-resume1",
+        "failure_reason": "Reached maximum number of turns (60)"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-002-claude-sonnet5-with-sanka",
+      "task": "drf-fastapi-002",
+      "model": "Claude Sonnet 5",
+      "model_slug": "sonnet5",
+      "model_id": "claude-sonnet-5",
+      "config": "with-sanka",
+      "route_weight": 14,
+      "status": "passed",
+      "fully_migrated": true,
+      "gates_passed": 8,
+      "gates_total": 8,
+      "hard_gates": {
+        "behavior_parity": true,
+        "database_parity": true,
+        "deterministic": true,
+        "native_target": true,
+        "regression_tests": true,
+        "side_effect_parity": true,
+        "source_qualified": true,
+        "target_boot": true
+      },
+      "metrics": {
+        "behavioral_parity": {
+          "passed": 13,
+          "rate": 1.0,
+          "total": 13
+        },
+        "database_parity": {
+          "passed": 13,
+          "rate": 1.0,
+          "total": 13
+        },
+        "native_compliance": {
+          "passed": 13,
+          "rate": 1.0,
+          "total": 13
+        },
+        "route_coverage": {
+          "passed": 13,
+          "rate": 1.0,
+          "total": 13
+        },
+        "scenario_count": 13,
+        "side_effect_parity": {
+          "passed": 13,
+          "rate": 1.0,
+          "total": 13
+        }
+      },
+      "turns": 61,
+      "subtype": "error_max_turns",
+      "terminal": "turn budget (60) exhausted; the workspace was frozen as-is",
+      "duration_seconds": 1107,
+      "generation_seconds": 1113,
+      "evaluation_seconds": 21,
+      "input_tokens": 7917082,
+      "cached_input_tokens": 7754821,
+      "output_tokens": 109841,
+      "cost_usd": 3.3000292000000004,
+      "cost_basis": "Claude Code API-equivalent self-report; Claude Max subscription cell",
+      "models_used": [
+        "claude-haiku-4-5-20251001",
+        "claude-sonnet-5"
+      ],
+      "candidate_digest": "8fd8ab50a1ca2ef010f0e8f88f51d641e02e4c69bfcf907c9d23dccdbe5bf20f",
+      "transcript_lines": 726,
+      "wave_id": "v4-erratum-study",
+      "wave_concurrency": "4",
+      "timing_methodology": "bounded-study-queue",
+      "run_start_utc": "2026-09-01T22:17:40Z",
+      "run_exit": 0,
+      "eval_exit": 0,
+      "v4": {
+        "status": "agent-run-failed",
+        "turns": 61,
+        "duration_seconds": 876,
+        "cost_usd": 2.6038638,
+        "wave_id": "v4-recovery-untouched-resume1",
+        "failure_reason": "Reached maximum number of turns (60)"
+      }
+    },
+    {
+      "candidate_id": "drf-fastapi-001-claude-sonnet5-with-sanka",
+      "task": "drf-fastapi-001",
+      "model": "Claude Sonnet 5",
+      "model_slug": "sonnet5",
+      "model_id": "claude-sonnet-5",
+      "config": "with-sanka",
+      "route_weight": 14,
+      "status": "passed",
+      "fully_migrated": true,
+      "gates_passed": 8,
+      "gates_total": 8,
+      "hard_gates": {
+        "behavior_parity": true,
+        "database_parity": true,
+        "deterministic": true,
+        "native_target": true,
+        "regression_tests": true,
+        "side_effect_parity": true,
+        "source_qualified": true,
+        "target_boot": true
+      },
+      "metrics": {
+        "behavioral_parity": {
+          "passed": 5,
+          "rate": 1.0,
+          "total": 5
+        },
+        "database_parity": {
+          "passed": 5,
+          "rate": 1.0,
+          "total": 5
+        },
+        "native_compliance": {
+          "passed": 5,
+          "rate": 1.0,
+          "total": 5
+        },
+        "route_coverage": {
+          "passed": 5,
+          "rate": 1.0,
+          "total": 5
+        },
+        "scenario_count": 5,
+        "side_effect_parity": {
+          "passed": 5,
+          "rate": 1.0,
+          "total": 5
+        }
+      },
+      "turns": 67,
+      "subtype": "success",
+      "terminal": "Claude CLI reported successful completion after 67 turns, exceeding the requested 60-turn limit; the workspace was frozen as-is and the overrun is disclosed",
+      "duration_seconds": 794,
+      "generation_seconds": 801,
+      "evaluation_seconds": 14,
+      "input_tokens": 6367135,
+      "cached_input_tokens": 6230296,
+      "output_tokens": 76011,
+      "cost_usd": 2.5551361999999997,
+      "cost_basis": "Claude Code API-equivalent self-report; Claude Max subscription cell",
+      "models_used": [
+        "claude-haiku-4-5-20251001",
+        "claude-sonnet-5"
+      ],
+      "candidate_digest": "92ff81a529364843636c304116abe022ee1ac12e3fc91f669ef8c3a735ff7110",
+      "transcript_lines": 522,
+      "wave_id": "v4-erratum-study",
+      "wave_concurrency": "4",
+      "timing_methodology": "bounded-study-queue",
+      "run_start_utc": "2026-09-01T22:18:10Z",
+      "run_exit": 0,
+      "eval_exit": 0,
+      "v4": {
+        "status": "agent-run-failed",
+        "turns": 61,
+        "duration_seconds": 867,
+        "cost_usd": 2.869007200000001,
+        "wave_id": "v4-recovery-untouched-final",
+        "failure_reason": "Reached maximum number of turns (60)"
+      }
+    }
+  ],
+  "stage": {
+    "stage_id": "v4-erratum-study",
+    "run_id": "v4-erratum-20260901T213700Z-26d1afdc",
+    "requested": 10,
+    "completed": 10,
+    "failures": 0,
+    "driver_exit_codes": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "makespan_seconds": 3558,
+    "max_generation_total": 4,
+    "max_generation_by_model": {
+      "opus48": 1,
+      "sonnet5": 3
+    },
+    "ended": "2026-09-01T22:36:34Z"
+  },
+  "derived_view": [
+    {
+      "model": "Claude Opus 4.8",
+      "config": "alone",
+      "v4_official_verified_routes": 170,
+      "v4_official_score_percent": 100.0,
+      "derived_verified_routes": 170,
+      "derived_score_percent": 100.0,
+      "cells_substituted": [],
+      "label": "DERIVED: v4 official rows with the study's re-executed cells substituted for the discarded rows; not the v4 record"
+    },
+    {
+      "model": "Claude Opus 4.8",
+      "config": "with-sanka",
+      "v4_official_verified_routes": 158,
+      "v4_official_score_percent": 92.9,
+      "derived_verified_routes": 170,
+      "derived_score_percent": 100.0,
+      "cells_substituted": [
+        "drf-fastapi-009-claude-opus48-with-sanka"
+      ],
+      "label": "DERIVED: v4 official rows with the study's re-executed cells substituted for the discarded rows; not the v4 record"
+    },
+    {
+      "model": "Claude Sonnet 5",
+      "config": "alone",
+      "v4_official_verified_routes": 134,
+      "v4_official_score_percent": 78.8,
+      "derived_verified_routes": 156,
+      "derived_score_percent": 91.8,
+      "cells_substituted": [
+        "drf-fastapi-009-claude-sonnet5-alone",
+        "drf-fastapi-011-claude-sonnet5-alone",
+        "drf-fastapi-010-claude-sonnet5-alone"
+      ],
+      "label": "DERIVED: v4 official rows with the study's re-executed cells substituted for the discarded rows; not the v4 record"
+    },
+    {
+      "model": "Claude Sonnet 5",
+      "config": "with-sanka",
+      "v4_official_verified_routes": 97,
+      "v4_official_score_percent": 57.1,
+      "derived_verified_routes": 151,
+      "derived_score_percent": 88.8,
+      "cells_substituted": [
+        "drf-fastapi-009-claude-sonnet5-with-sanka",
+        "drf-fastapi-007-claude-sonnet5-with-sanka",
+        "drf-fastapi-011-claude-sonnet5-with-sanka",
+        "drf-fastapi-003-claude-sonnet5-with-sanka",
+        "drf-fastapi-002-claude-sonnet5-with-sanka",
+        "drf-fastapi-001-claude-sonnet5-with-sanka"
+      ],
+      "label": "DERIVED: v4 official rows with the study's re-executed cells substituted for the discarded rows; not the v4 record"
+    }
+  ]
+}

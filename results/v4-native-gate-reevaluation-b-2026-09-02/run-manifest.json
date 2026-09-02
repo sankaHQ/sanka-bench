@@ -1,0 +1,84 @@
+{
+  "schema": "sanka-bench/native-gate-reevaluation-manifest/v1",
+  "batch": "b",
+  "reason": "Batch b re-evaluates every native-only failure of v4 and the erratum study under evaluator 0.0.3: include_router resolution (PR #28) plus the accepted rule that any fastapi.routing.APIRoute subclass with a workspace endpoint is native (PR #29), with catch-all serving reported as a diagnostic. Batch a (../bench-v4-native-gate-reevaluation-2026-09-02) recorded the include_router fix alone. Frozen candidates are read-only inputs; originals are never modified.",
+  "selection": "batch a cells + the two remaining native-only failures whose serving route is an APIRoute subclass (GLM 008 alone is already in batch a)",
+  "evaluator": {
+    "worktree": "<workspace>/.worktrees/sanka-bench-native-gate-subclasses",
+    "revision": "d6c10fa216e4ab4b0ea473dd3b50b0dfbd351015",
+    "revision_note": "batch b ran at local commit d6c10fa (stacked on PR #28 head); rebased onto main as c09d59f and pushed as PR #29 \u2014 evaluator file digests identical (verified True)",
+    "file_sha256": {
+      "src/sanka_bench/serving_guard.py": "da144179fdfba632eecf029377041a69c3f008bc726f0b733bc4a47a2ab0b632",
+      "src/sanka_bench/evaluator.py": "323670bdd9b1f21e0e299346eb7ac17998f434dbcc8a8d9c3982f1c71601ff0e"
+    },
+    "fastapi": "0.141.1",
+    "tasks_identical_to": "13bd9a863a76f813495c4483c1e39cd8aa7bba44",
+    "sanka_bench_version": "0.0.3",
+    "revision_after_rebase": "c09d59f8014a41ef9024ad480fefd3331dd350b6"
+  },
+  "cells": [
+    {
+      "task": "drf-fastapi-003",
+      "candidate_id": "drf-fastapi-003-codex-glm-5-3-flash-alone",
+      "source": "v4",
+      "label": "GLM-5.3-Flash 003 alone",
+      "route_weight": 14,
+      "candidate_dir": "<workspace>/results/v4-11task-2026-09-01/candidates/drf-fastapi-003/drf-fastapi-003-codex-glm-5-3-flash-alone",
+      "original_report": "<workspace>/results/v4-11task-2026-09-01/reports/drf-fastapi-003-drf-fastapi-003-codex-glm-5-3-flash-alone.json"
+    },
+    {
+      "task": "drf-fastapi-004",
+      "candidate_id": "drf-fastapi-004-codex-glm-5-3-flash-alone",
+      "source": "v4",
+      "label": "GLM-5.3-Flash 004 alone (also failed other gates)",
+      "route_weight": 26,
+      "candidate_dir": "<workspace>/results/v4-11task-2026-09-01/candidates/drf-fastapi-004/drf-fastapi-004-codex-glm-5-3-flash-alone",
+      "original_report": "<workspace>/results/v4-11task-2026-09-01/reports/drf-fastapi-004-drf-fastapi-004-codex-glm-5-3-flash-alone.json"
+    },
+    {
+      "task": "drf-fastapi-008",
+      "candidate_id": "drf-fastapi-008-codex-glm-5-3-flash-alone",
+      "source": "v4",
+      "label": "GLM-5.3-Flash 008 alone",
+      "route_weight": 36,
+      "candidate_dir": "<workspace>/results/v4-11task-2026-09-01/candidates/drf-fastapi-008/drf-fastapi-008-codex-glm-5-3-flash-alone",
+      "original_report": "<workspace>/results/v4-11task-2026-09-01/reports/drf-fastapi-008-drf-fastapi-008-codex-glm-5-3-flash-alone.json"
+    },
+    {
+      "task": "drf-fastapi-008",
+      "candidate_id": "drf-fastapi-008-codex-glm-5-3-flash-with-sanka",
+      "source": "v4",
+      "label": "GLM-5.3-Flash 008 with-sanka",
+      "route_weight": 36,
+      "candidate_dir": "<workspace>/results/v4-11task-2026-09-01/candidates/drf-fastapi-008/drf-fastapi-008-codex-glm-5-3-flash-with-sanka",
+      "original_report": "<workspace>/results/v4-11task-2026-09-01/reports/drf-fastapi-008-drf-fastapi-008-codex-glm-5-3-flash-with-sanka.json"
+    },
+    {
+      "task": "drf-fastapi-011",
+      "candidate_id": "drf-fastapi-011-claude-sonnet5-with-sanka",
+      "source": "erratum-study",
+      "label": "Claude Sonnet 5 011 with-sanka",
+      "route_weight": 5,
+      "candidate_dir": "<workspace>/tracking/bench-v4-erratum-study-2026-09-02/candidates/drf-fastapi-011/drf-fastapi-011-claude-sonnet5-with-sanka",
+      "original_report": "<workspace>/tracking/bench-v4-erratum-study-2026-09-02/reports/drf-fastapi-011-drf-fastapi-011-claude-sonnet5-with-sanka.json"
+    },
+    {
+      "task": "drf-fastapi-002",
+      "candidate_id": "drf-fastapi-002-codex-glm-5-3-flash-with-sanka",
+      "source": "v4",
+      "label": "GLM-5.3-Flash 002 with-sanka (UniversalAPIRoute subclass)",
+      "route_weight": 14,
+      "candidate_dir": "<workspace>/results/v4-11task-2026-09-01/candidates/drf-fastapi-002/drf-fastapi-002-codex-glm-5-3-flash-with-sanka",
+      "original_report": "<workspace>/results/v4-11task-2026-09-01/reports/drf-fastapi-002-drf-fastapi-002-codex-glm-5-3-flash-with-sanka.json"
+    },
+    {
+      "task": "drf-fastapi-008",
+      "candidate_id": "drf-fastapi-008-codex-deepseek-v4-pro-alone",
+      "source": "v4",
+      "label": "DeepSeek V4 Pro 008 alone (CaptureAllAPIRoute subclass)",
+      "route_weight": 36,
+      "candidate_dir": "<workspace>/results/v4-11task-2026-09-01/candidates/drf-fastapi-008/drf-fastapi-008-codex-deepseek-v4-pro-alone",
+      "original_report": "<workspace>/results/v4-11task-2026-09-01/reports/drf-fastapi-008-drf-fastapi-008-codex-deepseek-v4-pro-alone.json"
+    }
+  ]
+}
