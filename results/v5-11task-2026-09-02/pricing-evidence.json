@@ -1,0 +1,33 @@
+{
+  "schema": "sanka-bench/pricing-evidence/v2",
+  "status": "verified-for-v5",
+  "verified_at": "2026-09-02T00:06:37Z",
+  "verified_by": "Claude Code session (haegwan), read from the OpenAI developer pricing page",
+  "openai": {
+    "source": "https://developers.openai.com/api/docs/pricing",
+    "tier": "standard",
+    "context_tier": "short-context rates; the long-context tier (input $8.00/$0.80/$10.00, output $30.00 for gpt-5.6-sol; $0.40/$0.04/$0.50, $1.80 for gpt-5.6-luna) is not detectable from the recorded per-cell token totals, so computed reference cost is a lower bound if any request crossed the long-context threshold",
+    "promotion_note": "GPT-5.6 Sol promotional pricing stated as available at least through 2026-11-21",
+    "currency": "USD",
+    "unit": "per 1000000 tokens",
+    "rates": {
+      "gpt-5.6-sol": {
+        "input": 4.0,
+        "cached_input": 0.4,
+        "cache_write": 5.0,
+        "output": 20.0
+      },
+      "gpt-5.6-luna": {
+        "input": 0.2,
+        "cached_input": 0.02,
+        "cache_write": 0.25,
+        "output": 1.2
+      }
+    }
+  },
+  "fireworks": {
+    "pricing_source": "https://docs.fireworks.ai/serverless/pricing",
+    "rated_cost_source": "https://docs.fireworks.ai/api-reference/query-usage-costs",
+    "policy": "Use exact rated-cost API readback for each cell; do not substitute another model or provider rate."
+  }
+}

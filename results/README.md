@@ -18,11 +18,11 @@ Rules that apply to everything here:
 
 | Directory | What it is |
 | --- | --- |
+| `v5-11task-2026-09-02/` | **Current record.** Eleven tasks, 170 routes, engine 0.1.0a10, corrected runner and evaluator 0.0.3, 120-turn Claude budget, readiness-aware with-Sanka arm, pre-declared in `PLAN.md`. 132/132 cells terminal, 0 agent or provider failures. |
 | `v3-10task-2026-08-30/` | Ten tasks, 165 routes, engine 0.1.0a8, the old copy-the-overlay prompt. Historical. `ANALYSIS-with-sanka-regression.md` explains the prompt-mandate regression that led to the v4 prompt. |
 | `v4-11task-2026-09-01/` | Eleven tasks, 170 routes, engine 0.1.0a10, readiness-aware prompt. The recorded pass@1 record, with two errata: `ERRATUM-claude-turn-cap-2026-09-02.md` (ten Claude cells discarded unevaluated by a runner exit-code regression) and `ERRATUM-native-gate-included-router-2026-09-02.md` (native-gate false negatives for `include_router` candidates and `APIRoute` subclasses). |
 | `v4-erratum-study-2026-09-02/` | The ten discarded v4 cells re-executed with the fixed runner, same SHA, pins, prompt and budget. |
 | `v4-native-gate-reevaluation-a-2026-09-02/` | Frozen candidates re-evaluated with the include_router fix (evaluator 0.0.2). |
 | `v4-native-gate-reevaluation-b-2026-09-02/` | The same plus the accepted `APIRoute` subclass rule and catch-all diagnostic (evaluator 0.0.3). |
 
-The next full matrix (v5) runs on the corrected harness and evaluator under
-pre-declared rules and will be published here as the current record.
+v5 is the current record; v3 and v4 stay as history with their errata.
