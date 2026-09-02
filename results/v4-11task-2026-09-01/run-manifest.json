@@ -1,0 +1,223 @@
+{
+  "authorization": {
+    "authorization_scope": "132-cell-v4",
+    "authorized_at": "2026-09-01T01:31:02Z",
+    "authorized_by": "user via Codex thread",
+    "paid_run_authorized": true,
+    "run_id": "v4-20260901T013102Z-3aa1ef3c"
+  },
+  "benchmark_sha": "13bd9a863a76f813495c4483c1e39cd8aa7bba44",
+  "cost_plan": {
+    "authorization_ceiling_usd": 145.0,
+    "basis": "v3 known API-equivalent cost scaled from 10 to 11 tasks",
+    "central_estimate_usd": 119.28,
+    "estimated_fireworks_marginal_usd": 8.84,
+    "estimated_openai_metered_usd": 9.02,
+    "estimated_total_metered_usd": 17.86,
+    "note": "Anthropic is API-equivalent comparison cost covered by Claude Max while limits hold. The proven isolated Codex runner authenticates OpenAI and Fireworks with API keys, so both are expected metered charges.",
+    "v3_known_usd": 108.437585266
+  },
+  "execution": {
+    "authorization_scope": "132-cell-v4",
+    "agent_timeout_seconds": 3600,
+    "aggregate_command": [
+      "{python}",
+      "build_matrix_v4.py"
+    ],
+    "cell_command": [
+      "{python}",
+      "cell_driver_v4.py",
+      "{phase}",
+      "--manifest",
+      "{manifest}",
+      "--task",
+      "{task_suffix}",
+      "--model",
+      "{model}",
+      "--config",
+      "{config}"
+    ],
+    "configurations": [
+      "alone",
+      "with-sanka"
+    ],
+    "expected_rows": 132,
+    "first_with_sanka_cell": "drf-fastapi-001-claude-opus48-with-sanka",
+    "first_with_sanka_gate": "target_boot must pass before any remaining with-sanka cell",
+    "infrastructure_retries": {
+      "drf-fastapi-007-codex-deepseek-v4-pro-alone": {
+        "attempt": 2,
+        "authorization_ledger": "infrastructure-reruns-v4.json",
+        "prior_failure": "attempt 1 ended in turn.completed after a recoverable Fireworks stream notice, but the old parser discarded the temporary workspace before freezing it"
+      }
+    },
+    "max_turns": 60,
+    "metadata_compatibility_bridge": {
+      "reason": "PR #26 discloses provider_variant in candidate.yaml, but the frozen v4 candidate/v0.2 schema rejects that provenance property",
+      "operation": "remove only provenance.provider_variant from harness-owned candidate.yaml after generation; preserve the same value in GENERATED.md and the cell log; never modify overlay files",
+      "quality_effect": "none"
+    },
+    "mode": "foreground rolling coordinator with calibrated provider queues",
+    "parallelism": {
+      "agent_concurrency_ceiling": 18,
+      "aggregate_writer_count": 1,
+      "boot_gate_concurrency": 1,
+      "calibration_models": [
+        "opus48",
+        "gpt56sol",
+        "deepseekv4pro"
+      ],
+      "calibration_provider_caps": [
+        1,
+        3,
+        4,
+        6
+      ],
+      "evaluation_concurrency_ceiling": 4,
+      "model_concurrency_ceiling": 3,
+      "provider_concurrency_ceiling": 6
+    },
+    "pass_at": 1,
+    "retry_policy": "none; stop and classify infrastructure failures before any separately authorized rerun"
+  },
+  "models": [
+    {
+      "agent": "claude-code",
+      "candidate_slug": "claude-opus48",
+      "label": "Claude Opus 4.8",
+      "model_id": "claude-opus-4-8",
+      "provider": "anthropic",
+      "provider_variant": "claude-max-subscription",
+      "slug": "opus48"
+    },
+    {
+      "agent": "claude-code",
+      "candidate_slug": "claude-sonnet5",
+      "label": "Claude Sonnet 5",
+      "model_id": "claude-sonnet-5",
+      "provider": "anthropic",
+      "provider_variant": "claude-max-subscription",
+      "slug": "sonnet5"
+    },
+    {
+      "agent": "codex",
+      "candidate_slug": "codex-gpt-5-6-sol",
+      "label": "gpt-5.6-sol",
+      "model_id": "gpt-5.6-sol",
+      "provider": "openai",
+      "provider_variant": "api-standard",
+      "slug": "gpt56sol"
+    },
+    {
+      "agent": "codex",
+      "candidate_slug": "codex-deepseek-v4-pro",
+      "label": "DeepSeek V4 Pro",
+      "model_id": "accounts/fireworks/models/deepseek-v4-pro-0813",
+      "provider": "fireworks",
+      "provider_variant": "serverless-standard",
+      "backups": [
+        {
+          "adapter": "codex-cli-0.150.1",
+          "label": "Fireworks on-demand Fast",
+          "model_id": "PENDING_FIREWORKS_ON_DEMAND_DEPLOYMENT_ID",
+          "provider": "fireworks",
+          "provider_variant": "on-demand-fast",
+          "status": "unqualified",
+          "wire_api": "responses"
+        }
+      ],
+      "slug": "deepseekv4pro"
+    },
+    {
+      "agent": "codex",
+      "candidate_slug": "codex-glm-5-3-flash",
+      "label": "GLM-5.3-Flash",
+      "model_id": "accounts/fireworks/models/glm-5p3-flash",
+      "provider": "fireworks",
+      "provider_variant": "serverless-standard",
+      "backups": [
+        {
+          "adapter": "codex-cli-0.150.1",
+          "label": "Fireworks on-demand Fast",
+          "model_id": "PENDING_FIREWORKS_ON_DEMAND_DEPLOYMENT_ID",
+          "provider": "fireworks",
+          "provider_variant": "on-demand-fast",
+          "status": "unqualified",
+          "wire_api": "responses"
+        }
+      ],
+      "slug": "glm53flash"
+    },
+    {
+      "agent": "codex",
+      "candidate_slug": "codex-gpt-5-6-luna",
+      "label": "gpt-5.6-luna",
+      "model_id": "gpt-5.6-luna",
+      "provider": "openai",
+      "provider_variant": "api-standard",
+      "slug": "gpt56luna"
+    }
+  ],
+  "schema": "sanka-bench/model-matrix-run-manifest/v4",
+  "status": "authorized-models-ready",
+  "suite": {
+    "lane": "drf-fastapi",
+    "route_weights": {
+      "drf-fastapi-001": 14,
+      "drf-fastapi-002": 14,
+      "drf-fastapi-003": 14,
+      "drf-fastapi-004": 26,
+      "drf-fastapi-005": 16,
+      "drf-fastapi-006": 14,
+      "drf-fastapi-007": 14,
+      "drf-fastapi-008": 36,
+      "drf-fastapi-009": 12,
+      "drf-fastapi-010": 5,
+      "drf-fastapi-011": 5
+    },
+    "score_version": "Migration Quality Score v0.2",
+    "tasks": [
+      "drf-fastapi-001",
+      "drf-fastapi-002",
+      "drf-fastapi-003",
+      "drf-fastapi-004",
+      "drf-fastapi-005",
+      "drf-fastapi-006",
+      "drf-fastapi-007",
+      "drf-fastapi-008",
+      "drf-fastapi-009",
+      "drf-fastapi-010",
+      "drf-fastapi-011"
+    ],
+    "verified_route_denominator": 170
+  },
+  "toolchain": {
+    "agent_runner": "<workspace>/.worktrees/sanka-bench-run-reliability/scripts/run_agent_candidate.py",
+    "agent_runner_revision": "7679f930460b295d75e641afe3cecc79ac181e9c",
+    "agent_runner_sha256": "ef6d8c3f401132dd0ed7a965ba37a74c674f88ffb2a5acf1b501a680a853e2a7",
+    "claude_bin": "<claude-cli>",
+    "claude_cli": "2.1.241 (Claude Code)",
+    "codex_bin": "<workspace>/.worktrees/sanka-bench-matrix-v4/.bench-tools/codex-cli/node_modules/@openai/codex/bin/codex.js",
+    "codex_cli": "codex-cli 0.150.1",
+    "env_evidence": {
+      "is_symlink": true,
+      "path": "<workspace>/.worktrees/sanka-bench-matrix-v4/.env",
+      "target_mode": "0600",
+      "target_outside_worktree": true
+    },
+    "env_path": "<workspace>/.worktrees/sanka-bench-matrix-v4/.env",
+    "sanka_bench": "0.0.1",
+    "sanka_cli": "0.1.8",
+    "sanka_migrate": "0.1.0a10",
+    "matrix_runner": "<workspace>/.worktrees/sanka-bench-run-reliability/scripts/run_agent_matrix.py",
+    "matrix_runner_revision": "7679f930460b295d75e641afe3cecc79ac181e9c",
+    "matrix_runner_sha256": "3294b48d91ce769339c8b471b9ce400c5be0886a1592df8a49bd63ef79a47a2a",
+    "cell_driver": "<workspace>/results/v4-11task-2026-09-01/cell_driver_v4.py",
+    "cell_driver_sha256": "c30b1a1bd2085abd3e61a98357f2ad13b6c2a59f050d7ad43d2e0fb845d647da",
+    "aggregate_builder": "<workspace>/results/v4-11task-2026-09-01/build_matrix_v4.py",
+    "aggregate_builder_sha256": "0e8f0801912d25e64e752c34e5c06dfb3d01ca79ccb901fcaf5931982e7a9d09",
+    "platform_cost_collector": "<workspace>/results/v4-11task-2026-09-01/collect_fireworks_costs_v4.py",
+    "platform_cost_collector_sha256": "24f9302401e739b014a3528309d752b9f33d8d362527a68469cba71221274b02",
+    "worktree": "<workspace>/.worktrees/sanka-bench-matrix-v4"
+  }
+}

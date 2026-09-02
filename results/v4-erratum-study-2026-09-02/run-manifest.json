@@ -1,0 +1,176 @@
+{
+  "schema": "sanka-bench/model-matrix-run-manifest/v4-erratum-study",
+  "status": "complete: 10/10 terminal pass@1 cells, makespan 3558 s at 4 concurrent, coordinator exit 0",
+  "study_of": {
+    "run_id": "v4-20260901T013102Z-3aa1ef3c",
+    "mirror": "../v4-11task-2026-09-01",
+    "erratum": "../v4-11task-2026-09-01/ERRATUM-claude-turn-cap-2026-09-02.md",
+    "reason": "The ten cells below reached the 60-turn cap during the v4 recovery waves and were discarded unevaluated by the PR #26 runner (Claude CLI exits 1 on error_max_turns). This study re-executes exactly those cells, pass@1, with the fixed runner, at the same benchmark SHA, engine pins, prompt, budget and evaluator. It is published beside v4 and never merged into the v4 rows."
+  },
+  "authorization": {
+    "paid_run_authorized": true,
+    "authorization_scope": "10-cell-v4-erratum-study",
+    "authorized_at": "2026-09-01T21:37:00Z",
+    "authorized_by": "haegwan via Claude Code session (AskUserQuestion answer: 'Go, 4 concurrent (Recommended)')",
+    "run_id": "v4-erratum-20260901T213700Z-26d1afdc",
+    "cost_note": "Claude Max subscription cells; v4 recorded API-equivalent cost for these ten cells = $34.7 total (Opus $7.47, Sonnet $27.2). No metered API spend.",
+    "concurrency_authorized": {
+      "opus48": 1,
+      "sonnet5": 3,
+      "anthropic_total": 4
+    }
+  },
+  "benchmark_sha": "13bd9a863a76f813495c4483c1e39cd8aa7bba44",
+  "suite": {
+    "lane": "drf-fastapi",
+    "route_weights": {
+      "drf-fastapi-001": 14,
+      "drf-fastapi-002": 14,
+      "drf-fastapi-003": 14,
+      "drf-fastapi-004": 26,
+      "drf-fastapi-005": 16,
+      "drf-fastapi-006": 14,
+      "drf-fastapi-007": 14,
+      "drf-fastapi-008": 36,
+      "drf-fastapi-009": 12,
+      "drf-fastapi-010": 5,
+      "drf-fastapi-011": 5
+    },
+    "score_version": "Migration Quality Score v0.2",
+    "tasks": [
+      "drf-fastapi-001",
+      "drf-fastapi-002",
+      "drf-fastapi-003",
+      "drf-fastapi-004",
+      "drf-fastapi-005",
+      "drf-fastapi-006",
+      "drf-fastapi-007",
+      "drf-fastapi-008",
+      "drf-fastapi-009",
+      "drf-fastapi-010",
+      "drf-fastapi-011"
+    ],
+    "verified_route_denominator": 170
+  },
+  "models": [
+    {
+      "agent": "claude-code",
+      "candidate_slug": "claude-opus48",
+      "label": "Claude Opus 4.8",
+      "model_id": "claude-opus-4-8",
+      "provider": "anthropic",
+      "provider_variant": "claude-max-subscription",
+      "slug": "opus48"
+    },
+    {
+      "agent": "claude-code",
+      "candidate_slug": "claude-sonnet5",
+      "label": "Claude Sonnet 5",
+      "model_id": "claude-sonnet-5",
+      "provider": "anthropic",
+      "provider_variant": "claude-max-subscription",
+      "slug": "sonnet5"
+    }
+  ],
+  "execution": {
+    "configurations": [
+      "alone",
+      "with-sanka"
+    ],
+    "expected_rows": 10,
+    "cells": [
+      {
+        "task": "009",
+        "model": "opus48",
+        "config": "with-sanka",
+        "v4_duration_seconds": 1405
+      },
+      {
+        "task": "009",
+        "model": "sonnet5",
+        "config": "alone",
+        "v4_duration_seconds": 1335
+      },
+      {
+        "task": "009",
+        "model": "sonnet5",
+        "config": "with-sanka",
+        "v4_duration_seconds": 1208
+      },
+      {
+        "task": "007",
+        "model": "sonnet5",
+        "config": "with-sanka",
+        "v4_duration_seconds": 1128
+      },
+      {
+        "task": "011",
+        "model": "sonnet5",
+        "config": "alone",
+        "v4_duration_seconds": 1114
+      },
+      {
+        "task": "011",
+        "model": "sonnet5",
+        "config": "with-sanka",
+        "v4_duration_seconds": 1065
+      },
+      {
+        "task": "010",
+        "model": "sonnet5",
+        "config": "alone",
+        "v4_duration_seconds": 1050
+      },
+      {
+        "task": "003",
+        "model": "sonnet5",
+        "config": "with-sanka",
+        "v4_duration_seconds": 917
+      },
+      {
+        "task": "002",
+        "model": "sonnet5",
+        "config": "with-sanka",
+        "v4_duration_seconds": 876
+      },
+      {
+        "task": "001",
+        "model": "sonnet5",
+        "config": "with-sanka",
+        "v4_duration_seconds": 867
+      }
+    ],
+    "max_turns": 60,
+    "agent_timeout_seconds": 3600,
+    "pass_at": 1,
+    "retry_policy": "none; stop and classify infrastructure failures; no rerun without new explicit authorization",
+    "infrastructure_retries": {},
+    "parallelism": {
+      "opus48_concurrency_ceiling": 1,
+      "sonnet5_concurrency_ceiling": 3,
+      "anthropic_concurrency_ceiling": 4,
+      "evaluation": "in-line after each generation (at most 4 concurrent, same as the v4 evaluation cap)"
+    },
+    "mode": "one foreground coordinator (run_study.py) owning every worker; single aggregate writer (build_study.py) after all workers settle"
+  },
+  "toolchain": {
+    "worktree": "<workspace>/.worktrees/sanka-bench-matrix-v4",
+    "env_path": "<workspace>/.worktrees/sanka-bench-matrix-v4/.env",
+    "claude_bin": "<claude-cli>",
+    "claude_cli": "2.1.241 (Claude Code)",
+    "codex_bin": "<workspace>/.worktrees/sanka-bench-matrix-v4/.bench-tools/codex-cli/node_modules/@openai/codex/bin/codex.js",
+    "agent_runner": "<workspace>/.worktrees/sanka-bench-turn-cap-freeze/scripts/run_agent_candidate.py",
+    "agent_runner_revision": "92384056f706b4ff89488c3eed6e0f2b15ba697a",
+    "agent_runner_sha256": "aaa3fee19756318dcbf93c82d10b5758813a3705b1427ea84725fc8eda0a6b23",
+    "agent_runner_change": "sanka-bench PR #27: parsed result authoritative over exit code; Claude captured as stream-json (agent-log.jsonl = full transcript)",
+    "cell_driver": "<workspace>/tracking/bench-v4-erratum-study-2026-09-02/cell_driver_study.py",
+    "cell_driver_sha256": "bbae2f83e903c4e61a8be50c22903d0b0532e2f903fac010d3da79e41f72249a",
+    "cell_driver_provenance": "byte-identical to v4 cell_driver_v4.py except the authorization scope string",
+    "sanka_cli": "0.1.8",
+    "sanka_migrate": "0.1.0a10",
+    "venv_recreated": "2026-09-02: uv sync --frozen --extra fixture --group dev; uv pip install sanka-cli==0.1.8 sanka-migrate==0.1.0a10 (the v4 worktree venv had been deleted after the run)",
+    "agent_runner_provenance": "sanka-bench PR #27 approved head (exact-head human approval by haegwan); the squash-merge onto main carries byte-identical file content \u2014 re-verify the sha256 against origin/main after landing",
+    "matrix_runner": "not used (study coordinator = run_study.py)",
+    "agent_runner_merge_commit": "522666eba90d14860c72edce7689ee4b895253ab (sanka-bench PR #27 squash-merge; sha256 of scripts/run_agent_candidate.py identical to the pinned 9238405 file)"
+  }
+}

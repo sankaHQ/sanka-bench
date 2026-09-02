@@ -1,0 +1,206 @@
+{
+  "schema": "sanka-bench/native-gate-reevaluation/v1",
+  "generated_at": "2026-09-01T23:32:22Z",
+  "evaluator": {
+    "worktree": "<workspace>/.worktrees/sanka-bench-native-gate-subclasses",
+    "revision": "d6c10fa216e4ab4b0ea473dd3b50b0dfbd351015",
+    "revision_note": "local commit on branch native-gate-apiroute-subclasses (stacked on PR #28 head e3e875b); will be rebased onto main after #28 lands \u2014 the file digests below identify the evaluator content independent of the commit id",
+    "file_sha256": {
+      "src/sanka_bench/serving_guard.py": "da144179fdfba632eecf029377041a69c3f008bc726f0b733bc4a47a2ab0b632",
+      "src/sanka_bench/evaluator.py": "323670bdd9b1f21e0e299346eb7ac17998f434dbcc8a8d9c3982f1c71601ff0e"
+    },
+    "fastapi": "0.141.1",
+    "tasks_identical_to": "13bd9a863a76f813495c4483c1e39cd8aa7bba44",
+    "sanka_bench_version": "0.0.3"
+  },
+  "rows": [
+    {
+      "candidate_id": "drf-fastapi-003-codex-glm-5-3-flash-alone",
+      "task": "drf-fastapi-003",
+      "source": "v4",
+      "label": "GLM-5.3-Flash 003 alone",
+      "route_weight": 14,
+      "original": {
+        "fully_migrated": false,
+        "gates_failed": [
+          "native_target"
+        ],
+        "evaluator_version": "0.0.1"
+      },
+      "reevaluated": {
+        "fully_migrated": true,
+        "gates_failed": [],
+        "evaluator_version": "0.0.3",
+        "route_classes": [
+          "fastapi.routing.APIRoute"
+        ],
+        "candidate_digest": "sha256:6130a1d071aec9b6534c9a7bb3f5115167d40fde485886b7acd40e90ca7e4520",
+        "catch_all_served_scenarios": []
+      },
+      "original_candidate_digest": "sha256:6130a1d071aec9b6534c9a7bb3f5115167d40fde485886b7acd40e90ca7e4520"
+    },
+    {
+      "candidate_id": "drf-fastapi-004-codex-glm-5-3-flash-alone",
+      "task": "drf-fastapi-004",
+      "source": "v4",
+      "label": "GLM-5.3-Flash 004 alone (also failed other gates)",
+      "route_weight": 26,
+      "original": {
+        "fully_migrated": false,
+        "gates_failed": [
+          "behavior_parity",
+          "database_parity",
+          "deterministic",
+          "native_target",
+          "side_effect_parity",
+          "target_boot"
+        ],
+        "evaluator_version": "0.0.1"
+      },
+      "reevaluated": {
+        "fully_migrated": false,
+        "gates_failed": [
+          "behavior_parity",
+          "database_parity",
+          "deterministic",
+          "native_target",
+          "side_effect_parity",
+          "target_boot"
+        ],
+        "evaluator_version": "0.0.3",
+        "route_classes": [
+          "None",
+          "fastapi.routing.APIRoute"
+        ],
+        "candidate_digest": "sha256:9d738e173b548e72d6eef36ef7b2efca4e2568ab1d816b06340ce9d19f7d2d6c",
+        "catch_all_served_scenarios": []
+      },
+      "original_candidate_digest": "sha256:9d738e173b548e72d6eef36ef7b2efca4e2568ab1d816b06340ce9d19f7d2d6c"
+    },
+    {
+      "candidate_id": "drf-fastapi-008-codex-glm-5-3-flash-alone",
+      "task": "drf-fastapi-008",
+      "source": "v4",
+      "label": "GLM-5.3-Flash 008 alone",
+      "route_weight": 36,
+      "original": {
+        "fully_migrated": false,
+        "gates_failed": [
+          "native_target"
+        ],
+        "evaluator_version": "0.0.1"
+      },
+      "reevaluated": {
+        "fully_migrated": true,
+        "gates_failed": [],
+        "evaluator_version": "0.0.3",
+        "route_classes": [
+          "target_app.AnyMethodAPIRoute"
+        ],
+        "candidate_digest": "sha256:d9ca778281ed0813d4c65e2492db12598caca2d04da93ad2409267781a70051d",
+        "catch_all_served_scenarios": []
+      },
+      "original_candidate_digest": "sha256:d9ca778281ed0813d4c65e2492db12598caca2d04da93ad2409267781a70051d"
+    },
+    {
+      "candidate_id": "drf-fastapi-008-codex-glm-5-3-flash-with-sanka",
+      "task": "drf-fastapi-008",
+      "source": "v4",
+      "label": "GLM-5.3-Flash 008 with-sanka",
+      "route_weight": 36,
+      "original": {
+        "fully_migrated": false,
+        "gates_failed": [
+          "native_target"
+        ],
+        "evaluator_version": "0.0.1"
+      },
+      "reevaluated": {
+        "fully_migrated": true,
+        "gates_failed": [],
+        "evaluator_version": "0.0.3",
+        "route_classes": [
+          "fastapi.routing.APIRoute"
+        ],
+        "candidate_digest": "sha256:b0703694a647cd017136141f9425940177b080c5abf0e25eb55241fdc548b4d6",
+        "catch_all_served_scenarios": []
+      },
+      "original_candidate_digest": "sha256:b0703694a647cd017136141f9425940177b080c5abf0e25eb55241fdc548b4d6"
+    },
+    {
+      "candidate_id": "drf-fastapi-011-claude-sonnet5-with-sanka",
+      "task": "drf-fastapi-011",
+      "source": "erratum-study",
+      "label": "Claude Sonnet 5 011 with-sanka",
+      "route_weight": 5,
+      "original": {
+        "fully_migrated": false,
+        "gates_failed": [
+          "native_target"
+        ],
+        "evaluator_version": "0.0.1"
+      },
+      "reevaluated": {
+        "fully_migrated": true,
+        "gates_failed": [],
+        "evaluator_version": "0.0.3",
+        "route_classes": [
+          "fastapi.routing.APIRoute"
+        ],
+        "candidate_digest": "sha256:cfcbabd97b13bea29f444b352a2c03464ee71bec754f7d3c97b7cc42f14d5595",
+        "catch_all_served_scenarios": []
+      },
+      "original_candidate_digest": "sha256:cfcbabd97b13bea29f444b352a2c03464ee71bec754f7d3c97b7cc42f14d5595"
+    },
+    {
+      "candidate_id": "drf-fastapi-002-codex-glm-5-3-flash-with-sanka",
+      "task": "drf-fastapi-002",
+      "source": "v4",
+      "label": "GLM-5.3-Flash 002 with-sanka (UniversalAPIRoute subclass)",
+      "route_weight": 14,
+      "original": {
+        "fully_migrated": false,
+        "gates_failed": [
+          "native_target"
+        ],
+        "evaluator_version": "0.0.1"
+      },
+      "reevaluated": {
+        "fully_migrated": true,
+        "gates_failed": [],
+        "evaluator_version": "0.0.3",
+        "route_classes": [
+          "target_app.UniversalAPIRoute"
+        ],
+        "candidate_digest": "sha256:acab059ac758d62f20f1a9250ebdda2f9de2acbda61699b2930ed18a24782f5c",
+        "catch_all_served_scenarios": []
+      },
+      "original_candidate_digest": "sha256:acab059ac758d62f20f1a9250ebdda2f9de2acbda61699b2930ed18a24782f5c"
+    },
+    {
+      "candidate_id": "drf-fastapi-008-codex-deepseek-v4-pro-alone",
+      "task": "drf-fastapi-008",
+      "source": "v4",
+      "label": "DeepSeek V4 Pro 008 alone (CaptureAllAPIRoute subclass)",
+      "route_weight": 36,
+      "original": {
+        "fully_migrated": false,
+        "gates_failed": [
+          "native_target"
+        ],
+        "evaluator_version": "0.0.1"
+      },
+      "reevaluated": {
+        "fully_migrated": true,
+        "gates_failed": [],
+        "evaluator_version": "0.0.3",
+        "route_classes": [
+          "target_app.CaptureAllAPIRoute"
+        ],
+        "candidate_digest": "sha256:8f0a6d9294f3ee3e3867e09ca9aee275770fe7f1a9811190f7e0e23649e6cbb5",
+        "catch_all_served_scenarios": []
+      },
+      "original_candidate_digest": "sha256:8f0a6d9294f3ee3e3867e09ca9aee275770fe7f1a9811190f7e0e23649e6cbb5"
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "schema": "sanka-bench/infrastructure-reruns/v1",
+  "benchmark_sha": "13bd9a863a76f813495c4483c1e39cd8aa7bba44",
+  "authorized_at": "2026-09-01T08:18:28Z",
+  "authorization": "User approved PR #26 and explicitly requested proceeding with the recommended recovery of the current serverless v4 run.",
+  "policy": "Only drf-fastapi-007:deepseekv4pro:alone is eligible for one attempt 2 because the old transcript parser discarded a successfully completed temporary workspace after a recoverable Fireworks stream notice. Quality failures remain terminal pass@1 results, and no other terminal cell may be retried.",
+  "status": "attempt-2-complete-terminal-no-further-retry",
+  "cells": [
+    {
+      "candidate_id": "drf-fastapi-007-codex-deepseek-v4-pro-alone",
+      "provider": "fireworks",
+      "provider_variant": "serverless-standard",
+      "model_id": "accounts/fireworks/models/deepseek-v4-pro-0813",
+      "attempt_1_started_at": "2026-09-01T06:10:54Z",
+      "attempt_1_ended_at": "2026-09-01T07:05:25Z",
+      "attempt_1_run_exit": 1,
+      "attempt_1_wall_seconds": 3270,
+      "attempt_1_classification": "runner-parser-infrastructure-loss-after-turn-completed",
+      "attempt_1_terminal_event": "turn.completed",
+      "attempt_1_recovered_error_events": 1,
+      "attempt_1_archive": "infrastructure-reruns/task-007-alone/deepseekv4pro/attempt-1",
+      "attempt_1_digests": {
+        "run.log": "sha256:3306d9ffbe32d5aaefad6f6e80299b16aad336dbf9512e2069a0e4191157ca48",
+        "agent-log.jsonl": "sha256:161167f8d4811a3178136dbfa268f788641fdb1cdafbde6b4e5648441a045c82",
+        "agent-stderr.log": "sha256:bd7a1a2ef92d7bd4c5e27709427085f18ae5d60c662b1970a470e8935f5c1bde",
+        "agent-result.json": "sha256:eff62611987ee0e3aad66849ad21585c68db324f2ac1eabb4abf02de56ff08f6"
+      },
+      "local_preflight_failures": [
+        {
+          "stage_id": "v4-infrastructure-retry-task007-deepseek-alone-attempt2",
+          "classification": "local-wrapper-name-error-before-cell-log-or-model-request",
+          "model_request_started": false,
+          "evidence": "waves/v4-infrastructure-retry-task007-deepseek-alone-attempt2-drf-fastapi-007-codex-deepseek-v4-pro-alone-generate.log"
+        }
+      ],
+      "attempt_2_started_at": "2026-09-01T08:57:45Z",
+      "attempt_2_generation_ended_at": "2026-09-01T09:35:10Z",
+      "attempt_2_generation_status": "generated",
+      "attempt_2_generation_run_exit": 0,
+      "attempt_2_generation_wall_seconds": 2245,
+      "attempt_2_candidate_overlay_files": 2,
+      "attempt_2_evaluation_preflight_failure": {
+        "classification": "frozen-v4-candidate-schema-rejected-pr26-provider-variant-metadata",
+        "model_or_quality_evaluation_started": false,
+        "eval_exit": 2
+      },
+      "candidate_metadata_normalization": {
+        "change": "removed only provenance.provider_variant from harness-owned candidate.yaml; disclosure remains in GENERATED.md and the cell log; overlay is unchanged",
+        "candidate_yaml_before": "sha256:76c70230ff9b622a52bd1303dae5a956b9a86b4d163d92263b05f7501f68c34c",
+        "candidate_yaml_after": "sha256:b36f07f1ec5ccdbd4a676472b73de64610b3ef7beee5fbc47439bd2cb64ab2fc",
+        "generated_md": "sha256:2e50366cbe0b1f4ef7fbcd1072b77bfae9563b4e496b1ef4a1b99cb97c3742fc",
+        "overlay_target_app": "sha256:249851f3968a86238f916724df5e3768fb3e4bde20ab1f18e437f089b1e5b8ce",
+        "overlay_serving_settings": "sha256:7313251fafd0b3b7544e18fc591dbc2ebc0059ef41679bbae4f918e0b9c3c5f5"
+      },
+      "attempt_2_evaluation_repair": {
+        "completed_at": "2026-09-01T09:39:07Z",
+        "eval_exit": 0,
+        "report_status": "failed",
+        "fully_migrated": false,
+        "behavior_scenarios_passed": 26,
+        "behavior_scenarios_total": 30,
+        "classification": "terminal-quality-failure"
+      },
+      "attempt_2_status": "terminal-quality-failure",
+      "further_retry_allowed": false
+    }
+  ]
+}
